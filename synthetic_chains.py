@@ -1,18 +1,33 @@
-"""Synthetic issuer-chain fixtures for the system smoke test.
+"""Synthetic issuer-chain fixtures for the synthetic system smoke test.
 
-These three chains are SYNTHETIC but model real credit-agreement
-amendment-chain structure. They exercise the real executor and
-persistence planner (the actual system under test), not a mock.
+These chains are SYNTHETIC ORACLE fixtures, not independent ground truth.
+The ground-truth states are hand-constructed in this same fixture module.
+They model real credit-agreement amendment-chain structure and exercise
+the real executor and persistence planner (the actual system under test),
+not a mock.
 
 Chain selection rationale (mirrors the RUNBOOK inclusion rule):
-  - Chain ACME: 3 sequential amendments, clean chain, A&R ground truth.
-    Exercises Q1 (state preservation), Q2 (lineage), Q4 (ground-truth match).
-  - Chain BETA: 2 amendments, one with an intentional UNRESOLVED
-    instruction (RESTATE_SECTION). Exercises Q3 (unresolved blocks
-    promotion) plus Q1/Q2/Q4.
+  - Chain ACME: 3 sequential amendments, clean chain, A&R oracle.
+    Exercises Q1 (state preservation), Q2 (lineage), Q4 (oracle match).
+  - Chain BETA: 2 amendments, A1 has an intentional UNRESOLVED
+    instruction (RESTATE_SECTION). A2 is clean but does NOT target the
+    same commitment as A1's unresolved, so A2 does NOT resolve the
+    inherited uncertainty → A2 is NOT authoritative (chain-aware
+    authority). Exercises Q3 (inherited unresolved blocks promotion).
   - Chain GAMMA: 2 amendments with a temporary waiver + reinstatement,
     then a threshold change. Exercises the waiver/restore persistence
     path plus Q1/Q2/Q4.
+  - Chain DELTA: 3 amendments where A1 waives a covenant Jan→Jul, A2
+    is an UNRELATED amendment in March, A3 is in August. Regression
+    test for the chain-wide pending-restoration queue: the A1 July
+    restore must NOT be lost just because A2 (the immediately
+    preceding amendment) didn't touch the waived covenant.
+  - Chain EPSILON: 3 amendments where A1 has an UNRESOLVED
+    RESTATE_SECTION on interest_coverage, A2 is clean but targets a
+    DIFFERENT commitment (does not resolve A1's unresolved → A2 NOT
+    authoritative), A3 explicitly addresses interest_coverage
+    (resolves A1's unresolved → A3 IS authoritative). Regression test
+    for chain-aware authority resolution.
 
 Real multi-amendment chain acquisition from EDGAR is the next phase
 (25-issuer chain study). These fixtures validate the system plumbing
@@ -31,7 +46,7 @@ def _dt(s: str) -> datetime:
 
 
 # ---------------------------------------------------------------------------
-# Chain ACME — 3 clean amendments, A&R ground truth
+# Chain ACME — 3 clean amendments, A&R oracle
 # ---------------------------------------------------------------------------
 
 
@@ -47,11 +62,12 @@ def chain_acme() -> IssuerChain:
                      increase revolving commitment 50M → 75M
     A3 (2026-06-01): tighten leverage 4.5 → 4.0,
                      add permitted_acquisition exception to leverage
-    Ground truth: Amended and Restated Credit Agreement (filed 2026-07-01)
+    Oracle ground truth: Amended and Restated Credit Agreement (filed 2026-07-01)
         - total_leverage_ratio: threshold 4.0, exception permitted_acquisition
         - interest_coverage: threshold 3.0
         - debt_service_coverage: threshold 1.25
         - revolving_commitment: amount 75_000_000
+    Comparison at: 2026-07-01 (A&R filing date)
     """
     original = {
         "financial_covenant.total_leverage_ratio": CommitmentState(
@@ -208,43 +224,53 @@ def chain_acme() -> IssuerChain:
         issuer_name="Acme Industries, Inc. (ACME) [synthetic fixture]",
         original_state=original,
         amendments=amendments,
+        comparison_at=_dt("2026-07-01T00:00:00Z"),
         ground_truth_state=ground_truth,
-        ground_truth_label="Amended and Restated Credit Agreement, filed 2026-07-01 [synthetic]",
+        ground_truth_label="Amended and Restated Credit Agreement, filed 2026-07-01 [synthetic oracle]",
     )
 
 
 # ---------------------------------------------------------------------------
-# Chain BETA — 2 amendments, one with intentional UNRESOLVED
+# Chain BETA — 2 amendments, one with intentional UNRESOLVED (not resolved)
 # ---------------------------------------------------------------------------
 
 
 def chain_beta() -> IssuerChain:
-    """Beta Corp — 2 amendments, A1 has an UNRESOLVED instruction.
+    """Beta Corp — 2 amendments, A1 has an UNRESOLVED instruction that A2
+    does NOT resolve.
 
     S0: original credit agreement
         - total_leverage_ratio covenant, threshold 3.5
         - interest_coverage covenant, threshold 2.5
     A1 (2026-02-01): REPLACE leverage 3.5 → 4.0 (applied)
-                     + RESTATE_SECTION (UNRESOLVED — executor cannot
-                       decompose a restatement without explicit
-                       instructions).
+                     + RESTATE_SECTION on interest_coverage (UNRESOLVED —
+                       executor cannot decompose a restatement without
+                       explicit instructions).
                      → status PARTIAL, is_authoritative=False.
                      The leverage change IS applied to the state, but
                      the step is provisional and must not be promoted
                      to authoritative.
     A2 (2026-05-01): REPLACE leverage 4.0 → 4.25 (clean, COMPLETE).
-                     This step is authoritative.
-    Ground truth: Composite Credit Agreement (filed 2026-06-01)
+                     A2 targets total_leverage_ratio, NOT interest_coverage
+                     (the commitment with A1's unresolved RESTATE_SECTION).
+                     Therefore A2 does NOT resolve A1's inherited unresolved.
+                     → A2 is COMPLETE but NOT authoritative (chain-aware
+                       authority: inherited unresolved blocks promotion).
+    Oracle ground truth: Composite Credit Agreement (filed 2026-06-01)
         - total_leverage_ratio: threshold 4.25
         - interest_coverage: threshold 2.5
+    Comparison at: 2026-06-01 (composite filing date)
 
-    Note: the ground truth reflects the FINAL state after A2. The
-    provisional A1 state (leverage 4.0) is not the ground truth because
-    A1 was not authoritative. The reconstructed final state after A2
-    (leverage 4.25) should match ground truth. This tests that:
-      (a) A1's unresolved blocks its promotion,
-      (b) A2's clean application produces an authoritative state that
-          matches the independent ground truth.
+    Note: the oracle ground truth reflects the FINAL state after A2. The
+    reconstructed final state (leverage 4.25, interest 2.5) matches the
+    oracle (Q4 passes), but the chain is NOT authoritative (Q3 correctly
+    reports that A2 is blocked by inherited unresolved from A1). This
+    tests that:
+      (a) A1's unresolved blocks its own promotion,
+      (b) A2's clean application on a DIFFERENT commitment does NOT
+          clear A1's inherited unresolved → A2 is also not authoritative,
+      (c) the reconstructed state still matches the oracle (state
+          reconstruction is independent of authority).
     """
     original = {
         "financial_covenant.total_leverage_ratio": CommitmentState(
@@ -296,7 +322,7 @@ def chain_beta() -> IssuerChain:
         AmendmentStep(
             amendment_number=2,
             effective_at=_dt("2026-05-01T00:00:00Z"),
-            description="Relax leverage 4.0 → 4.25 (clean)",
+            description="Relax leverage 4.0 → 4.25 (clean, but does not resolve A1's unresolved)",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -340,8 +366,9 @@ def chain_beta() -> IssuerChain:
         issuer_name="Beta Corp (BETA) [synthetic fixture]",
         original_state=original,
         amendments=amendments,
+        comparison_at=_dt("2026-06-01T00:00:00Z"),
         ground_truth_state=ground_truth,
-        ground_truth_label="Composite Credit Agreement, filed 2026-06-01 [synthetic]",
+        ground_truth_label="Composite Credit Agreement, filed 2026-06-01 [synthetic oracle]",
     )
 
 
@@ -364,13 +391,16 @@ def chain_gamma() -> IssuerChain:
                      Note: after the waiver expires, the covenant returns
                      to its post-A1 terms (threshold 5.0, ACTIVE). A2 then
                      changes the threshold to 4.5.
-    Ground truth: Amended and Restated Credit Agreement (filed 2026-08-01)
+    Oracle ground truth: Amended and Restated Credit Agreement (filed 2026-08-01)
         - total_leverage_ratio: threshold 4.5, ACTIVE
         - interest_coverage: threshold 2.0
+    Comparison at: 2026-08-01 (A&R filing date)
 
     This chain exercises the waiver/restore persistence path: the
     persistence plan for A1 must produce both a WAIVED version and a
     restore_state version, with a REINSTATES lineage edge between them.
+    The waiver expires exactly when A2 takes effect, so the restore
+    fires at the A1→A2 transition.
     """
     original = {
         "financial_covenant.total_leverage_ratio": CommitmentState(
@@ -459,11 +489,317 @@ def chain_gamma() -> IssuerChain:
         issuer_name="Gamma Holdings, LLC (GAMMA) [synthetic fixture]",
         original_state=original,
         amendments=amendments,
+        comparison_at=_dt("2026-08-01T00:00:00Z"),
         ground_truth_state=ground_truth,
-        ground_truth_label="Amended and Restated Credit Agreement, filed 2026-08-01 [synthetic]",
+        ground_truth_label="Amended and Restated Credit Agreement, filed 2026-08-01 [synthetic oracle]",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Chain DELTA — 3 amendments, waiver with intervening unrelated amendment
+# Regression test for chain-wide pending-restoration queue.
+# ---------------------------------------------------------------------------
+
+
+def chain_delta() -> IssuerChain:
+    """Delta Systems — 3 amendments where A1 waives a covenant Jan→Jul,
+    A2 is an UNRELATED amendment in March, A3 is in August.
+
+    S0: original credit agreement
+        - total_leverage_ratio covenant, threshold 5.0
+        - interest_coverage covenant, threshold 2.0
+    A1 (2026-01-01): WAIVE_TEMPORARILY the leverage covenant for Q1-Q2 2026
+                     (Jan 1 → Jul 1).
+    A2 (2026-03-01): REPLACE interest_coverage threshold 2.0 → 2.5.
+                     This is UNRELATED to the waived leverage covenant.
+                     At A2's effective_at (Mar 1), the waiver has NOT
+                     expired (expires Jul 1), so no restore is applied yet.
+    A3 (2026-08-01): REPLACE leverage threshold 5.0 → 4.5.
+                     At A3's effective_at (Aug 1), the waiver HAS expired
+                     (expired Jul 1). The chain-wide pending-restoration
+                     queue must apply the A1 restore (leverage → ACTIVE,
+                     threshold 5.0) BEFORE A3 executes. A3 then changes
+                     the threshold to 4.5.
+    Oracle ground truth: Amended and Restated Credit Agreement (filed 2026-09-01)
+        - total_leverage_ratio: threshold 4.5, ACTIVE
+        - interest_coverage: threshold 2.5
+    Comparison at: 2026-09-01 (A&R filing date)
+
+    REGRESSION TEST: This chain exposes the bug where
+    _apply_expired_waiver_restores only consulted the IMMEDIATELY
+    PRECEDING persistence plan. At the A2→A3 transition, the old code
+    consulted A2's plan (which has no restore_state for leverage), and
+    the A1 July restore was silently lost. The chain-wide pending queue
+    fixes this: the A1 restore stays in the queue across A2 and fires
+    at A3.
+    """
+    original = {
+        "financial_covenant.total_leverage_ratio": CommitmentState(
+            canonical_key="financial_covenant.total_leverage_ratio",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="total_leverage_ratio",
+            operator="<=",
+            threshold=5.0,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+        "financial_covenant.interest_coverage": CommitmentState(
+            canonical_key="financial_covenant.interest_coverage",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="interest_coverage",
+            operator=">=",
+            threshold=2.0,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+    }
+
+    amendments = [
+        AmendmentStep(
+            amendment_number=1,
+            effective_at=_dt("2026-01-01T00:00:00Z"),
+            description="Waive leverage covenant for Q1-Q2 2026 (Jan→Jul)",
+            instructions=[
+                AmendmentInstruction(
+                    order=1,
+                    instruction_type=InstructionType.WAIVE_TEMPORARILY,
+                    target_key="financial_covenant.total_leverage_ratio",
+                    effective_start=_dt("2026-01-01T00:00:00Z"),
+                    effective_end=_dt("2026-07-01T00:00:00Z"),
+                ),
+            ],
+        ),
+        AmendmentStep(
+            amendment_number=2,
+            effective_at=_dt("2026-03-01T00:00:00Z"),
+            description="Tighten interest_coverage 2.0 → 2.5 (unrelated to waived leverage)",
+            instructions=[
+                AmendmentInstruction(
+                    order=1,
+                    instruction_type=InstructionType.REPLACE_VALUE,
+                    target_key="financial_covenant.interest_coverage",
+                    field="threshold",
+                    old_value=2.0,
+                    new_value=2.5,
+                ),
+            ],
+        ),
+        AmendmentStep(
+            amendment_number=3,
+            effective_at=_dt("2026-08-01T00:00:00Z"),
+            description="Tighten leverage 5.0 → 4.5 (post-waiver, after intervening A2)",
+            instructions=[
+                AmendmentInstruction(
+                    order=1,
+                    instruction_type=InstructionType.REPLACE_VALUE,
+                    target_key="financial_covenant.total_leverage_ratio",
+                    field="threshold",
+                    old_value=5.0,
+                    new_value=4.5,
+                ),
+            ],
+        ),
+    ]
+
+    ground_truth = {
+        "financial_covenant.total_leverage_ratio": CommitmentState(
+            canonical_key="financial_covenant.total_leverage_ratio",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="total_leverage_ratio",
+            operator="<=",
+            threshold=4.5,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+        "financial_covenant.interest_coverage": CommitmentState(
+            canonical_key="financial_covenant.interest_coverage",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="interest_coverage",
+            operator=">=",
+            threshold=2.5,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+    }
+
+    return IssuerChain(
+        chain_id="CHAIN-DELTA",
+        issuer_name="Delta Systems, Inc. (DELTA) [synthetic fixture]",
+        original_state=original,
+        amendments=amendments,
+        comparison_at=_dt("2026-09-01T00:00:00Z"),
+        ground_truth_state=ground_truth,
+        ground_truth_label="Amended and Restated Credit Agreement, filed 2026-09-01 [synthetic oracle]",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Chain EPSILON — 3 amendments, inherited unresolved resolved by A3
+# Regression test for chain-aware authority resolution.
+# ---------------------------------------------------------------------------
+
+
+def chain_epsilon() -> IssuerChain:
+    """Epsilon Energy — 3 amendments where A1 has an UNRESOLVED
+    RESTATE_SECTION, A2 does NOT resolve it (different target), A3 DOES
+    resolve it (same target) → A3 becomes authoritative.
+
+    S0: original credit agreement
+        - total_leverage_ratio covenant, threshold 3.5
+        - interest_coverage covenant, threshold 2.5
+    A1 (2026-01-15): REPLACE leverage 3.5 → 4.0 (applied)
+                     + RESTATE_SECTION on interest_coverage (UNRESOLVED).
+                     → PARTIAL, not authoritative. inherited_unresolved
+                       = [RESTATE_SECTION on interest_coverage].
+    A2 (2026-03-01): REPLACE leverage 4.0 → 4.25 (clean, COMPLETE).
+                     A2 targets total_leverage_ratio, NOT interest_coverage.
+                     → A2 does NOT resolve A1's inherited unresolved.
+                     → A2 is COMPLETE but NOT authoritative.
+                       inherited_unresolved still = [RESTATE_SECTION on
+                       interest_coverage].
+    A3 (2026-05-01): REPLACE interest_coverage threshold 2.5 → 3.0
+                     (clean, COMPLETE).
+                     A3 targets interest_coverage — the SAME commitment
+                     as A1's unresolved RESTATE_SECTION. Per the
+                     conservative resolution policy, A3's applied
+                     constructive instruction on the same target_key
+                     resolves the inherited unresolved.
+                     → A3 is COMPLETE AND inherited_unresolved is now
+                       empty → A3 IS authoritative.
+    Oracle ground truth: Composite Credit Agreement (filed 2026-06-01)
+        - total_leverage_ratio: threshold 4.25
+        - interest_coverage: threshold 3.0
+    Comparison at: 2026-06-01 (composite filing date)
+
+    REGRESSION TEST: This chain proves that chain-aware authority is not
+    just "block forever" — it has a resolution mechanism. A later
+    amendment that explicitly addresses the same commitment as an
+    inherited unresolved instruction clears the inherited uncertainty
+    and allows the chain to promote to authoritative.
+    """
+    original = {
+        "financial_covenant.total_leverage_ratio": CommitmentState(
+            canonical_key="financial_covenant.total_leverage_ratio",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="total_leverage_ratio",
+            operator="<=",
+            threshold=3.5,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+        "financial_covenant.interest_coverage": CommitmentState(
+            canonical_key="financial_covenant.interest_coverage",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="interest_coverage",
+            operator=">=",
+            threshold=2.5,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+    }
+
+    amendments = [
+        AmendmentStep(
+            amendment_number=1,
+            effective_at=_dt("2026-01-15T00:00:00Z"),
+            description="Relax leverage 3.5 → 4.0 (applied) + RESTATE_SECTION interest_coverage (unresolved)",
+            instructions=[
+                AmendmentInstruction(
+                    order=1,
+                    instruction_type=InstructionType.REPLACE_VALUE,
+                    target_key="financial_covenant.total_leverage_ratio",
+                    field="threshold",
+                    old_value=3.5,
+                    new_value=4.0,
+                ),
+                AmendmentInstruction(
+                    order=2,
+                    instruction_type=InstructionType.RESTATE_SECTION,
+                    target_key="financial_covenant.interest_coverage",
+                    target_section_ref="Section 6.07",
+                ),
+            ],
+        ),
+        AmendmentStep(
+            amendment_number=2,
+            effective_at=_dt("2026-03-01T00:00:00Z"),
+            description="Relax leverage 4.0 → 4.25 (does NOT resolve A1's unresolved on interest_coverage)",
+            instructions=[
+                AmendmentInstruction(
+                    order=1,
+                    instruction_type=InstructionType.REPLACE_VALUE,
+                    target_key="financial_covenant.total_leverage_ratio",
+                    field="threshold",
+                    old_value=4.0,
+                    new_value=4.25,
+                ),
+            ],
+        ),
+        AmendmentStep(
+            amendment_number=3,
+            effective_at=_dt("2026-05-01T00:00:00Z"),
+            description="Tighten interest_coverage 2.5 → 3.0 (resolves A1's inherited unresolved)",
+            instructions=[
+                AmendmentInstruction(
+                    order=1,
+                    instruction_type=InstructionType.REPLACE_VALUE,
+                    target_key="financial_covenant.interest_coverage",
+                    field="threshold",
+                    old_value=2.5,
+                    new_value=3.0,
+                ),
+            ],
+        ),
+    ]
+
+    ground_truth = {
+        "financial_covenant.total_leverage_ratio": CommitmentState(
+            canonical_key="financial_covenant.total_leverage_ratio",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="total_leverage_ratio",
+            operator="<=",
+            threshold=4.25,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+        "financial_covenant.interest_coverage": CommitmentState(
+            canonical_key="financial_covenant.interest_coverage",
+            commitment_type="financial_covenant",
+            party=["borrower"],
+            action="maintain",
+            subject="interest_coverage",
+            operator=">=",
+            threshold=3.0,
+            unit="ratio",
+            frequency="quarterly",
+        ),
+    }
+
+    return IssuerChain(
+        chain_id="CHAIN-EPSILON",
+        issuer_name="Epsilon Energy, LLC (EPSILON) [synthetic fixture]",
+        original_state=original,
+        amendments=amendments,
+        comparison_at=_dt("2026-06-01T00:00:00Z"),
+        ground_truth_state=ground_truth,
+        ground_truth_label="Composite Credit Agreement, filed 2026-06-01 [synthetic oracle]",
     )
 
 
 def all_chains() -> list[IssuerChain]:
-    """Return all three smoke-test chains."""
-    return [chain_acme(), chain_beta(), chain_gamma()]
+    """Return all five smoke-test chains."""
+    return [chain_acme(), chain_beta(), chain_gamma(), chain_delta(), chain_epsilon()]

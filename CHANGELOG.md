@@ -3,64 +3,137 @@
 All notable changes to the Upsilon Financial Commitment Integrity system are
 documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased] — System smoke test (end-to-end chain reconstruction)
+## [Unreleased] — Synthetic system smoke test (end-to-end chain reconstruction)
 
 ### Added
 - **End-to-end amendment-chain reconstruction harness** (`chain_reconstruction.py`):
   drives the full pipeline S0 → A1 → reconstruct S1 → A2 → reconstruct S2 →
-  ... → compare reconstructed current state against filed composite /
-  amended-and-restated ground truth. Uses the real `executor.execute_amendment`
+  ... → compare reconstructed current state against oracle ground-truth state
+  at a specified comparison time. Uses the real `executor.execute_amendment`
   and `persistence.build_persistence_plan` — no mocks.
-- **Synthetic issuer-chain fixtures** (`synthetic_chains.py`): 3 chains
-  modeling real amendment-chain structure:
-  - CHAIN-ACME: 3 clean sequential amendments, A&R ground truth.
+- **Synthetic oracle issuer-chain fixtures** (`synthetic_chains.py`): 5 chains
+  modeling real amendment-chain structure. These are SYNTHETIC ORACLE fixtures
+  — the ground-truth states are hand-constructed in the same fixture module,
+  not independent documents. Real multi-amendment chain acquisition from EDGAR
+  is the next phase (25-issuer chain study).
+  - CHAIN-ACME: 3 clean sequential amendments, A&R oracle.
   - CHAIN-BETA: 2 amendments, A1 has an intentional UNRESOLVED
-    (RESTATE_SECTION) → PARTIAL → not authoritative; A2 clean → authoritative.
+    (RESTATE_SECTION) → PARTIAL → not authoritative. A2 is clean but targets
+    a DIFFERENT commitment, so it does NOT resolve A1's inherited unresolved
+    → A2 is also NOT authoritative (chain-aware authority).
   - CHAIN-GAMMA: 2 amendments with a temporary waiver + reinstatement,
     then a threshold change. Exercises the waiver/restore persistence path.
-  Real multi-amendment chain acquisition from EDGAR is the next phase
-  (25-issuer chain study); these fixtures validate the system plumbing
-  before that acquisition work.
+  - CHAIN-DELTA: 3 amendments where A1 waives a covenant Jan→Jul, A2 is an
+    UNRELATED amendment in March, A3 is in August. Regression test for the
+    chain-wide pending-restoration queue: the A1 July restore must NOT be
+    lost just because A2 (the immediately preceding amendment) didn't touch
+    the waived covenant.
+  - CHAIN-EPSILON: 3 amendments where A1 has an UNRESOLVED RESTATE_SECTION,
+    A2 targets a different commitment (does NOT resolve → A2 NOT
+    authoritative), A3 explicitly addresses the same commitment (resolves
+    A1's inherited unresolved → A3 IS authoritative). Regression test for
+    chain-aware authority resolution.
 - **Ground-truth comparison engine** (`compare_to_ground_truth`): field-by-field
-  comparison of reconstructed vs ground-truth state across 14 semantic fields
-  (status, threshold, party, frequency, exceptions, operator, etc.).
+  comparison of reconstructed vs oracle ground-truth state across 14 semantic
+  fields (status, threshold, party, frequency, exceptions, operator, etc.).
   Commitments DELETED in reconstructed and absent from ground truth are not
   counted as errors. Temporal/infrastructure fields (valid_from, valid_to,
   applicability) are excluded — the ground truth carries semantic state, not
   Upsilon's temporal model.
-- **"Kernel at time T" waiver restore** (`_apply_expired_waiver_restores`):
-  when carrying state forward between amendments, expired waivers are
-  restored to their post-amendment terms per the temporal authority rule in
-  COMMITMENT_LINEAGE_SCHEMA.md. This is the reconstruction layer's
-  responsibility — the executor and persistence plan are correct as-is.
-- **System smoke test runner** (`run_smoke_test.py`): CLI that runs all 3
-  chains and produces a markdown report answering the four smoke-test
-  questions. Output: `results/system_smoke_test.md` (gitignored).
-- **23 new tests** (`test_chain_reconstruction.py`): per-chain reconstruction
-  tests, per-question tests for Q1–Q4, comparison engine unit tests, and an
-  aggregate gate test (`test_all_four_questions_pass_all_three_chains`).
+- **Chain-aware authority model**: a step is authoritative iff (a) its own
+  execution status is COMPLETE AND (b) no inherited unresolved uncertainty
+  from ancestor amendments remains. A later clean amendment does NOT
+  automatically erase uncertainty inherited from an earlier PARTIAL/
+  UNRESOLVED amendment. The inherited unresolved must be explicitly
+  addressed by a later amendment's applied instructions targeting the same
+  commitment (`_is_resolved_by` conservative resolution matcher).
+- **Chain-wide pending-restoration queue** (`PendingRestore`,
+  `_apply_due_restores`): replaces the per-step `_apply_expired_waiver_restores`
+  that only consulted the immediately preceding persistence plan. The
+  reconstruction maintains a chain-wide queue of pending waiver restore
+  events. At each amendment transition, restores whose valid_from <= the
+  next amendment's effective_at are applied. This correctly handles waivers
+  that expire between two unrelated intervening amendments.
+- **Explicit comparison time** (`IssuerChain.comparison_at`): the
+  ground-truth comparison uses an explicit timestamp (typically the
+  composite/A&R filing date) instead of `datetime.max`. Pending waiver
+  restores due by this time are applied before comparison. This replaces
+  the earlier `datetime.max` approach, which incorrectly forced every
+  waiver to be considered expired regardless of the actual comparison time.
+- **Lineage graph verification** (`LineageGraph`, `VersionNode`): Q2 now
+  builds a full parent/child version graph across all steps and verifies:
+  every non-origin version has a parent, every version is reachable from
+  an origin node, no orphan versions, waiver→reinstatement edges are
+  connected (restore's parent is a WAIVES state node), every version's
+  authority_amendment_number matches the step that created it, and the
+  current version of each target is reachable from its origin. This
+  replaces the earlier Q2 which only checked mutation existence + valid_from
+  anchors.
+- **Synthetic system smoke test runner** (`run_smoke_test.py`): CLI that
+  runs all 5 chains and produces a markdown report answering the four
+  smoke-test questions. Output: `results/system_smoke_test.md` (gitignored).
+- **40 tests** (`test_chain_reconstruction.py`): per-chain reconstruction
+  tests (5 chains), per-question tests for Q1–Q4, comparison engine unit
+  tests, chain-aware authority unit tests (`_is_resolved_by`),
+  pending-restoration queue unit tests (`_apply_due_restores`), lineage
+  graph unit tests (reachability, orphan detection, cycle detection), and
+  an aggregate gate test (`test_all_four_questions_pass_all_five_chains`).
 
-### System smoke test results (3 synthetic chains)
+### Architectural fixes (from review of initial smoke test)
+
+The initial smoke test (commit 510b554) had four architectural defects
+identified during review. All four are fixed in this release:
+
+1. **P0 — Authority contamination across amendments**: the initial version
+   marked each step authoritative solely from that step's execution status.
+   A clean A2 could automatically erase uncertainty inherited from an
+   unresolved A1. Fixed with the chain-aware authority model: inherited
+   unresolved blocks promotion until explicitly resolved by a later
+   amendment targeting the same commitment.
+
+2. **P0 — Waiver restoration lost across intervening amendments**: the
+   initial `_apply_expired_waiver_restores` only consulted the immediately
+   preceding persistence plan. A waiver restore scheduled in A1's plan
+   could be lost if A2 (an unrelated intervening amendment) didn't touch
+   the waived commitment. Fixed with the chain-wide pending-restoration
+   queue: restores from ALL prior steps stay in the queue until their
+   valid_from <= a future transition's effective_at.
+
+3. **P1 — `datetime.max` as comparison time**: the initial version used
+   `datetime.max` to force every waiver in the final amendment to be
+   considered expired for ground-truth comparison. This is wrong — the
+   comparison should be at the ground-truth filing date, not the end of
+   all conceivable time. Fixed with explicit `IssuerChain.comparison_at`.
+
+4. **P1 — Q2 did not test complete lineage**: the initial Q2 only checked
+   mutation existence + valid_from anchors, not the actual parent/child
+   lineage graph. Fixed with `LineageGraph` verification: orphan
+   detection, reachability-from-origin, waiver→reinstatement edge
+   connectivity, authority-version linkage.
+
+### Synthetic system smoke test results (5 synthetic oracle chains)
 
 The smoke test answers four questions:
 
-| Question | ACME | BETA | GAMMA |
-|---|:---:|:---:|:---:|
-| Q1: Preserve authoritative state across amendments | PASS | PASS | PASS |
-| Q2: Maintain complete lineage from origin to current | PASS | PASS | PASS |
-| Q3: Unresolved blocks authoritative promotion | PASS | PASS | PASS |
-| Q4: Reconstructed state matches ground truth | PASS | PASS | PASS |
+| Question | ACME | BETA | GAMMA | DELTA | EPSILON |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Q1: Preserve authoritative state across amendments | PASS | PASS | PASS | PASS | PASS |
+| Q2: Maintain complete lineage from origin to current | PASS | PASS | PASS | PASS | PASS |
+| Q3: Unresolved blocks authoritative promotion (chain-aware) | PASS | PASS | PASS | PASS | PASS |
+| Q4: Reconstructed state matches oracle ground truth | PASS | PASS | PASS | PASS | PASS |
 
-Finding: the smoke test surfaced a real architectural issue on the first run
-— the reconstruction harness was carrying forward the in-amendment state
-(WAIVED) rather than the effective state at the time of the next amendment.
-Fixed by implementing the "kernel at time T" waiver restore in the
-reconstruction layer. The executor and persistence plan were correct as-is.
+Key behavioral changes from the initial smoke test:
+- BETA's A2 is now correctly NOT authoritative (inherited unresolved from
+  A1 is not resolved by A2 targeting a different commitment).
+- EPSILON's A3 IS authoritative (it resolves A1's inherited unresolved by
+  targeting the same commitment).
+- DELTA proves that waiver restores survive intervening unrelated amendments.
 
 ### Next phase
-25-issuer chain study with real EDGAR multi-amendment chains. The system
+25-issuer chain study with real EDGAR multi-amendment chains. The synthetic
 smoke test validates the plumbing; the chain study validates accuracy on
-real documents.
+real documents. The real EDGAR system smoke test (with independent ground
+truth from filed composite/A&R documents) is part of that phase.
 
 ## [0.4.1] — 2026-08-30
 

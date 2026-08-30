@@ -26,9 +26,9 @@ from synthetic_chains import all_chains
 def render_report(results: list[ChainReconstructionResult]) -> str:
     """Render the smoke-test results as a markdown report."""
     lines: list[str] = []
-    lines.append("# Upsilon System Smoke Test — End-to-End Chain Reconstruction")
+    lines.append("# Upsilon Synthetic System Smoke Test — End-to-End Chain Reconstruction")
     lines.append("")
-    lines.append("This is the first true system smoke test for the Financial")
+    lines.append("This is the synthetic system smoke test for the Financial")
     lines.append("Commitment Integrity tester. It exercises the full pipeline:")
     lines.append("")
     lines.append("```text")
@@ -41,15 +41,23 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
     lines.append("...")
     lines.append("↓")
     lines.append("compare reconstructed current state")
-    lines.append("against filed composite / amended-and-restated ground truth")
+    lines.append("against oracle ground-truth state at a specified comparison time")
     lines.append("```")
     lines.append("")
-    lines.append("**Chains:** 3 synthetic fixtures modeling real amendment-chain")
-    lines.append("structure. Real multi-amendment chain acquisition from EDGAR is")
-    lines.append("the next phase (25-issuer chain study).")
+    lines.append("**Chains:** 5 synthetic oracle fixtures modeling real amendment-chain")
+    lines.append("structure. The ground-truth states are hand-constructed in the same")
+    lines.append("fixture module — these are oracle tests, not independent ground truth.")
+    lines.append("Real multi-amendment chain acquisition from EDGAR is the next phase")
+    lines.append("(25-issuer chain study).")
     lines.append("")
     lines.append("**System under test:** the real `executor.execute_amendment` and")
     lines.append("`persistence.build_persistence_plan` — no mocks.")
+    lines.append("")
+    lines.append("**Authority model:** chain-aware. A step is authoritative iff its")
+    lines.append("own execution is COMPLETE AND no inherited unresolved uncertainty")
+    lines.append("from ancestor amendments remains. A later clean amendment does NOT")
+    lines.append("automatically erase inherited uncertainty — it must be explicitly")
+    lines.append("resolved by targeting the same commitment.")
     lines.append("")
 
     # Summary table
@@ -88,15 +96,16 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
         # Step-by-step
         lines.append("### Reconstruction steps")
         lines.append("")
-        lines.append("| Step | Effective | Status | Applied | Unresolved | Authoritative |")
-        lines.append("|---:|---|---|---:|---:|:---:|")
+        lines.append("| Step | Effective | Status | Applied | Own Unres. | Inherited Unres. | Authoritative |")
+        lines.append("|---:|---|---|---:|---:|---:|:---:|")
         for s in r.steps:
             auth = "yes" if s.is_authoritative else "**no**"
             lines.append(
                 f"| A{s.amendment_number} | {s.effective_at.date().isoformat()} | "
                 f"{s.execution_result.status.value} | "
                 f"{len(s.execution_result.applied)} | "
-                f"{len(s.execution_result.unresolved)} | {auth} |"
+                f"{len(s.execution_result.unresolved)} | "
+                f"{len(s.inherited_unresolved)} | {auth} |"
             )
         lines.append("")
 
@@ -123,13 +132,18 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
                 )
             elif qk == "Q2_lineage_completeness":
                 lines.append(
-                    f"- mutations per step: {ev['step_mutation_counts']}, "
+                    f"- {ev['total_versions']} versions across {ev['total_targets']} targets, "
+                    f"mutations per step: {ev['step_mutation_counts']}, "
                     f"lineage gaps: {ev['lineage_gaps']}"
                 )
             elif qk == "Q3_unresolved_blocks_promotion":
-                if ev["steps_with_unresolved"]:
+                if ev["steps_with_own_unresolved"]:
                     lines.append(
-                        f"- steps with unresolved: {ev['steps_with_unresolved']}"
+                        f"- steps with own unresolved: {ev['steps_with_own_unresolved']}"
+                    )
+                if ev["steps_with_inherited_unresolved"]:
+                    lines.append(
+                        f"- steps with inherited unresolved: {ev['steps_with_inherited_unresolved']}"
                     )
                 lines.append(
                     f"- promotion blocked correctly: {ev['promotion_blocked_correctly']}"
@@ -175,13 +189,17 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
     lines.append("## Verdict")
     lines.append("")
     if all_pass:
-        lines.append("**ALL FOUR QUESTIONS PASS on all 3 chains.**")
+        lines.append(f"**ALL FOUR QUESTIONS PASS on all {len(results)} chains.**")
         lines.append("")
-        lines.append("The system smoke test succeeds. Upsilon can:")
+        lines.append("The synthetic system smoke test succeeds. Upsilon can:")
         lines.append("- preserve authoritative state across multiple amendments (Q1)")
         lines.append("- maintain complete lineage from origin to current state (Q2)")
-        lines.append("- block authoritative promotion when instructions are unresolved (Q3)")
-        lines.append("- reconstruct state that exactly matches an independent ground truth (Q4)")
+        lines.append("- block authoritative promotion when instructions are unresolved,")
+        lines.append("  including inherited unresolved from ancestor amendments (Q3)")
+        lines.append("- reconstruct state that exactly matches the oracle ground truth (Q4)")
+        lines.append("")
+        lines.append("Authority model: chain-aware. A step is authoritative iff its own")
+        lines.append("execution is COMPLETE AND no inherited unresolved uncertainty remains.")
         lines.append("")
         lines.append("Next phase: 25-issuer chain study with real EDGAR multi-amendment chains.")
     else:
