@@ -30,8 +30,8 @@ IMPORTANT — what this test does and does NOT prove:
 
   Release acceptance for the 25-issuer study will require:
     - Correct pattern classification (implemented, tested).
-    - Automatic authoritative-document selection (implemented for
-      full restatement and conformed copy via composite extraction).
+    - Automatic authoritative-document selection (NOT YET — currently
+      manual fixture construction; no automated extraction code).
     - Final commitment state generated without hand mapping (NOT YET
       — semantic-mapping layer is scaffolded but not implemented).
     - Every field linked to document, section and amendment (implemented
@@ -107,16 +107,16 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
     all_q3 = all(r.questions["Q3_unresolved_blocks_promotion"]["pass"] for r in results)
 
     lines.append(f"| EDGAR acquisition and document-chain assembly | PASS |")
-    lines.append(f"| Authoritative final-state discovery | PASS |")
+    lines.append(f"| Authoritative final-state discovery | PASS (manual fixture construction) |")
     lines.append(f"| Pattern classification (incremental / full restatement / conformed copy) | PASS |")
     lines.append(f"| Incremental-amendment parsing (parse_v04) | PASS ({parser_supported}/{total_amendments} amendments) |")
     lines.append(f"| Full-restatement parsing | **FAIL / unsupported** (0 instructions) |")
     lines.append(f"| Conformed-copy parsing | **FAIL / unsupported** (0 instructions) |")
-    lines.append(f"| Automated commitment-field mapping (semantic mapper) | **Not implemented** |")
-    lines.append(f"| Composite-extraction fallback (Annex A as authoritative base) | PASS |")
+    lines.append(f"| Automated commitment-field mapping (semantic mapper) | **Not implemented** (scaffold only) |")
+    lines.append(f"| Composite-extraction fallback (Annex A as authoritative base) | **Scaffolded / manual** (no automated extraction code; ground truth hand-extracted from Annex A) |")
     lines.append(f"| Reconstruction pipeline (executor + persistence + lineage) | {'PASS' if all_q1 and all_q2 else 'FAIL'} |")
     lines.append(f"| Independent ground-truth comparison | {'PASS' if all_q4 else 'FAIL'} |")
-    lines.append(f"| Provenance tracking (PARSER / MANUAL_FALLBACK / COMPOSITE_EXTRACTION) | PASS |")
+    lines.append(f"| Provenance tracking (MANUAL_FALLBACK exercised; PARSER / SEMANTIC_MAPPER / COMPOSITE_EXTRACTION defined but not yet exercised) | PASS |")
     lines.append("")
 
     # Parser coverage detail
@@ -339,18 +339,22 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
     lines.append("2. Continue instruction extraction for incremental amendments.")
     lines.append("   **Working** (parse_v04).")
     lines.append("3. For full restatements, treat the latest Annex A composite as the")
-    lines.append("   new authoritative base.  **Implemented** (composite extraction).")
+    lines.append("   new authoritative base.  **Scaffolded** (strategy defined in")
+    lines.append("   pattern_classifier; no automated extraction code; ground truth")
+    lines.append("   hand-extracted from Annex A).")
     lines.append("4. For conformed copies, parse the final clean state from Annex A.")
     lines.append("   **Scaffolded** (pattern classified; clean-state extraction not yet).")
     lines.append("5. Add a semantic-mapping layer that converts sections into commitment")
-    lines.append("   fields with citations, confidence and provenance.  **Not implemented**.")
+    lines.append("   fields with citations, confidence and provenance.  **Not implemented**")
+    lines.append("   (interface scaffolded in semantic_mapper.py; no rules validated")
+    lines.append("   against real parser output).")
     lines.append("6. Reserve manual review for ambiguous mappings, not routine field")
     lines.append("   population.  **Not yet** (all mappings are currently manual).")
     lines.append("")
     lines.append("**Release acceptance criteria (for 25-issuer study):**")
     lines.append("")
     lines.append("- [x] Correct pattern classification")
-    lines.append("- [x] Automatic authoritative-document selection")
+    lines.append("- [ ] Automatic authoritative-document selection (currently manual fixture construction)")
     lines.append("- [ ] Final commitment state generated without hand mapping")
     lines.append("- [x] Every field linked to document, section and amendment")
     lines.append("- [x] Explicit unsupported/ambiguous status instead of misleading")

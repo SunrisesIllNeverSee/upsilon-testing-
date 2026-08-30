@@ -87,6 +87,47 @@ def test_edgar_instructions_have_citations():
                         f"{chain.chain_id} A{step.amendment_number} ins {ins.order} missing citation_section"
 
 
+def test_edgar_instructions_all_manual_fallback():
+    """All EDGAR commitment-level instructions are currently MANUAL_FALLBACK.
+
+    This locks in the honest claim that no automated mapping (PARSER,
+    SEMANTIC_MAPPER, or COMPOSITE_EXTRACTION) is exercised yet.  When the
+    semantic mapper or composite extractor is implemented and wired in,
+    this test will be updated to reflect the new provenance distribution.
+    """
+    for chain in all_edgar_chains():
+        for step in chain.amendments:
+            for ins in step.instructions:
+                assert ins.provenance == InstructionProvenance.MANUAL_FALLBACK, \
+                    f"{chain.chain_id} A{step.amendment_number} ins {ins.order}: " \
+                    f"expected MANUAL_FALLBACK, got {ins.provenance}. " \
+                    f"No automated provenance (PARSER/SEMANTIC_MAPPER/COMPOSITE_EXTRACTION) " \
+                    f"should be claimed until the corresponding layer is implemented."
+
+
+def test_edgar_ground_truth_labels_do_not_claim_composite_extraction_provenance():
+    """Ground-truth labels must not claim COMPOSITE_EXTRACTION provenance for instructions.
+
+    The COMPOSITE_EXTRACTION provenance enum value is defined for future use
+    but no instruction carries it.  Ground-truth labels should describe the
+    extraction method honestly (manually extracted) without implying that an
+    automated composite-extraction process produced the state.
+    """
+    for chain in all_edgar_chains():
+        if chain.ground_truth_label is None:
+            continue
+        # The label may mention COMPOSITE_EXTRACTION in the context of
+        # explaining that it is NOT used, but must not claim it as the
+        # provenance of the ground-truth state.
+        label = chain.ground_truth_label
+        if "COMPOSITE_EXTRACTION" in label:
+            # Must be in a "not carried" or "no automated" context, not a
+            # "PROVENANCE: COMPOSITE_EXTRACTION" claim.
+            assert "no instruction carries" in label.lower() or "not" in label.lower(), \
+                f"{chain.chain_id}: ground_truth_label mentions COMPOSITE_EXTRACTION " \
+                f"but does not clarify it is not yet exercised"
+
+
 def test_edgar_chains_have_ground_truth():
     """Each EDGAR chain has independently extracted ground truth."""
     for chain in all_edgar_chains():

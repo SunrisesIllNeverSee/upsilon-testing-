@@ -579,12 +579,14 @@ def chain_amedisys() -> IssuerChain:
         comparison_at=_dt("2021-07-30T00:00:00"),
         ground_truth_state=ground_truth,
         ground_truth_label=(
-            "Extracted from A2 Annex A composite (Second Amendment, "
+            "Manually extracted from A2 Annex A composite (Second Amendment, "
             "July 30, 2021).  The Annex A is an independently filed full "
             "restated credit agreement representing the authoritative "
             "state after A1+A2.  Covenants persist through restatement.  "
-            "PROVENANCE: COMPOSITE_EXTRACTION — state derived from Annex A, "
-            "not from replaying amendment instructions (parser found 0)."
+            "NOTE: ground truth was hand-extracted from the Annex A composite; "
+            "no automated composite-extraction code exists yet (parser found 0 "
+            "instructions, and no instruction carries COMPOSITE_EXTRACTION "
+            "provenance)."
         ),
         is_synthetic=False,
     )
@@ -882,12 +884,14 @@ def chain_bausch_lomb() -> IssuerChain:
         comparison_at=_dt("2026-01-02T00:00:00"),
         ground_truth_state=ground_truth,
         ground_truth_label=(
-            "Extracted from A4 Annex A conformed copy (Fourth Amendment, "
-            "January 2, 2026).  The conformed copy is an independently "
-            "filed full conformed credit agreement with strikethrough and "
-            "double-underline markup showing all changes from S0 through A4.  "
-            "PROVENANCE: COMPOSITE_EXTRACTION — state derived from Annex A, "
-            "not from replaying amendment instructions (parser found 0)."
+            "Manually extracted from A4 Annex A conformed copy (Fourth "
+            "Amendment, January 2, 2026).  The conformed copy is an "
+            "independently filed full conformed credit agreement with "
+            "strikethrough and double-underline markup showing all changes "
+            "from S0 through A4.  NOTE: ground truth was hand-extracted from "
+            "the Annex A conformed copy; no automated clean-state extraction "
+            "code exists yet (parser found 0 instructions, and no instruction "
+            "carries COMPOSITE_EXTRACTION provenance)."
         ),
         is_synthetic=False,
     )

@@ -5,12 +5,20 @@ instructions (from parse_v04) into commitment-level changes
 (target_key, field, old_value, new_value) with citations,
 confidence, and provenance.
 
-STATUS: SCAFFOLD / NOT YET IMPLEMENTED.
+STATUS: INTERFACE SCAFFOLD / NOT YET IMPLEMENTED.
 
-The scaffold defines the interface and data structures so the
+This module defines the interface and data structures so the
 real EDGAR smoke test can track provenance (SEMANTIC_MAPPER vs
 MANUAL_FALLBACK) and so the 25-issuer study has a clear target
-for implementation.
+for implementation.  The map_instruction function is a stub that
+returns all instructions as ambiguous (MANUAL provenance) — it
+does not perform any mapping.  No rules are registered because
+rules validated against synthetic text would be misleading: the
+real parser output format (e.g., section_ref="Section 7.10" and
+source_text containing "to exceed 4.00 to 1.00") differs from
+what a naive rule would expect (e.g., "Section 7.10(a)" and "not
+to exceed 3.50 to 1.00").  Rules must be validated against real
+parser output before being registered.
 
 When implemented, the semantic mapper will:
 
@@ -34,6 +42,8 @@ values (e.g., "Section 7.10" → financial_covenant.leverage_ratio,
 
 Release acceptance requires that routine field population be automated
 by this layer, with manual review reserved for ambiguous mappings only.
+Until is_implemented() returns True, all commitment-level instructions
+in the EDGAR chains carry MANUAL_FALLBACK provenance.
 """
 from __future__ import annotations
 
@@ -44,13 +54,12 @@ from models import (
     AmendmentInstruction,
     DomainEffect,
     InstructionProvenance,
-    InstructionType,
 )
 
 
 @dataclass
 class MappingRule:
-    """A deterministic rule for mapping a section reference to a commitment.
+    r"""A deterministic rule for mapping a section reference to a commitment.
 
     Fields:
         section_pattern: regex pattern matching the target_section_ref
@@ -64,6 +73,10 @@ class MappingRule:
         value_converter: function to convert the regex match to the
             final value (e.g., float, int, dict)
         description: human-readable description of the rule
+
+    NOTE: no rules are registered yet.  Rules must be validated against
+    real parser output (target_section_ref format, source_text phrasing)
+    before being added to _RULES.
     """
 
     section_pattern: str
@@ -95,7 +108,7 @@ class MappingResult:
 
 
 # ---------------------------------------------------------------------------
-# Rule registry (to be populated during 25-issuer study)
+# Rule registry (empty — to be populated during 25-issuer study)
 # ---------------------------------------------------------------------------
 
 # This registry maps section references to commitment fields.
@@ -104,29 +117,15 @@ class MappingResult:
 # different section numbers for covenants, so the registry is
 # keyed by (issuer_pattern, section_pattern) or by a generic
 # section pattern that works across issuers.
-
-_RULES: list[MappingRule] = [
-    # Ameresco: Section 7.10(a) = Core Leverage Ratio
-    MappingRule(
-        section_pattern=r"Section 7\.10\(a\)",
-        target_key="financial_covenant.leverage_ratio",
-        field="applicability",
-        domain_effect=DomainEffect.COVENANT_THRESHOLD_CHANGE,
-        value_pattern=r"not to exceed ([\d.]+) to 1\.00",
-        value_converter=float,
-        description="Ameresco Section 7.10(a) Core Leverage Ratio threshold",
-    ),
-    # Ameresco: Section 7.10(b) = Debt Service Coverage Ratio
-    MappingRule(
-        section_pattern=r"Section 7\.10\(b\)",
-        target_key="financial_covenant.debt_service_coverage",
-        field="threshold",
-        domain_effect=DomainEffect.COVENANT_THRESHOLD_CHANGE,
-        value_pattern=r"not to be less than ([\d.]+) to 1\.00",
-        value_converter=float,
-        description="Ameresco Section 7.10(b) Debt Service Coverage Ratio threshold",
-    ),
-]
+#
+# IMPORTANT: rules must be validated against real parser output
+# before being registered.  The parser's target_section_ref format
+# (e.g., "Section 7.10" not "Section 7.10(a)") and source_text
+# phrasing (e.g., "to exceed 4.00 to 1.00" not "not to exceed 3.50
+# to 1.00") must match the rule's section_pattern and value_pattern
+# respectively.  Rules that work on synthetic text but not on real
+# parser output are misleading and must not be registered.
+_RULES: list[MappingRule] = []
 
 
 def map_instruction(
@@ -144,91 +143,34 @@ def map_instruction(
     Returns:
         MappingResult with mapped instructions (provenance=SEMANTIC_MAPPER)
         or ambiguous instructions (provenance=MANUAL).
+
+    NOTE: this is a stub.  No rules are registered, so every instruction
+    is returned as ambiguous (MANUAL provenance).  When rules are added
+    and validated against real parser output, this function will perform
+    actual mapping.
     """
-    import re
-
     result = MappingResult()
-    section_ref = parser_instruction.target_section_ref or ""
 
-    for rule in _RULES:
-        if re.search(rule.section_pattern, section_ref, re.IGNORECASE):
-            result.rules_matched.append(rule.description)
-
-            # Try to extract value from source_text
-            new_value = None
-            if rule.value_pattern and rule.value_converter and parser_instruction.source_text:
-                m = re.search(rule.value_pattern, parser_instruction.source_text, re.IGNORECASE)
-                if m:
-                    try:
-                        new_value = rule.value_converter(m.group(1))
-                    except (ValueError, TypeError):
-                        pass
-
-            if new_value is not None:
-                mapped = AmendmentInstruction(
-                    order=parser_instruction.order,
-                    instruction_type=parser_instruction.instruction_type,
-                    target_key=rule.target_key,
-                    target_section_ref=parser_instruction.target_section_ref,
-                    field=rule.field,
-                    old_value=parser_instruction.old_value,
-                    new_value=new_value,
-                    effective_start=parser_instruction.effective_start,
-                    effective_end=parser_instruction.effective_end,
-                    source_text=parser_instruction.source_text,
-                    confidence=0.85,
-                    domain_effect=rule.domain_effect,
-                    provenance=InstructionProvenance.SEMANTIC_MAPPER,
-                    citation_document=citation_document,
-                    citation_section=parser_instruction.target_section_ref,
-                )
-                result.instructions.append(mapped)
-            else:
-                # Value could not be extracted — flag for manual review
-                ambiguous = AmendmentInstruction(
-                    order=parser_instruction.order,
-                    instruction_type=parser_instruction.instruction_type,
-                    target_key=rule.target_key,
-                    target_section_ref=parser_instruction.target_section_ref,
-                    field=rule.field,
-                    old_value=parser_instruction.old_value,
-                    new_value=parser_instruction.new_value,
-                    effective_start=parser_instruction.effective_start,
-                    effective_end=parser_instruction.effective_end,
-                    source_text=parser_instruction.source_text,
-                    confidence=0.5,
-                    domain_effect=rule.domain_effect,
-                    provenance=InstructionProvenance.MANUAL,
-                    citation_document=citation_document,
-                    citation_section=parser_instruction.target_section_ref,
-                )
-                result.ambiguous.append(ambiguous)
-            break
-
-    if not result.rules_matched:
-        # No rule matched — flag the original as ambiguous
-        result.ambiguous.append(
-            AmendmentInstruction(
-                order=parser_instruction.order,
-                instruction_type=parser_instruction.instruction_type,
-                target_key=parser_instruction.target_key,
-                target_section_ref=parser_instruction.target_section_ref,
-                field=parser_instruction.field,
-                old_value=parser_instruction.old_value,
-                new_value=parser_instruction.new_value,
-                effective_start=parser_instruction.effective_start,
-                effective_end=parser_instruction.effective_end,
-                source_text=parser_instruction.source_text,
-                confidence=0.3,
-                domain_effect=parser_instruction.domain_effect,
-                provenance=InstructionProvenance.MANUAL,
-                citation_document=citation_document,
-                citation_section=parser_instruction.target_section_ref,
-            )
+    # No rules registered — flag the original as ambiguous for manual review.
+    result.ambiguous.append(
+        AmendmentInstruction(
+            order=parser_instruction.order,
+            instruction_type=parser_instruction.instruction_type,
+            target_key=parser_instruction.target_key,
+            target_section_ref=parser_instruction.target_section_ref,
+            field=parser_instruction.field,
+            old_value=parser_instruction.old_value,
+            new_value=parser_instruction.new_value,
+            effective_start=parser_instruction.effective_start,
+            effective_end=parser_instruction.effective_end,
+            source_text=parser_instruction.source_text,
+            confidence=0.3,
+            domain_effect=parser_instruction.domain_effect,
+            provenance=InstructionProvenance.MANUAL,
+            citation_document=citation_document,
+            citation_section=parser_instruction.target_section_ref,
         )
-
-    if result.instructions:
-        result.confidence = sum(i.confidence for i in result.instructions) / len(result.instructions)
+    )
 
     return result
 
@@ -239,7 +181,10 @@ def is_implemented() -> bool:
     Returns False until the mapper can handle routine field population
     without manual intervention.  The 25-issuer study requires this
     to return True before release acceptance.
+
+    The mapper is currently a pure interface stub:
+      - No rules are registered in _RULES.
+      - map_instruction returns all instructions as ambiguous (MANUAL).
+      - No instruction in the EDGAR chains carries SEMANTIC_MAPPER provenance.
     """
-    # The mapper is scaffolded but not yet production-ready.
-    # It has rules for Ameresco sections but not for the full corpus.
     return False
