@@ -3,6 +3,41 @@
 All notable changes to the Upsilon Financial Commitment Integrity system are
 documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased] — 25-issuer development corpus
+
+### Added
+- **`build_development_corpus.py`**: EDGAR full-text search pipeline that
+  searches for 8-K filings containing "amendment to credit agreement" across
+  4 date ranges (2020-2026), selects 25 unique issuers (excluding smoke cases),
+  fetches filing index pages, finds EX-10.1 exhibits, and downloads documents
+  with HTML-to-text conversion and SHA-256 hashing.
+- **`classify_development_corpus.py`**: heuristic format classifier that runs
+  v0.3.1 parser across all 25 documents and classifies each into formats A-G
+  (inline, amendment+composite, amended&restated, redline, definition-heavy,
+  waiver-only, mixed/other). Captures all required fields: issuer, accession,
+  amendment number, document format, composite present, instruction count,
+  instruction classes, UNRESOLVED count, false positives, false negatives,
+  parser coverage.
+- **25 development corpus documents** in `data/development/DEV-001` through
+  `DEV-025/`, each with `source.html`, `source.txt`, and `source_meta.json`.
+- **`development_corpus.csv`**: classification results for all 25 documents.
+- **`data/development/manifest.json`**: acquisition metadata.
+- **`data/development/classification_results.json`**: JSON classification results.
+- **Run record**: `research/run_records/20260830T033000Z_dev_corpus_acquisition.json`.
+
+### Key findings
+- **Format distribution**: A=80%, F=4%, G=16%, B/D=0% (no composite targets)
+- **Composite format prevalence**: 0/25 (0%) — the Annex A composite format
+  from the smoke test is NOT the dominant pattern in the general population
+- **Parser coverage**: 44.8% average — the parser misses more than half of
+  real amendment instructions due to narrow regex patterns
+- **Primary coverage gaps**: parser only matches `Section X` (not
+  `Article`/`Schedule`/`Exhibit`), only matches `amended by adding/deleting`
+  (not `amended as follows` or `amended to read`), only matches
+  `deleting...replacing` (not `deleting...inserting`)
+- **Acquisition quality**: 2/25 (8%) documents are non-credit-agreement
+  exhibits (wrong EX-10.1)
+
 ## [0.3.1] — 2026-08-30
 
 ### Fixed

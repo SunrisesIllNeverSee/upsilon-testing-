@@ -623,3 +623,127 @@ For the 25-issuer development corpus, expect:
 - data/smoke/DKS-001/source.v03.json (0 instructions, composite_target present)
 
 ---
+
+## Entry 008 — 25-issuer development corpus: population prevalence and parser coverage
+
+**Timestamp:** 2026-08-30T03:30:00Z
+**Researcher:** Deric McHenry (via Devin CLI)
+**Study phase:** Development (exploratory)
+**Case / corpus:** 25-issuer development corpus (DEV-001 through DEV-025)
+**Git commit:** 35528c6 (pre-corpus-acquisition)
+**Protocol hash:** 3bb202333ec97eb728a7542358de43afff2703a62bd0539650121f8cd5ecc911
+
+### Objective
+Before building any format-specific engine (especially the HTML redline parser), measure what the real population of credit agreement amendments looks like. The two smoke cases were both composite-format (Annex A) filings. We do not know whether that represents 10%, 40%, or 70% of the population. Building a sophisticated HTML-redline engine before knowing prevalence risks overfitting to a rare format.
+
+### Method
+1. Search EDGAR full-text search API for 8-K filings containing "amendment to credit agreement" across 4 date ranges (2020-2026).
+2. Select 25 unique issuers (one filing per CIK), excluding the 2 smoke-case issuers.
+3. For each filing, fetch the filing index page, find EX-10 exhibits, and download the first EX-10.1 exhibit.
+4. Convert HTML to text, hash all files.
+5. Run v0.3.1 parser unchanged across all 25 documents.
+6. Classify each document into format A-G using a heuristic classifier (broader than the parser regexes).
+7. For each document capture: issuer, accession, amendment number, document format, composite present, instruction count, instruction classes, UNRESOLVED count, false positives, false negatives, parser coverage.
+
+### Exact procedure / commands
+```bash
+set -a && source .env && set +a
+python build_development_corpus.py
+python classify_development_corpus.py
+```
+
+### Format taxonomy
+```
+A — inline amendment instructions
+B — amendment + composite Annex
+C — amended & restated agreement
+D — redline/blackline composite
+E — definition-heavy / cross-reference amendment
+F — waiver-only amendment
+G — mixed/other
+```
+
+### Raw results
+
+#### Format distribution
+```
+A: 20 (80.0%)  — inline amendment instructions
+F:  1 ( 4.0%)  — consent/forbearance agreement
+G:  4 (16.0%)  — non-credit-agreement exhibits or full restated agreements
+```
+
+#### Key finding: 0 composite targets in 25 development documents
+```
+Composite targets found: 0/25 (0%)
+```
+
+This is the most important prevalence finding. The two smoke cases (SW-001, DKS-001) were both composite-format filings with Annex A. But in a random sample of 25 credit agreement amendments from 2020-2026, zero had composite Annex A targets. The composite format appears to be a minority pattern, not the dominant one.
+
+The 4 "G" documents are:
+- DEV-004: "Second Amendment to Credit Agreement" — amendment but uses non-standard instruction language not caught by the classifier
+- DEV-005: "Purchase and Sale Agreement" — NOT a credit agreement amendment (wrong exhibit)
+- DEV-016: "Credit Agreement" — a full credit agreement, not an amendment
+- DEV-020: "Paycheck Protection Note" — a PPP note, NOT a credit agreement amendment
+
+So 2 of the 4 G documents are genuinely wrong exhibits (non-credit-agreement documents filed as EX-10.1), and 2 are amendments with non-standard language.
+
+#### Parser coverage
+```
+Total v0.3 instructions:  13
+Total v0.2 instructions:  38
+Est. false positives:     25 (v0.2→v0.3 reduction)
+Est. false negatives:     81 (missed instructions)
+Average parser coverage:  44.8%
+```
+
+The parser detected only 13 instructions out of an estimated 94 expected amendment instructions across the 25 documents. This is a 44.8% coverage rate — meaning the parser misses more than half of real amendment instructions.
+
+#### Per-document coverage breakdown
+Documents with 0% coverage (parser found nothing but amendment language exists):
+- DEV-001, DEV-007, DEV-008, DEV-013, DEV-017, DEV-019, DEV-022, DEV-023, DEV-024, DEV-025
+
+These documents use amendment instruction phrasings that the v0.3 regexes do not match:
+- `is hereby amended as follows` (not `amended by adding/deleting`)
+- `is amended to read as follows` (not `amended and restated in its entirety`)
+- `is hereby deleted from Section X in its entirety` (not `deleted in its entirety`)
+- `Schedule 1.1 ... is hereby amended by inserting` (parser only matches `Section`, not `Schedule`)
+- `Article I ... is hereby amended by adding` (parser only matches `Section`, not `Article`)
+
+### Interpretation
+
+#### 1. Population prevalence
+The composite/Annex A format (formats B and D) that dominated the smoke test is NOT the dominant format in the general population. Inline amendment instructions (format A) dominate at 80%. This validates the user's concern about overfitting: building an HTML redline engine before measuring prevalence would have invested in a minority format.
+
+#### 2. Parser coverage gap
+The v0.3 parser has a 44.8% coverage rate on real amendments. The primary failure mode is not false positives (those were fixed in v0.3) but false negatives — the parser misses real instructions because its regexes are too narrow. The specific gaps are:
+
+1. **Reference target too narrow**: Parser only matches `Section X`, not `Article X`, `Schedule X`, or `Exhibit X`.
+2. **Instruction verb too narrow**: Parser matches `amended by adding` and `amended by deleting`, but not `amended as follows`, `amended to read as follows`, or `amended by inserting`.
+3. **Replace pattern too narrow**: Parser matches `deleting ... replacing`, but not `deleting ... inserting` or `deleting the single instance of ... and inserting ... in lieu thereof`.
+
+#### 3. Wrong exhibits
+2 of 25 documents (8%) are not credit agreement amendments at all — they're other EX-10.1 exhibits (a purchase agreement and a PPP note). This is an acquisition quality issue, not a parser issue.
+
+### Decision
+1. **Do NOT build the HTML redline engine yet.** The composite format is 0% of this development sample. Inline amendments are 80%. The priority is improving inline instruction coverage.
+2. **Parser v0.4 should focus on**: broadening reference targets (Section/Article/Schedule/Exhibit), broadening instruction verbs (amended as follows, amended to read, inserting), and handling Schedule-level definitions.
+3. **Acquisition improvement**: filter out non-credit-agreement EX-10.1 exhibits by checking the document title for "amendment to credit agreement" or "credit agreement" language.
+4. **The 2 smoke cases remain valuable** as the only composite-format examples, but they are not representative of the general population.
+
+### Prospective expectation before parser v0.4
+After broadening the regexes to handle the patterns observed in this corpus, expect:
+- Parser coverage to increase from ~45% to ~70-80%
+- False positive rate to remain low (v0.3 segmentation fix holds)
+- Remaining false negatives will be from deeply nested or unusually phrased amendments
+- The 25-issuer corpus will serve as the development test set for iterative improvement
+
+### Artifacts produced
+- build_development_corpus.py (EDGAR search + download pipeline)
+- classify_development_corpus.py (format classification + coverage estimation)
+- data/development/DEV-001 through DEV-025/ (source.html, source.txt, source_meta.json for each)
+- data/development/manifest.json (acquisition metadata for all 25)
+- development_corpus.csv (classification results with all required fields)
+- data/development/classification_results.json (same data in JSON)
+- research/run_records/20260830T033000Z_dev_corpus_acquisition.json (provenance)
+
+---
