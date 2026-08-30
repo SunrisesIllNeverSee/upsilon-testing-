@@ -157,6 +157,8 @@ class TestNoConfidenceOnRawHits:
 
     def test_no_confidence_on_real_docs(self):
         """Check all 25 development documents for confidence field."""
+        if not (DEV_DIR / "DEV-001" / "source.txt").exists():
+            pytest.skip("Development corpus source files not available (data/ is gitignored)")
         for i in range(1, 26):
             doc_id = f"DEV-{i:03d}"
             text = (DEV_DIR / doc_id / "source.txt").read_text()
@@ -190,6 +192,8 @@ class TestAmendedAsFollowsContainer:
     def test_container_no_restate_on_real_docs(self):
         """No document in the development corpus should have RESTATE_SECTION
         emitted from an 'amended as follows' container."""
+        if not (DEV_DIR / "DEV-001" / "source.txt").exists():
+            pytest.skip("Development corpus source files not available (data/ is gitignored)")
         for i in range(1, 26):
             doc_id = f"DEV-{i:03d}"
             text = (DEV_DIR / doc_id / "source.txt").read_text()
