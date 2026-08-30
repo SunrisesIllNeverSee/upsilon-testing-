@@ -120,6 +120,49 @@ class CommitmentState(BaseModel):
     application_order: list[str] = Field(default_factory=list)
 
 
+class InstructionProvenance(str, Enum):
+    """How an instruction was derived — its origin and trust level.
+
+    PARSER
+        Automatically extracted by the deterministic parser (parse_v04).
+        The instruction came directly from regex-based section-level
+        extraction.  No human intervention.
+
+    SEMANTIC_MAPPER
+        Automatically derived by the semantic-mapping layer, which
+        converts parser-extracted section-level instructions into
+        commitment-level changes (target_key, field, old_value,
+        new_value) with citations and confidence.  No human
+        intervention beyond mapper configuration.
+
+    COMPOSITE_EXTRACTION
+        Derived from an Annex A composite or conformed copy — the
+        authoritative post-amendment state was extracted directly
+        from the composite document, not by replaying amendment
+        instructions.  This is the fallback for full restatement
+        and conformed copy patterns where the parser finds 0
+        instructions.
+
+    MANUAL
+        Hand-mapped by a human reading the amendment text.  Used
+        during development and for ambiguous mappings that the
+        semantic mapper cannot resolve automatically.  Manual
+        instructions must be reviewed before release acceptance.
+
+    MANUAL_FALLBACK
+        Hand-mapped because the parser or semantic mapper could not
+        produce an instruction automatically.  This is a known
+        limitation, not a routine path.  Must be tracked for
+        release acceptance (manual review should be reserved for
+        ambiguous mappings, not routine field population).
+    """
+    PARSER = "parser"
+    SEMANTIC_MAPPER = "semantic_mapper"
+    COMPOSITE_EXTRACTION = "composite_extraction"
+    MANUAL = "manual"
+    MANUAL_FALLBACK = "manual_fallback"
+
+
 class AmendmentInstruction(BaseModel):
     order: int
     instruction_type: InstructionType
@@ -136,6 +179,23 @@ class AmendmentInstruction(BaseModel):
     # the legal-document transformation operation). Populated by downstream
     # semantic analysis, not by the parser directly.
     domain_effect: Optional[DomainEffect] = None
+    # Provenance: how this instruction was derived.  Required for
+    # release acceptance auditing.  Defaults to MANUAL for backward
+    # compatibility with existing fixtures that do not set it.
+    provenance: InstructionProvenance = Field(
+        default=InstructionProvenance.MANUAL,
+        description="How this instruction was derived (parser, mapper, composite, manual)",
+    )
+    # Citation: document and section reference for audit trail.
+    # Populated by the semantic mapper or manual review.
+    citation_document: Optional[str] = Field(
+        default=None,
+        description="Source document (e.g., 'Amendment No. 3, Aug 24, 2023')",
+    )
+    citation_section: Optional[str] = Field(
+        default=None,
+        description="Source section reference (e.g., 'Section 7.10(a)')",
+    )
 
 
 class ExecutionStatus(str, Enum):

@@ -62,7 +62,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from models import AmendmentInstruction, CommitmentState, DomainEffect, InstructionType
+from models import AmendmentInstruction, CommitmentState, DomainEffect, InstructionProvenance, InstructionType
 from chain_reconstruction import AmendmentStep, IssuerChain
 
 
@@ -180,6 +180,9 @@ def chain_ameresco() -> IssuerChain:
                 "Also amends Maturity Date, SOFR definitions, Section 2.12, "
                 "Section 3.03.  Parser found 5 section-level instructions."
             ),
+            pattern="incremental",
+            parser_instruction_count=5,
+            source_document_path="data/edgar_chains/ameresco/A1_amend_2023_08.txt",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -216,6 +219,9 @@ def chain_ameresco() -> IssuerChain:
                         "exceed 3.50 to 1.00."
                     ),
                     domain_effect=DomainEffect.COVENANT_THRESHOLD_CHANGE,
+                    provenance=InstructionProvenance.MANUAL_FALLBACK,
+                    citation_document="Amendment No. 3, Aug 24, 2023",
+                    citation_section="Section 7.10(a)",
                 ),
             ],
         ),
@@ -228,6 +234,9 @@ def chain_ameresco() -> IssuerChain:
                 "Also amends Section 7.04(c)(xiii), Section 8.01(c). "
                 "Parser found 4 section-level instructions."
             ),
+            pattern="incremental",
+            parser_instruction_count=4,
+            source_document_path="data/edgar_chains/ameresco/A2_amend_2023_12.txt",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -260,6 +269,9 @@ def chain_ameresco() -> IssuerChain:
                         "exceed 3.50 to 1.00."
                     ),
                     domain_effect=DomainEffect.COVENANT_THRESHOLD_CHANGE,
+                    provenance=InstructionProvenance.MANUAL_FALLBACK,
+                    citation_document="Amendment No. 4, Dec 11, 2023",
+                    citation_section="Section 7.10(a)",
                 ),
             ],
         ),
@@ -273,6 +285,9 @@ def chain_ameresco() -> IssuerChain:
                 "Parser found 5 section-level instructions (DELETE, ADD, "
                 "REPLACE_TEXT, REPLACE_TEXT, DELETE)."
             ),
+            pattern="incremental",
+            parser_instruction_count=5,
+            source_document_path="data/edgar_chains/ameresco/A3_sixth_amend_2024.txt",
             instructions=[
                 # A3 does not change the financial covenants.
                 # It adds Junior Credit Agreement provisions to Sections
@@ -308,6 +323,9 @@ def chain_ameresco() -> IssuerChain:
                         "Intercreditor Agreement."
                     ),
                     domain_effect=DomainEffect.COMMITMENT_AMOUNT_CHANGE,
+                    provenance=InstructionProvenance.MANUAL_FALLBACK,
+                    citation_document="Amendment No. 6, Jun 28, 2024",
+                    citation_section="Section 7.01(a)(xi)",
                 ),
             ],
         ),
@@ -371,6 +389,7 @@ def chain_ameresco() -> IssuerChain:
             "ratio threshold from A2 (Dec 11, 2023); DSCR unchanged from S0; "
             "Junior Credit Agreement added by A3."
         ),
+        is_synthetic=False,
     )
 
 
@@ -483,6 +502,9 @@ def chain_amedisys() -> IssuerChain:
                 "restatement unchanged.  Step is COMPLETE with 0 applied "
                 "commitment-level instructions."
             ),
+            pattern="full_restatement",
+            parser_instruction_count=0,
+            source_document_path="data/edgar_chains/amedisys/A1_first_amend_2019.txt",
             instructions=[
                 # Full restatement: the entire credit agreement is replaced
                 # by Annex A.  The RESTATE_SECTION operation is a document-
@@ -490,6 +512,10 @@ def chain_amedisys() -> IssuerChain:
                 # specific commitment-level changes.  The tracked covenants
                 # persist through the restatement unchanged, so there are
                 # no commitment-level instructions to apply.
+                #
+                # Strategy: the Annex A composite in A2 is the authoritative
+                # base state.  Do NOT replay amendments; extract commitment
+                # state directly from the composite.
             ],
         ),
         AmendmentStep(
@@ -504,6 +530,9 @@ def chain_amedisys() -> IssuerChain:
                 "authoritative state after A1+A2 and serves as ground truth.  "
                 "Tracked covenants persist through restatement unchanged."
             ),
+            pattern="full_restatement",
+            parser_instruction_count=0,
+            source_document_path="data/edgar_chains/amedisys/A2_second_amend_2021.txt",
             instructions=[
                 # Same full restatement pattern as A1.  The Annex A composite
                 # is the authoritative post-amendment state.  Tracked covenants
@@ -553,8 +582,11 @@ def chain_amedisys() -> IssuerChain:
             "Extracted from A2 Annex A composite (Second Amendment, "
             "July 30, 2021).  The Annex A is an independently filed full "
             "restated credit agreement representing the authoritative "
-            "state after A1+A2.  Covenants persist through restatement."
+            "state after A1+A2.  Covenants persist through restatement.  "
+            "PROVENANCE: COMPOSITE_EXTRACTION — state derived from Annex A, "
+            "not from replaying amendment instructions (parser found 0)."
         ),
+        is_synthetic=False,
     )
 
 
@@ -661,6 +693,9 @@ def chain_bausch_lomb() -> IssuerChain:
                 "Annex A.  Adds $750M First Incremental Term Loans.  "
                 "Parser found 0 instructions (1.08M chars)."
             ),
+            pattern="conformed_copy",
+            parser_instruction_count=0,
+            source_document_path="data/edgar_chains/bausch_lomb/A1_first_incremental_2023.txt",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -687,6 +722,9 @@ def chain_bausch_lomb() -> IssuerChain:
                     ),
                     confidence=0.7,
                     domain_effect=DomainEffect.COMMITMENT_AMOUNT_CHANGE,
+                    provenance=InstructionProvenance.MANUAL_FALLBACK,
+                    citation_document="First Incremental Amendment, Sep 29, 2023",
+                    citation_section="Annex A (conformed copy)",
                 ),
             ],
         ),
@@ -698,6 +736,9 @@ def chain_bausch_lomb() -> IssuerChain:
                 "Adds $500M Second Incremental Term Loans.  "
                 "Parser found 0 instructions (1.08M chars)."
             ),
+            pattern="conformed_copy",
+            parser_instruction_count=0,
+            source_document_path="data/edgar_chains/bausch_lomb/A2_second_incremental_2024.txt",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -724,6 +765,9 @@ def chain_bausch_lomb() -> IssuerChain:
                     ),
                     confidence=0.7,
                     domain_effect=DomainEffect.COMMITMENT_AMOUNT_CHANGE,
+                    provenance=InstructionProvenance.MANUAL_FALLBACK,
+                    citation_document="Second Incremental Amendment, Nov 1, 2024",
+                    citation_section="Annex A (conformed copy)",
                 ),
             ],
         ),
@@ -735,6 +779,9 @@ def chain_bausch_lomb() -> IssuerChain:
                 "Replacement Term Loans, refinances existing term loans.  "
                 "Parser found 0 instructions (1.24M chars)."
             ),
+            pattern="conformed_copy",
+            parser_instruction_count=0,
+            source_document_path="data/edgar_chains/bausch_lomb/A3_third_amend_2025.txt",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -755,6 +802,9 @@ def chain_bausch_lomb() -> IssuerChain:
                     ),
                     confidence=0.8,
                     domain_effect=DomainEffect.COMMITMENT_AMOUNT_CHANGE,
+                    provenance=InstructionProvenance.MANUAL_FALLBACK,
+                    citation_document="Third Amendment, Jun 26, 2025",
+                    citation_section="Annex A (conformed copy)",
                 ),
             ],
         ),
@@ -768,6 +818,9 @@ def chain_bausch_lomb() -> IssuerChain:
                 "tracked in current commitment model.  "
                 "Parser found 0 instructions (1.09M chars)."
             ),
+            pattern="conformed_copy",
+            parser_instruction_count=0,
+            source_document_path="data/edgar_chains/bausch_lomb/A4_fourth_amend_2026.txt",
             instructions=[
                 # A4 changes interest rate margins, not commitment amounts.
                 # The commitment model does not track interest rates, so
@@ -832,8 +885,11 @@ def chain_bausch_lomb() -> IssuerChain:
             "Extracted from A4 Annex A conformed copy (Fourth Amendment, "
             "January 2, 2026).  The conformed copy is an independently "
             "filed full conformed credit agreement with strikethrough and "
-            "double-underline markup showing all changes from S0 through A4."
+            "double-underline markup showing all changes from S0 through A4.  "
+            "PROVENANCE: COMPOSITE_EXTRACTION — state derived from Annex A, "
+            "not from replaying amendment instructions (parser found 0)."
         ),
+        is_synthetic=False,
     )
 
 

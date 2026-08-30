@@ -88,12 +88,33 @@ from persistence import build_persistence_plan
 
 @dataclass
 class AmendmentStep:
-    """One amendment in a chain: instructions + effective time."""
+    """One amendment in a chain: instructions + effective time + pattern.
+
+    Fields:
+        amendment_number: 1-based amendment index
+        effective_at: effective date of the amendment
+        instructions: commitment-level instructions to apply
+        description: human-readable description
+        pattern: amendment structural pattern (incremental,
+            full_restatement, conformed_copy, unknown).  Determines
+            whether the parser can extract instructions automatically
+            or whether a fallback strategy is needed.  None for
+            synthetic chains (no real filing pattern).
+        parser_instruction_count: number of instructions the parser
+            (parse_v04) extracted from the source document.  0 for
+            unsupported patterns (full restatement, conformed copy).
+            None if the parser was not run.
+        source_document_path: path to the source text file (for real
+            EDGAR chains).  None for synthetic chains.
+    """
 
     amendment_number: int
     effective_at: datetime
     instructions: list[AmendmentInstruction]
     description: str = ""
+    pattern: str | None = None
+    parser_instruction_count: int | None = None
+    source_document_path: str | None = None
 
 
 @dataclass
@@ -114,6 +135,9 @@ class IssuerChain:
             should be compared to ground truth (typically the composite/
             A&R filing date). Pending waiver restores due by this time
             are applied before comparison. Required.
+        is_synthetic: True for synthetic oracle chains, False for real
+            EDGAR chains.  Used by the report renderer to distinguish
+            synthetic validation from real-data validation.
     """
 
     chain_id: str
@@ -123,6 +147,7 @@ class IssuerChain:
     comparison_at: datetime
     ground_truth_state: dict[str, CommitmentState] | None = None
     ground_truth_label: str | None = None
+    is_synthetic: bool = True
 
 
 @dataclass
@@ -145,6 +170,15 @@ class StepResult:
     # This step's own unresolved instructions (subset of inherited_unresolved
     # for the NEXT step).
     own_unresolved: list[AmendmentInstruction] = field(default_factory=list)
+    # Amendment pattern (incremental, full_restatement, conformed_copy,
+    # unknown).  None for synthetic chains.
+    pattern: str | None = None
+    # Number of instructions the parser extracted from the source doc.
+    # 0 for unsupported patterns.  None if parser was not run.
+    parser_instruction_count: int | None = None
+    # Provenance breakdown of the instructions in this step.
+    # Counts by InstructionProvenance value.
+    provenance_counts: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -558,6 +592,12 @@ def reconstruct_chain(chain: IssuerChain) -> ChainReconstructionResult:
             and not inherited_unresolved
         )
 
+        # Provenance counts for this step's instructions.
+        prov_counts: dict[str, int] = {}
+        for ins in step.instructions:
+            prov = ins.provenance.value if hasattr(ins.provenance, "value") else str(ins.provenance)
+            prov_counts[prov] = prov_counts.get(prov, 0) + 1
+
         steps.append(
             StepResult(
                 amendment_number=step.amendment_number,
@@ -568,6 +608,9 @@ def reconstruct_chain(chain: IssuerChain) -> ChainReconstructionResult:
                 is_authoritative=is_authoritative,
                 inherited_unresolved=list(inherited_unresolved),
                 own_unresolved=own_unresolved,
+                pattern=step.pattern,
+                parser_instruction_count=step.parser_instruction_count,
+                provenance_counts=prov_counts,
             )
         )
 

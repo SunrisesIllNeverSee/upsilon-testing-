@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from chain_reconstruction import reconstruct_chain
 from edgar_chains import all_edgar_chains, chain_ameresco, chain_amedisys, chain_bausch_lomb
+from models import InstructionProvenance
 
 
 def test_all_edgar_chains_returns_three():
@@ -24,6 +25,66 @@ def test_edgar_chain_ids_are_distinct():
     chains = all_edgar_chains()
     ids = [c.chain_id for c in chains]
     assert len(ids) == len(set(ids))
+
+
+def test_edgar_chains_not_synthetic():
+    """All EDGAR chains are marked is_synthetic=False."""
+    for chain in all_edgar_chains():
+        assert chain.is_synthetic is False, f"{chain.chain_id} should be is_synthetic=False"
+
+
+def test_edgar_chains_have_patterns():
+    """Each EDGAR amendment step has a pattern classification."""
+    for chain in all_edgar_chains():
+        for step in chain.amendments:
+            assert step.pattern is not None, f"{chain.chain_id} A{step.amendment_number} missing pattern"
+            assert step.pattern in ("incremental", "full_restatement", "conformed_copy"), \
+                f"{chain.chain_id} A{step.amendment_number} invalid pattern: {step.pattern}"
+
+
+def test_edgar_chains_have_parser_counts():
+    """Each EDGAR amendment step has a parser_instruction_count."""
+    for chain in all_edgar_chains():
+        for step in chain.amendments:
+            assert step.parser_instruction_count is not None, \
+                f"{chain.chain_id} A{step.amendment_number} missing parser_instruction_count"
+            assert step.parser_instruction_count >= 0
+
+
+def test_edgar_chains_have_source_paths():
+    """Each EDGAR amendment step has a source_document_path."""
+    for chain in all_edgar_chains():
+        for step in chain.amendments:
+            assert step.source_document_path is not None, \
+                f"{chain.chain_id} A{step.amendment_number} missing source_document_path"
+
+
+def test_edgar_instructions_have_provenance():
+    """All EDGAR instructions have explicit provenance (not default)."""
+    for chain in all_edgar_chains():
+        for step in chain.amendments:
+            for ins in step.instructions:
+                assert ins.provenance is not None, \
+                    f"{chain.chain_id} A{step.amendment_number} ins {ins.order} missing provenance"
+                assert ins.provenance in (
+                    InstructionProvenance.PARSER,
+                    InstructionProvenance.SEMANTIC_MAPPER,
+                    InstructionProvenance.COMPOSITE_EXTRACTION,
+                    InstructionProvenance.MANUAL,
+                    InstructionProvenance.MANUAL_FALLBACK,
+                )
+
+
+def test_edgar_instructions_have_citations():
+    """All EDGAR instructions with MANUAL_FALLBACK provenance have citations."""
+    for chain in all_edgar_chains():
+        for step in chain.amendments:
+            for ins in step.instructions:
+                if ins.provenance == InstructionProvenance.MANUAL_FALLBACK:
+                    assert ins.citation_document is not None, \
+                        f"{chain.chain_id} A{step.amendment_number} ins {ins.order} missing citation_document"
+                    assert ins.citation_section is not None, \
+                        f"{chain.chain_id} A{step.amendment_number} ins {ins.order} missing citation_section"
 
 
 def test_edgar_chains_have_ground_truth():
@@ -48,11 +109,17 @@ def test_ameresco_chain_structure():
     assert len(chain.amendments) == 3
     assert len(chain.original_state) == 2  # leverage_ratio + debt_service_coverage
 
+    # All amendments are incremental pattern
+    for step in chain.amendments:
+        assert step.pattern == "incremental"
+        assert step.parser_instruction_count > 0  # parser found instructions
+
     # A1 and A2 change the leverage ratio applicability (step-down schedule)
     a1_instructions = chain.amendments[0].instructions
     assert len(a1_instructions) == 1
     assert a1_instructions[0].target_key == "financial_covenant.leverage_ratio"
     assert a1_instructions[0].field == "applicability"
+    assert a1_instructions[0].provenance == InstructionProvenance.MANUAL_FALLBACK
 
     a2_instructions = chain.amendments[1].instructions
     assert len(a2_instructions) == 1
@@ -72,6 +139,11 @@ def test_amedisys_chain_structure():
     assert len(chain.amendments) == 2
     assert len(chain.original_state) == 2  # leverage_ratio + fixed_charge_coverage
 
+    # Both amendments are full restatement pattern
+    for i, step in enumerate(chain.amendments, 1):
+        assert step.pattern == "full_restatement", f"A{i} should be full_restatement"
+        assert step.parser_instruction_count == 0, f"A{i} parser should find 0"
+
     # Full restatement amendments have no commitment-level instructions
     # (covenants persist through restatement)
     for i, step in enumerate(chain.amendments, 1):
@@ -85,10 +157,16 @@ def test_bausch_lomb_chain_structure():
     assert len(chain.amendments) == 4
     assert len(chain.original_state) == 2  # leverage_ratio + term_loan_b
 
+    # All amendments are conformed copy pattern
+    for i, step in enumerate(chain.amendments, 1):
+        assert step.pattern == "conformed_copy", f"A{i} should be conformed_copy"
+        assert step.parser_instruction_count == 0, f"A{i} parser should find 0"
+
     # A1 and A2 add new term loan facilities
     a1 = chain.amendments[0].instructions
     assert len(a1) == 1
     assert a1[0].target_key == "facility.first_incremental_term_loan"
+    assert a1[0].provenance == InstructionProvenance.MANUAL_FALLBACK
 
     a2 = chain.amendments[1].instructions
     assert len(a2) == 1
@@ -114,6 +192,15 @@ def test_ameresco_reconstruction_passes():
         "Q3_unresolved_blocks_promotion",
         "Q4_ground_truth_match",
     )), f"Ameresco failed: {[(k, r['summary']) for k, r in result.questions.items() if not r['pass']]}"
+
+def test_step_results_carry_pattern_metadata():
+    """Reconstruction step results carry pattern and provenance metadata."""
+    result = reconstruct_chain(chain_ameresco())
+    for step in result.steps:
+        assert step.pattern == "incremental"
+        assert step.parser_instruction_count is not None
+        assert step.parser_instruction_count > 0
+        assert "manual_fallback" in step.provenance_counts
 
 
 def test_amedisys_reconstruction_passes():

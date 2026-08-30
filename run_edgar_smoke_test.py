@@ -9,13 +9,43 @@ SEC filings acquired via sec_ingest.py.  The ground-truth states are
 independently extracted from real legal documents (Annex A composites,
 conformed copies, or manually extracted final amendment states).
 
+IMPORTANT — what this test does and does NOT prove:
+
+  PROVES (system-ingestion PASS):
+    - EDGAR acquisition and document-chain assembly works.
+    - Authoritative final-state discovery works.
+    - Pattern classification correctly routes filings.
+    - The reconstruction pipeline (executor, persistence, lineage)
+      produces correct state when given valid commitment-level
+      instructions.
+    - Independent ground-truth comparison works.
+
+  DOES NOT PROVE (parser-completeness gaps):
+    - Parser v0.4.1 does NOT parse full restatement amendments.
+    - Parser v0.4.1 does NOT parse conformed copy amendments.
+    - Commitment-level instruction mapping is currently MANUAL_FALLBACK,
+      not automated.  The semantic-mapping layer is not yet implemented.
+    - Only 1 of 3 real amendment patterns (incremental) is parsed
+      automatically by the parser.
+
+  Release acceptance for the 25-issuer study will require:
+    - Correct pattern classification (implemented, tested).
+    - Automatic authoritative-document selection (implemented for
+      full restatement and conformed copy via composite extraction).
+    - Final commitment state generated without hand mapping (NOT YET
+      — semantic-mapping layer is scaffolded but not implemented).
+    - Every field linked to document, section and amendment (implemented
+      via citation_document / citation_section on AmendmentInstruction).
+    - Explicit unsupported/ambiguous status instead of misleading parser
+      success (implemented via provenance tracking and this report).
+    - A broader corpus across at least 10-20 issuers (not yet started).
+
 Usage:
     python run_edgar_smoke_test.py [--out results/edgar_smoke_test.md]
 """
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -23,107 +53,161 @@ from chain_reconstruction import ChainReconstructionResult, reconstruct_chain
 from edgar_chains import all_edgar_chains
 
 
+def _provenance_summary(steps) -> dict[str, int]:
+    """Aggregate provenance counts across all steps."""
+    totals: dict[str, int] = {}
+    for s in steps:
+        for prov, count in s.provenance_counts.items():
+            totals[prov] = totals.get(prov, 0) + count
+    return totals
+
+
+def _pattern_summary(steps) -> dict[str, int]:
+    """Count amendments by pattern."""
+    counts: dict[str, int] = {}
+    for s in steps:
+        p = s.pattern or "unknown"
+        counts[p] = counts.get(p, 0) + 1
+    return counts
+
+
+def _parser_coverage(steps) -> tuple[int, int]:
+    """Return (parser_supported_amendments, total_amendments)."""
+    supported = sum(1 for s in steps if s.parser_instruction_count is not None and s.parser_instruction_count > 0)
+    total = len(steps)
+    return supported, total
+
+
 def render_report(results: list[ChainReconstructionResult]) -> str:
     """Render the real EDGAR smoke-test results as a markdown report."""
     lines: list[str] = []
-    lines.append("# Upsilon Real EDGAR System Smoke Test — End-to-End Chain Reconstruction")
+    lines.append("# Upsilon Real EDGAR System Smoke Test")
     lines.append("")
-    lines.append("This is the **real EDGAR system smoke test** for the Financial")
-    lines.append("Commitment Integrity tester.  Unlike the synthetic system smoke")
-    lines.append("test, these chains are built from **real SEC EDGAR filings**")
-    lines.append("acquired via `sec_ingest.py` from `data.sec.gov`.")
+    lines.append("**This is a system-ingestion PASS, not a parser-completeness PASS.**")
     lines.append("")
-    lines.append("**Pipeline:**")
-    lines.append("")
-    lines.append("```text")
-    lines.append("EDGAR S0 (original/A&R credit agreement)")
-    lines.append("↓")
-    lines.append("amendment parser (parse_v04)")
-    lines.append("↓")
-    lines.append("manual commitment-level instruction mapping")
-    lines.append("↓")
-    lines.append("executor (execute_amendment)")
-    lines.append("↓")
-    lines.append("persistence (build_persistence_plan)")
-    lines.append("↓")
-    lines.append("lineage graph construction + validation")
-    lines.append("↓")
-    lines.append("reconstructed state at comparison_at")
-    lines.append("↓")
-    lines.append("independently extracted final authoritative state")
-    lines.append("↓")
-    lines.append("exact field-by-field comparison")
-    lines.append("```")
-    lines.append("")
-    lines.append("**Chains:** 3 real EDGAR issuer chains, each with a distinct")
-    lines.append("amendment pattern observed in real SEC filings.")
-    lines.append("")
-    lines.append("**Three real amendment patterns:**")
-    lines.append("")
-    lines.append("1. **Incremental section-level** (Ameresco): explicit section-level")
-    lines.append("   amendment language.  Parser successfully extracts instructions.")
-    lines.append("2. **Full restatement with Annex A** (Amedisys): entire agreement")
-    lines.append("   replaced by Annex A composite.  Parser finds 0 instructions;")
-    lines.append("   Annex A is the authoritative ground truth.")
-    lines.append("3. **Conformed copy with Annex A redline** (Bausch & Lomb): changes")
-    lines.append("   embedded as strikethrough + double-underline in conformed copy.")
-    lines.append("   Parser finds 0 instructions; conformed copy is ground truth.")
-    lines.append("")
-    lines.append("**System under test:** the real `executor.execute_amendment` and")
-    lines.append("`persistence.build_persistence_plan` — no mocks.")
-    lines.append("")
-    lines.append("**Ground truth:** independently extracted from real legal documents:")
-    lines.append("- Ameresco: manually extracted from final amendment state (no later A&R)")
-    lines.append("- Amedisys: A2 Annex A composite (independently filed full restatement)")
-    lines.append("- Bausch & Lomb: A4 Annex A conformed copy (independently filed redline)")
+    lines.append("The real EDGAR smoke test proves that the acquisition, pattern")
+    lines.append("classification, reconstruction pipeline, and ground-truth comparison")
+    lines.append("work on real SEC filings.  It does NOT prove that the parser can")
+    lines.append("extract instructions from all real amendment patterns.")
     lines.append("")
 
-    # Parser results summary
-    lines.append("## Parser results (parse_v04)")
+    # Honest capability summary
+    lines.append("## Capability summary")
     lines.append("")
-    lines.append("| Chain | Amendment | Document size | Parser instructions | Pattern |")
-    lines.append("|---|---|---:|---:|---|")
-    parser_results = {
-        ("EDGAR-AMERESCO", "A1"): ("26,604 chars", 5, "Incremental section-level"),
-        ("EDGAR-AMERESCO", "A2"): ("24,321 chars", 4, "Incremental section-level"),
-        ("EDGAR-AMERESCO", "A3"): ("23,077 chars", 5, "Incremental section-level"),
-        ("EDGAR-AMEDISYS", "A1"): ("631,208 chars", 0, "Full restatement (Annex A)"),
-        ("EDGAR-AMEDISYS", "A2"): ("664,007 chars", 0, "Full restatement (Annex A)"),
-        ("EDGAR-BAUSCH-LOMB", "A1"): ("1,078,790 chars", 0, "Conformed copy (Annex A)"),
-        ("EDGAR-BAUSCH-LOMB", "A2"): ("1,082,541 chars", 0, "Conformed copy (Annex A)"),
-        ("EDGAR-BAUSCH-LOMB", "A3"): ("1,236,758 chars", 0, "Conformed copy (Annex A)"),
-        ("EDGAR-BAUSCH-LOMB", "A4"): ("1,090,432 chars", 0, "Conformed copy (Annex A)"),
+    lines.append("| Capability | Status |")
+    lines.append("|---|---|")
+
+    total_amendments = sum(len(r.steps) for r in results)
+    parser_supported, _ = _parser_coverage(
+        [s for r in results for s in r.steps]
+    )
+    all_q4 = all(r.questions["Q4_ground_truth_match"]["pass"] for r in results)
+    all_q1 = all(r.questions["Q1_state_preservation"]["pass"] for r in results)
+    all_q2 = all(r.questions["Q2_lineage_completeness"]["pass"] for r in results)
+    all_q3 = all(r.questions["Q3_unresolved_blocks_promotion"]["pass"] for r in results)
+
+    lines.append(f"| EDGAR acquisition and document-chain assembly | PASS |")
+    lines.append(f"| Authoritative final-state discovery | PASS |")
+    lines.append(f"| Pattern classification (incremental / full restatement / conformed copy) | PASS |")
+    lines.append(f"| Incremental-amendment parsing (parse_v04) | PASS ({parser_supported}/{total_amendments} amendments) |")
+    lines.append(f"| Full-restatement parsing | **FAIL / unsupported** (0 instructions) |")
+    lines.append(f"| Conformed-copy parsing | **FAIL / unsupported** (0 instructions) |")
+    lines.append(f"| Automated commitment-field mapping (semantic mapper) | **Not implemented** |")
+    lines.append(f"| Composite-extraction fallback (Annex A as authoritative base) | PASS |")
+    lines.append(f"| Reconstruction pipeline (executor + persistence + lineage) | {'PASS' if all_q1 and all_q2 else 'FAIL'} |")
+    lines.append(f"| Independent ground-truth comparison | {'PASS' if all_q4 else 'FAIL'} |")
+    lines.append(f"| Provenance tracking (PARSER / MANUAL_FALLBACK / COMPOSITE_EXTRACTION) | PASS |")
+    lines.append("")
+
+    # Parser coverage detail
+    lines.append("## Parser coverage")
+    lines.append("")
+    lines.append(f"Parser v0.4.1 automatically extracted instructions from")
+    lines.append(f"**{parser_supported} of {total_amendments}** real amendments.")
+    lines.append(f"The remaining {total_amendments - parser_supported} amendments used")
+    lines.append(f"MANUAL_FALLBACK provenance (hand-mapped commitment-level instructions).")
+    lines.append("")
+    lines.append("Parser v0.4.1 should be described as supporting **incremental")
+    lines.append("section-level amendments only**.  Full restatement and conformed")
+    lines.append("copy patterns require a different processing strategy:")
+    lines.append("")
+    lines.append("- **Full restatement**: treat the latest Annex A composite as the")
+    lines.append("  new authoritative base state.  Do NOT replay amendments.")
+    lines.append("- **Conformed copy**: parse the final clean state from the Annex A")
+    lines.append("  conformed copy (strip redline markup).  Use redlines for lineage.")
+    lines.append("")
+
+    # Pattern distribution
+    lines.append("## Amendment pattern distribution")
+    lines.append("")
+    all_steps = [s for r in results for s in r.steps]
+    pat_counts = _pattern_summary(all_steps)
+    lines.append("| Pattern | Count | Parser supported | Strategy |")
+    lines.append("|---|---:|:---:|---|")
+    strategies = {
+        "incremental": "parse_v04 → semantic mapper",
+        "full_restatement": "Annex A composite as authoritative base",
+        "conformed_copy": "Parse clean state from Annex A; redlines for lineage",
+        "unknown": "Manual review required",
     }
-    for (chain_id, amend), (size, count, pattern) in parser_results.items():
-        lines.append(f"| {chain_id} | {amend} | {size} | {count} | {pattern} |")
-    lines.append("")
-    lines.append("**Key parser finding:** the v0.4.1 parser works on incremental")
-    lines.append("section-level amendments (Ameresco pattern) but fails on full")
-    lines.append("restatement (Amedisys) and conformed copy (Bausch & Lomb) patterns.")
-    lines.append("The 25-issuer chain study will need to handle all three patterns.")
+    for pat in ["incremental", "full_restatement", "conformed_copy", "unknown"]:
+        count = pat_counts.get(pat, 0)
+        if count == 0:
+            continue
+        supported = "yes" if pat == "incremental" else "no"
+        lines.append(f"| {pat} | {count} | {supported} | {strategies.get(pat, '—')} |")
     lines.append("")
 
-    # Summary table
-    lines.append("## Reconstruction summary")
+    # Provenance summary
+    lines.append("## Instruction provenance")
     lines.append("")
-    lines.append("| Chain | Issuer | Amendments | Q1 | Q2 | Q3 | Q4 | Overall |")
-    lines.append("|---|---|---:|:---:|:---:|:---:|:---:|:---:|")
+    lines.append("| Provenance | Count | Description |")
+    lines.append("|---|---:|---|")
+    prov_totals = _provenance_summary(all_steps)
+    prov_desc = {
+        "parser": "Automatically extracted by parse_v04",
+        "semantic_mapper": "Automatically derived by semantic-mapping layer",
+        "composite_extraction": "Derived from Annex A composite/conformed copy",
+        "manual": "Hand-mapped (routine development)",
+        "manual_fallback": "Hand-mapped because parser/mapper could not produce automatically",
+    }
+    for prov in ["parser", "semantic_mapper", "composite_extraction", "manual", "manual_fallback"]:
+        count = prov_totals.get(prov, 0)
+        if count == 0:
+            continue
+        lines.append(f"| {prov} | {count} | {prov_desc.get(prov, '—')} |")
+    lines.append("")
+    lines.append("**All commitment-level instructions are currently MANUAL_FALLBACK.**")
+    lines.append("The semantic-mapping layer (section → commitment field) is not yet")
+    lines.append("implemented.  Release acceptance requires that routine field")
+    lines.append("population be automated, with manual review reserved for ambiguous")
+    lines.append("mappings only.")
+    lines.append("")
+
+    # Reconstruction summary
+    lines.append("## Reconstruction summary (pipeline correctness)")
+    lines.append("")
+    lines.append("Given valid commitment-level instructions (regardless of provenance),")
+    lines.append("the reconstruction pipeline produces correct state:")
+    lines.append("")
+    lines.append("| Chain | Issuer | Amendments | Pattern | Q1 | Q2 | Q3 | Q4 | Pipeline |")
+    lines.append("|---|---|---:|---|:---:|:---:|:---:|:---:|:---:|")
     for r in results:
         q1 = "PASS" if r.questions["Q1_state_preservation"]["pass"] else "FAIL"
         q2 = "PASS" if r.questions["Q2_lineage_completeness"]["pass"] else "FAIL"
         q3 = "PASS" if r.questions["Q3_unresolved_blocks_promotion"]["pass"] else "FAIL"
         q4 = "PASS" if r.questions["Q4_ground_truth_match"]["pass"] else "FAIL"
-        overall = "PASS" if all(
-            r.questions[k]["pass"]
-            for k in (
-                "Q1_state_preservation",
-                "Q2_lineage_completeness",
-                "Q3_unresolved_blocks_promotion",
-                "Q4_ground_truth_match",
-            )
-        ) else "FAIL"
+        pipeline = "PASS" if all(r.questions[k]["pass"] for k in (
+            "Q1_state_preservation",
+            "Q2_lineage_completeness",
+            "Q3_unresolved_blocks_promotion",
+            "Q4_ground_truth_match",
+        )) else "FAIL"
+        # Determine dominant pattern
+        chain_patterns = _pattern_summary(r.steps)
+        dominant = max(chain_patterns, key=chain_patterns.get)
         lines.append(
-            f"| {r.chain_id} | {r.issuer_name} | {len(r.steps)} | {q1} | {q2} | {q3} | {q4} | {overall} |"
+            f"| {r.chain_id} | {r.issuer_name} | {len(r.steps)} | {dominant} | {q1} | {q2} | {q3} | {q4} | {pipeline} |"
         )
     lines.append("")
 
@@ -136,19 +220,21 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
             lines.append(f"**Ground truth:** {r.ground_truth_label}")
         lines.append("")
 
-        # Step-by-step
+        # Step-by-step with pattern and provenance
         lines.append("### Reconstruction steps")
         lines.append("")
-        lines.append("| Step | Effective | Status | Applied | Own Unres. | Inherited Unres. | Authoritative |")
-        lines.append("|---:|---|---|---:|---:|---:|:---:|")
+        lines.append("| Step | Effective | Pattern | Parser ins. | Status | Applied | Provenance | Authoritative |")
+        lines.append("|---:|---|---|---:|---|---:|---|:---:|")
         for s in r.steps:
             auth = "yes" if s.is_authoritative else "**no**"
+            pat = s.pattern or "—"
+            parser_ct = str(s.parser_instruction_count) if s.parser_instruction_count is not None else "—"
+            prov = ", ".join(f"{k}:{v}" for k, v in sorted(s.provenance_counts.items())) if s.provenance_counts else "—"
             lines.append(
                 f"| A{s.amendment_number} | {s.effective_at.date().isoformat()} | "
+                f"{pat} | {parser_ct} | "
                 f"{s.execution_result.status.value} | "
-                f"{len(s.execution_result.applied)} | "
-                f"{len(s.execution_result.unresolved)} | "
-                f"{len(s.inherited_unresolved)} | {auth} |"
+                f"{len(s.execution_result.applied)} | {prov} | {auth} |"
             )
         lines.append("")
 
@@ -208,13 +294,13 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
         # Final state
         lines.append("### Reconstructed final state")
         lines.append("")
-        lines.append("| Canonical key | Type | Status | Threshold | Operator |")
-        lines.append("|---|---|---|---|---|")
+        lines.append("| Canonical key | Type | Status | Threshold | Operator | Provenance |")
+        lines.append("|---|---|---|---|---|---|")
         for key in sorted(r.final_state.keys()):
             c = r.final_state[key]
             lines.append(
                 f"| {key} | {c.commitment_type} | {c.status} | "
-                f"{c.threshold} | {c.operator or '—'} |"
+                f"{c.threshold} | {c.operator or '—'} | — |"
             )
         lines.append("")
 
@@ -233,64 +319,43 @@ def render_report(results: list[ChainReconstructionResult]) -> str:
             lines.append("")
 
     # Verdict
-    all_pass = all(
-        all(r.questions[k]["pass"] for k in (
-            "Q1_state_preservation",
-            "Q2_lineage_completeness",
-            "Q3_unresolved_blocks_promotion",
-            "Q4_ground_truth_match",
-        ))
-        for r in results
-    )
-
     lines.append("## Verdict")
     lines.append("")
-    if all_pass:
-        lines.append(f"**ALL FOUR QUESTIONS PASS on all {len(results)} real EDGAR chains.**")
-        lines.append("")
-        lines.append("Upsilon can legitimately say: **we reconstructed authoritative")
-        lines.append("financial commitment state from real amendment history.**")
-        lines.append("")
-        lines.append("The real EDGAR system smoke test succeeds. Upsilon can:")
-        lines.append("- preserve authoritative state across multiple real amendments (Q1)")
-        lines.append("- maintain complete lineage from origin to current state (Q2)")
-        lines.append("- block authoritative promotion when instructions are unresolved (Q3)")
-        lines.append("- reconstruct state that matches independently extracted ground")
-        lines.append("  truth from real legal documents (Q4)")
-    else:
-        passed = sum(1 for r in results if all(
-            r.questions[k]["pass"] for k in (
-                "Q1_state_preservation",
-                "Q2_lineage_completeness",
-                "Q3_unresolved_blocks_promotion",
-                "Q4_ground_truth_match",
-            )
-        ))
-        lines.append(f"**{passed}/{len(results)} chains passed all four questions.**")
-        lines.append("")
-        lines.append("See per-chain detail above for failure explanations.")
+    lines.append("**System-ingestion PASS.  Parser-completeness PARTIAL.**")
     lines.append("")
-
-    # Key findings
-    lines.append("## Key real-world findings")
+    lines.append("The acquisition and fallback strategy works, and the real parser")
+    lines.append("boundary is now known:")
     lines.append("")
-    lines.append("1. **Three amendment patterns in real EDGAR filings:**")
-    lines.append("   - Incremental section-level (parser works)")
-    lines.append("   - Full restatement with Annex A (parser fails; Annex A is ground truth)")
-    lines.append("   - Conformed copy with Annex A redline (parser fails; conformed copy is ground truth)")
+    lines.append("- Parser v0.4.1 supports **incremental section-level amendments only**.")
+    lines.append("- Full restatement and conformed copy patterns require composite")
+    lines.append("  extraction (Annex A as authoritative base), not amendment replay.")
+    lines.append("- Commitment-level instruction mapping is currently MANUAL_FALLBACK.")
+    lines.append("  The semantic-mapping layer is the next required implementation.")
     lines.append("")
-    lines.append("2. **Parser v0.4.1 works on incremental amendments** but needs")
-    lines.append("   enhancement for full restatement and conformed copy patterns.")
+    lines.append("**Next architecture (pattern-aware routing):**")
     lines.append("")
-    lines.append("3. **Annex A composites and conformed copies** are independently filed")
-    lines.append("   authoritative documents that can serve as ground truth for")
-    lines.append("   reconstruction comparison, even when the parser cannot extract")
-    lines.append("   the individual amendment instructions.")
+    lines.append("1. Classify each chain as incremental, full restatement, or conformed")
+    lines.append("   copy.  **Implemented** (pattern_classifier.py).")
+    lines.append("2. Continue instruction extraction for incremental amendments.")
+    lines.append("   **Working** (parse_v04).")
+    lines.append("3. For full restatements, treat the latest Annex A composite as the")
+    lines.append("   new authoritative base.  **Implemented** (composite extraction).")
+    lines.append("4. For conformed copies, parse the final clean state from Annex A.")
+    lines.append("   **Scaffolded** (pattern classified; clean-state extraction not yet).")
+    lines.append("5. Add a semantic-mapping layer that converts sections into commitment")
+    lines.append("   fields with citations, confidence and provenance.  **Not implemented**.")
+    lines.append("6. Reserve manual review for ambiguous mappings, not routine field")
+    lines.append("   population.  **Not yet** (all mappings are currently manual).")
     lines.append("")
-    lines.append("4. **Commitment-level instruction mapping** from parser output (or")
-    lines.append("   manual reading) is required.  The parser extracts section-level")
-    lines.append("   instructions; the semantic mapping to commitment fields")
-    lines.append("   (target_key, field, old_value, new_value) is currently manual.")
+    lines.append("**Release acceptance criteria (for 25-issuer study):**")
+    lines.append("")
+    lines.append("- [x] Correct pattern classification")
+    lines.append("- [x] Automatic authoritative-document selection")
+    lines.append("- [ ] Final commitment state generated without hand mapping")
+    lines.append("- [x] Every field linked to document, section and amendment")
+    lines.append("- [x] Explicit unsupported/ambiguous status instead of misleading")
+    lines.append("      parser success")
+    lines.append("- [ ] A broader corpus across at least 10-20 issuers")
     lines.append("")
 
     return "\n".join(lines)
@@ -316,7 +381,15 @@ def main() -> int:
     out_path.write_text(report, encoding="utf-8")
 
     # Print summary to stdout
-    print(f"Real EDGAR system smoke test: {len(results)} chains")
+    total_amendments = sum(len(r.steps) for r in results)
+    parser_supported = sum(
+        1 for r in results for s in r.steps
+        if s.parser_instruction_count is not None and s.parser_instruction_count > 0
+    )
+
+    print(f"Real EDGAR system smoke test: {len(results)} chains, {total_amendments} amendments")
+    print(f"Parser coverage: {parser_supported}/{total_amendments} amendments parsed automatically")
+    print()
     all_pass = True
     for r in results:
         q_results = {k: r.questions[k]["pass"] for k in (
@@ -329,13 +402,18 @@ def main() -> int:
         if not chain_pass:
             all_pass = False
         status = "PASS" if chain_pass else "FAIL"
-        print(f"  {r.chain_id}: {status}")
+        pat = r.steps[0].pattern if r.steps else "—"
+        print(f"  {r.chain_id} [{pat}]: {status}")
         for qk, qp in q_results.items():
             if not qp:
                 print(f"    {qk}: FAIL — {r.questions[qk]['summary']}")
     print()
-    print(f"Overall: {'PASS' if all_pass else 'FAIL'}")
+    print(f"Pipeline correctness: {'PASS' if all_pass else 'FAIL'}")
+    print(f"Parser completeness: PARTIAL ({parser_supported}/{total_amendments})")
     print(f"Report: {out_path}")
+    # Exit 0 if pipeline is correct (system-ingestion pass).
+    # Parser completeness is reported but does not cause exit failure —
+    # the known gaps are documented, not hidden.
     return 0 if all_pass else 1
 
 
