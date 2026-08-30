@@ -72,6 +72,7 @@ from typing import Any
 from models import (
     AmendmentInstruction,
     CommitmentState,
+    DomainEffect,
     ExecutionResult,
     ExecutionStatus,
     InstructionType,
@@ -295,29 +296,81 @@ _CONSTRUCTIVE_TYPES = frozenset({
 })
 
 
+def _effective_field(ins: AmendmentInstruction) -> str | None:
+    """The effective field an instruction targets, deriving from
+    domain_effect when field is not explicitly set. Mirrors the
+    executor's field-derivation logic."""
+    if ins.field:
+        return ins.field
+    if ins.domain_effect:
+        de = ins.domain_effect
+        if de == DomainEffect.DEADLINE_CHANGE:
+            return "deadline"
+        if de == DomainEffect.FREQUENCY_CHANGE:
+            return "frequency"
+        if de == DomainEffect.PARTY_CHANGE:
+            return "party"
+        if de == DomainEffect.SCOPE_CHANGE:
+            return "scope"
+        if de == DomainEffect.COVENANT_THRESHOLD_CHANGE:
+            return "threshold"
+    return None
+
+
+def _resolution_key(
+    ins: AmendmentInstruction,
+) -> tuple[str, str | None, InstructionType]:
+    """The resolution key for an instruction.
+
+    Tuple: (target_key, effective_field, instruction_type).
+
+    Two instructions with the same resolution key address the same
+    commitment + field/path + operation. An inherited unresolved
+    instruction is resolved by a later applied instruction with the
+    same resolution key.
+
+    This is field/claim-specific: a REPLACE_VALUE on
+    interest_coverage.threshold does NOT resolve an unresolved
+    REPLACE_VALUE on interest_coverage.frequency, even though they
+    target the same commitment. The field/path must match.
+
+    RESTATE_SECTION instructions have field=None (they cover a whole
+    section). A RESTATE_SECTION is only resolved by another
+    successfully-decomposed RESTATE_SECTION on the same target — not
+    by a single field change. Since the executor currently always
+    raises for RESTATE_SECTION, RESTATE_SECTION uncertainty is
+    permanent until the executor can decompose restatements.
+    """
+    return (
+        ins.target_key or "",
+        _effective_field(ins),
+        ins.instruction_type,
+    )
+
+
 def _is_resolved_by(
     unresolved: AmendmentInstruction,
     applied: list[AmendmentInstruction],
 ) -> bool:
-    """Conservative resolution matcher for inherited unresolved.
+    """Field/claim-specific resolution matcher for inherited unresolved.
 
-    An inherited unresolved instruction is considered resolved by a later
-    step if that step has at least one applied constructive instruction
-    targeting the same commitment (target_key).
+    An inherited unresolved instruction is considered resolved by a
+    later step if that step has at least one applied constructive
+    instruction with the same resolution key (target_key +
+    effective_field + instruction_type).
 
-    This is conservative: a REPLACE_VALUE on one field of a commitment
-    does not truly "resolve" a RESTATE_SECTION that covers the whole
-    section, but it does indicate the later amendment explicitly
-    addressed that commitment. Full resolution semantics (e.g.,
-    RESTATE_SECTION requires decomposition coverage of every field in
-    the section) are deferred to the 25-issuer chain study.
+    This is field-specific: a REPLACE_VALUE on
+    interest_coverage.threshold does NOT resolve an unresolved
+    REPLACE_VALUE on interest_coverage.frequency, even though they
+    target the same commitment. The field/path must match.
     """
     if not unresolved.target_key:
         return False
+    urk = _resolution_key(unresolved)
     for a in applied:
         if a.instruction_type not in _CONSTRUCTIVE_TYPES:
             continue
-        if a.target_key and a.target_key == unresolved.target_key:
+        if _resolution_key(a) == urk:
             return True
     return False
 

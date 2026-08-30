@@ -22,12 +22,13 @@ Chain selection rationale (mirrors the RUNBOOK inclusion rule):
     test for the chain-wide pending-restoration queue: the A1 July
     restore must NOT be lost just because A2 (the immediately
     preceding amendment) didn't touch the waived covenant.
-  - Chain EPSILON: 3 amendments where A1 has an UNRESOLVED
-    RESTATE_SECTION on interest_coverage, A2 is clean but targets a
-    DIFFERENT commitment (does not resolve A1's unresolved → A2 NOT
-    authoritative), A3 explicitly addresses interest_coverage
-    (resolves A1's unresolved → A3 IS authoritative). Regression test
-    for chain-aware authority resolution.
+  - Chain EPSILON: 3 amendments where A1 has a field-specific
+    UNRESOLVED (REPLACE_VALUE with wrong old_value on
+    interest_coverage.threshold), A2 targets a different commitment
+    (does not resolve → A2 NOT authoritative), A3 targets the same
+    commitment + same field + same operation (resolves A1's inherited
+    unresolved → A3 IS authoritative). Regression test for
+    field-specific chain-aware authority resolution.
 
 Real multi-amendment chain acquisition from EDGAR is the next phase
 (25-issuer chain study). These fixtures validate the system plumbing
@@ -648,30 +649,32 @@ def chain_delta() -> IssuerChain:
 
 
 def chain_epsilon() -> IssuerChain:
-    """Epsilon Energy — 3 amendments where A1 has an UNRESOLVED
-    RESTATE_SECTION, A2 does NOT resolve it (different target), A3 DOES
-    resolve it (same target) → A3 becomes authoritative.
+    """Epsilon Energy — 3 amendments where A1 has a field-specific
+    UNRESOLVED (REPLACE_VALUE with wrong old_value on
+    interest_coverage.threshold), A2 does NOT resolve it (different
+    commitment), A3 DOES resolve it (same commitment + same field +
+    same operation) → A3 becomes authoritative.
 
     S0: original credit agreement
         - total_leverage_ratio covenant, threshold 3.5
         - interest_coverage covenant, threshold 2.5
-    A1 (2026-01-15): REPLACE leverage 3.5 → 4.0 (applied)
-                     + RESTATE_SECTION on interest_coverage (UNRESOLVED).
+    A1 (2026-01-15): REPLACE leverage 3.5 → 4.0 (applied, correct old_value)
+                     + REPLACE interest_coverage.threshold with
+                       old_value=2.0 (WRONG — actual is 2.5) → UNRESOLVED.
+                       The parser misread the prior threshold, so the
+                       old-value guard in the executor rejects it.
                      → PARTIAL, not authoritative. inherited_unresolved
-                       = [RESTATE_SECTION on interest_coverage].
+                       = [REPLACE_VALUE on interest_coverage.threshold].
     A2 (2026-03-01): REPLACE leverage 4.0 → 4.25 (clean, COMPLETE).
                      A2 targets total_leverage_ratio, NOT interest_coverage.
-                     → A2 does NOT resolve A1's inherited unresolved.
+                     → A2 does NOT resolve A1's inherited unresolved
+                       (different target_key → different resolution key).
                      → A2 is COMPLETE but NOT authoritative.
-                       inherited_unresolved still = [RESTATE_SECTION on
-                       interest_coverage].
-    A3 (2026-05-01): REPLACE interest_coverage threshold 2.5 → 3.0
-                     (clean, COMPLETE).
-                     A3 targets interest_coverage — the SAME commitment
-                     as A1's unresolved RESTATE_SECTION. Per the
-                     conservative resolution policy, A3's applied
-                     constructive instruction on the same target_key
-                     resolves the inherited unresolved.
+    A3 (2026-05-01): REPLACE interest_coverage.threshold 2.5 → 3.0
+                     (clean, COMPLETE, correct old_value=2.5).
+                     A3's resolution key = (interest_coverage, threshold,
+                     REPLACE_VALUE) — SAME as A1's unresolved resolution
+                     key. The inherited unresolved is resolved.
                      → A3 is COMPLETE AND inherited_unresolved is now
                        empty → A3 IS authoritative.
     Oracle ground truth: Composite Credit Agreement (filed 2026-06-01)
@@ -680,10 +683,12 @@ def chain_epsilon() -> IssuerChain:
     Comparison at: 2026-06-01 (composite filing date)
 
     REGRESSION TEST: This chain proves that chain-aware authority is not
-    just "block forever" — it has a resolution mechanism. A later
-    amendment that explicitly addresses the same commitment as an
-    inherited unresolved instruction clears the inherited uncertainty
-    and allows the chain to promote to authoritative.
+    just "block forever" — it has a field-specific resolution mechanism.
+    A later amendment that addresses the same commitment + same field +
+    same operation as an inherited unresolved instruction clears the
+    inherited uncertainty and allows the chain to promote to
+    authoritative. A later amendment on the same commitment but a
+    DIFFERENT field does NOT resolve it (see CHAIN-ZETA unit tests).
     """
     original = {
         "financial_covenant.total_leverage_ratio": CommitmentState(
@@ -714,7 +719,7 @@ def chain_epsilon() -> IssuerChain:
         AmendmentStep(
             amendment_number=1,
             effective_at=_dt("2026-01-15T00:00:00Z"),
-            description="Relax leverage 3.5 → 4.0 (applied) + RESTATE_SECTION interest_coverage (unresolved)",
+            description="Relax leverage 3.5 → 4.0 (applied) + REPLACE interest_coverage.threshold (wrong old_value, unresolved)",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -726,16 +731,18 @@ def chain_epsilon() -> IssuerChain:
                 ),
                 AmendmentInstruction(
                     order=2,
-                    instruction_type=InstructionType.RESTATE_SECTION,
+                    instruction_type=InstructionType.REPLACE_VALUE,
                     target_key="financial_covenant.interest_coverage",
-                    target_section_ref="Section 6.07",
+                    field="threshold",
+                    old_value=2.0,  # WRONG — actual is 2.5
+                    new_value=3.0,
                 ),
             ],
         ),
         AmendmentStep(
             amendment_number=2,
             effective_at=_dt("2026-03-01T00:00:00Z"),
-            description="Relax leverage 4.0 → 4.25 (does NOT resolve A1's unresolved on interest_coverage)",
+            description="Relax leverage 4.0 → 4.25 (does NOT resolve A1's unresolved on interest_coverage.threshold)",
             instructions=[
                 AmendmentInstruction(
                     order=1,
@@ -750,14 +757,14 @@ def chain_epsilon() -> IssuerChain:
         AmendmentStep(
             amendment_number=3,
             effective_at=_dt("2026-05-01T00:00:00Z"),
-            description="Tighten interest_coverage 2.5 → 3.0 (resolves A1's inherited unresolved)",
+            description="Tighten interest_coverage.threshold 2.5 → 3.0 (resolves A1's inherited unresolved: same target + field + operation)",
             instructions=[
                 AmendmentInstruction(
                     order=1,
                     instruction_type=InstructionType.REPLACE_VALUE,
                     target_key="financial_covenant.interest_coverage",
                     field="threshold",
-                    old_value=2.5,
+                    old_value=2.5,  # CORRECT — matches actual
                     new_value=3.0,
                 ),
             ],

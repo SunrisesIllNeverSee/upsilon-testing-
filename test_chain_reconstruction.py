@@ -189,10 +189,12 @@ def test_chain_delta_waiver_across_intervening_amendment():
 
 
 def test_chain_epsilon_inherited_unresolved_resolved_by_a3():
-    """Chain EPSILON: A1 has unresolved RESTATE_SECTION on interest_coverage,
-    A2 targets a different commitment (does NOT resolve), A3 targets
-    interest_coverage (DOES resolve) → A3 becomes authoritative.
-    Regression test for chain-aware authority resolution."""
+    """Chain EPSILON: A1 has a field-specific unresolved (REPLACE_VALUE
+    with wrong old_value on interest_coverage.threshold), A2 targets a
+    different commitment (does NOT resolve), A3 targets the same
+    commitment + same field + same operation (DOES resolve) → A3
+    becomes authoritative. Regression test for field-specific
+    chain-aware authority resolution."""
     result = reconstruct_chain(chain_epsilon())
     assert len(result.steps) == 3
 
@@ -202,7 +204,10 @@ def test_chain_epsilon_inherited_unresolved_resolved_by_a3():
     assert a1.execution_result.status == ExecutionStatus.PARTIAL
     assert a1.is_authoritative is False
     assert len(a1.execution_result.unresolved) == 1
+    # The unresolved is a REPLACE_VALUE on interest_coverage.threshold.
     assert a1.inherited_unresolved[0].target_key == "financial_covenant.interest_coverage"
+    assert a1.inherited_unresolved[0].field == "threshold"
+    assert a1.inherited_unresolved[0].instruction_type == InstructionType.REPLACE_VALUE
 
     # A2: COMPLETE but NOT authoritative — targets total_leverage_ratio,
     # not interest_coverage, so A1's inherited unresolved persists.
@@ -212,9 +217,8 @@ def test_chain_epsilon_inherited_unresolved_resolved_by_a3():
     assert len(a2.inherited_unresolved) == 1
     assert a2.inherited_unresolved[0].target_key == "financial_covenant.interest_coverage"
 
-    # A3: COMPLETE AND authoritative — targets interest_coverage, which
-    # resolves A1's inherited RESTATE_SECTION per the conservative
-    # resolution policy.
+    # A3: COMPLETE AND authoritative — targets interest_coverage.threshold
+    # with REPLACE_VALUE, same resolution key as A1's unresolved.
     assert a3.execution_result.status == ExecutionStatus.COMPLETE
     assert a3.is_authoritative is True
     assert len(a3.execution_result.unresolved) == 0
@@ -609,13 +613,17 @@ def test_compare_status_mismatch_when_reconstructed_deleted_gt_active():
 # ---------------------------------------------------------------------------
 
 
-def test_is_resolved_by_same_target_resolves():
+def test_is_resolved_by_same_target_same_field_same_op_resolves():
     """An inherited unresolved is resolved by an applied constructive
-    instruction on the same target_key."""
+    instruction with the same resolution key (target_key + field +
+    instruction_type). This is the field-specific resolution case."""
     unresolved = AmendmentInstruction(
         order=2,
-        instruction_type=InstructionType.RESTATE_SECTION,
+        instruction_type=InstructionType.REPLACE_VALUE,
         target_key="financial_covenant.interest_coverage",
+        field="threshold",
+        old_value=2.0,  # wrong old_value caused the unresolved
+        new_value=3.0,
     )
     applied = [
         AmendmentInstruction(
@@ -623,11 +631,37 @@ def test_is_resolved_by_same_target_resolves():
             instruction_type=InstructionType.REPLACE_VALUE,
             target_key="financial_covenant.interest_coverage",
             field="threshold",
-            old_value=2.5,
+            old_value=2.5,  # correct old_value, applied successfully
             new_value=3.0,
         ),
     ]
     assert _is_resolved_by(unresolved, applied) is True
+
+
+def test_is_resolved_by_same_target_different_field_does_not_resolve():
+    """An inherited unresolved on interest_coverage.threshold is NOT
+    resolved by an applied REPLACE_VALUE on interest_coverage.frequency.
+    Same commitment, different field → different resolution key → not
+    resolved. This is the key field-specificity regression test."""
+    unresolved = AmendmentInstruction(
+        order=2,
+        instruction_type=InstructionType.REPLACE_VALUE,
+        target_key="financial_covenant.interest_coverage",
+        field="threshold",
+        old_value=2.0,
+        new_value=3.0,
+    )
+    applied = [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_key="financial_covenant.interest_coverage",
+            field="frequency",  # DIFFERENT field
+            old_value="quarterly",
+            new_value="monthly",
+        ),
+    ]
+    assert _is_resolved_by(unresolved, applied) is False
 
 
 def test_is_resolved_by_different_target_does_not_resolve():
@@ -635,8 +669,11 @@ def test_is_resolved_by_different_target_does_not_resolve():
     on a DIFFERENT target_key."""
     unresolved = AmendmentInstruction(
         order=2,
-        instruction_type=InstructionType.RESTATE_SECTION,
+        instruction_type=InstructionType.REPLACE_VALUE,
         target_key="financial_covenant.interest_coverage",
+        field="threshold",
+        old_value=2.0,
+        new_value=3.0,
     )
     applied = [
         AmendmentInstruction(
@@ -651,13 +688,65 @@ def test_is_resolved_by_different_target_does_not_resolve():
     assert _is_resolved_by(unresolved, applied) is False
 
 
+def test_is_resolved_by_same_target_same_field_different_op_does_not_resolve():
+    """An inherited REPLACE_VALUE on threshold is NOT resolved by an
+    applied REPLACE_TEXT on threshold. Same target + same field, but
+    different operation → different resolution key → not resolved."""
+    unresolved = AmendmentInstruction(
+        order=2,
+        instruction_type=InstructionType.REPLACE_VALUE,
+        target_key="financial_covenant.interest_coverage",
+        field="threshold",
+        old_value=2.0,
+        new_value=3.0,
+    )
+    applied = [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_TEXT,  # different op
+            target_key="financial_covenant.interest_coverage",
+            field="threshold",
+            old_value="2.0x",
+            new_value="3.0x",
+        ),
+    ]
+    assert _is_resolved_by(unresolved, applied) is False
+
+
+def test_is_resolved_by_restate_section_not_resolved_by_field_change():
+    """A RESTATE_SECTION (no field) is NOT resolved by a REPLACE_VALUE
+    on any single field of the same commitment. RESTATE_SECTION covers
+    the whole section; a single field change doesn't resolve the
+    section-wide uncertainty."""
+    unresolved = AmendmentInstruction(
+        order=2,
+        instruction_type=InstructionType.RESTATE_SECTION,
+        target_key="financial_covenant.interest_coverage",
+        target_section_ref="Section 6.07",
+    )
+    applied = [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_key="financial_covenant.interest_coverage",
+            field="threshold",
+            old_value=2.5,
+            new_value=3.0,
+        ),
+    ]
+    assert _is_resolved_by(unresolved, applied) is False
+
+
 def test_is_resolved_by_reference_change_does_not_resolve():
     """A RENUMBER_REFERENCE (non-constructive) does not resolve inherited
     unresolved even if it targets the same commitment."""
     unresolved = AmendmentInstruction(
         order=2,
-        instruction_type=InstructionType.RESTATE_SECTION,
+        instruction_type=InstructionType.REPLACE_VALUE,
         target_key="financial_covenant.interest_coverage",
+        field="threshold",
+        old_value=2.0,
+        new_value=3.0,
     )
     applied = [
         AmendmentInstruction(
@@ -669,6 +758,35 @@ def test_is_resolved_by_reference_change_does_not_resolve():
         ),
     ]
     assert _is_resolved_by(unresolved, applied) is False
+
+
+def test_is_resolved_by_domain_effect_derives_field():
+    """When an instruction has no explicit field but has
+    domain_effect=COVENANT_THRESHOLD_CHANGE, the effective field is
+    'threshold'. An unresolved with field='threshold' is resolved by
+    an applied with domain_effect=COVENANT_THRESHOLD_CHANGE on the
+    same target."""
+    from models import DomainEffect
+    unresolved = AmendmentInstruction(
+        order=2,
+        instruction_type=InstructionType.REPLACE_VALUE,
+        target_key="financial_covenant.interest_coverage",
+        field="threshold",
+        old_value=2.0,
+        new_value=3.0,
+    )
+    applied = [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_key="financial_covenant.interest_coverage",
+            # No explicit field — domain_effect derives it.
+            domain_effect=DomainEffect.COVENANT_THRESHOLD_CHANGE,
+            old_value=2.5,
+            new_value=3.0,
+        ),
+    ]
+    assert _is_resolved_by(unresolved, applied) is True
 
 
 # ---------------------------------------------------------------------------
