@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from models import CommitmentState, AmendmentInstruction, InstructionType
+from models import CommitmentState, AmendmentInstruction, DomainEffect, InstructionType
 from executor import execute_amendment
 
 
@@ -89,19 +89,82 @@ def test_exception_add_remove_idempotent():
     state = base_state()
     add = AmendmentInstruction(
         order=1,
-        instruction_type=InstructionType.ADD_EXCEPTION,
+        instruction_type=InstructionType.ADD,
+        domain_effect=DomainEffect.EXCEPTION_EXPANSION,
         target_key="financial_covenant.total_leverage_ratio",
         new_value="permitted_acquisition",
     )
     add2 = add.model_copy(update={"order": 2})
     rem = AmendmentInstruction(
         order=3,
-        instruction_type=InstructionType.REMOVE_EXCEPTION,
+        instruction_type=InstructionType.DELETE,
+        domain_effect=DomainEffect.EXCEPTION_REMOVAL,
         target_key="financial_covenant.total_leverage_ratio",
         old_value="permitted_acquisition",
     )
     result = execute_amendment(state, [add, add2, rem])
     assert result.state["financial_covenant.total_leverage_ratio"].exceptions == []
+
+
+def test_generic_add_with_dict_payload_creates_new_commitment():
+    """Generic ADD with a dict payload (no target_key) creates a new commitment,
+    mirroring ADD_COMMITMENT behavior. This is the v0.4 architecture where ADD
+    is the generic transformation and the dict payload signals a new commitment."""
+    state = base_state()
+    new_payload = {
+        "canonical_key": "financial_covenant.interest_coverage",
+        "commitment_type": "financial_covenant",
+        "threshold": 3.0,
+    }
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.ADD,
+            new_value=new_payload,
+        )
+    ])
+    assert not result.unresolved
+    assert "financial_covenant.interest_coverage" in result.state
+    assert result.state["financial_covenant.interest_coverage"].threshold == 3.0
+
+
+def test_generic_add_with_dict_payload_duplicate_rejected():
+    """Generic ADD with a dict payload whose canonical_key already exists is rejected."""
+    state = base_state()
+    new_payload = state["financial_covenant.total_leverage_ratio"].model_dump()
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.ADD,
+            new_value=new_payload,
+        )
+    ])
+    assert len(result.unresolved) == 1
+
+
+def test_generic_delete_without_domain_effect_is_unresolved():
+    """Generic DELETE without EXCEPTION_REMOVAL domain_effect is unresolved.
+    Use DELETE_COMMITMENT to delete a commitment."""
+    result = execute_amendment(base_state(), [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.DELETE,
+            target_key="financial_covenant.total_leverage_ratio",
+        )
+    ])
+    assert len(result.unresolved) == 1
+
+
+def test_add_commitment_without_dict_payload_is_unresolved():
+    """ADD_COMMITMENT without a dict payload is unresolved."""
+    result = execute_amendment(base_state(), [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.ADD_COMMITMENT,
+            new_value="not a dict",
+        )
+    ])
+    assert len(result.unresolved) == 1
 
 
 def test_first_instruction_persists_when_second_fails():

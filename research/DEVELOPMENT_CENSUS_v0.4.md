@@ -1,6 +1,6 @@
-# Parser-Development Sample Census — v0.3.1 Baseline
+# Parser-Development Sample Census — v0.4
 
-**Parser:** v0.3.1 (deterministic_baseline_v0.3) (tag: dev-baseline-v0.3.1)
+**Parser:** v0.4 (deterministic_baseline_v0.4) (tag: v0.4)
 **Sample:** 25-document parser-development sample (DEV-001 through DEV-025)
 **Note:** This is one document per issuer, NOT the 25-issuer agreement-chain
 corpus (original + multiple amendments per issuer) that the reconstruction
@@ -26,25 +26,25 @@ Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).
 
 | Format | Precision | Recall | F1 | Unresolved | Docs |
 |--------|-----------|--------|----|------------|------|
-| Inline | 0.846 | 0.151 | 0.256 | 0 | 20 |
+| Inline | 0.826 | 0.521 | 0.639 | 0 | 20 |
 | Composite | N/A | N/A | N/A | 0 | 0 |
 | Restated | N/A | N/A | N/A | 0 | 0 |
 | Referential | N/A | N/A | N/A | 0 | 0 |
 | Waiver | 1.000 | 1.000 | 1.000 | 0 | 1 |
 | Mixed | 1.000 | 0.000 | 0.000 | 0 | 4 |
-| **All amendment documents** | **0.846** | **0.143** | **0.244** | **0** | **25** |
+| **All amendment documents** | **0.826** | **0.494** | **0.618** | **0** | **25** |
 
 ## Pooled summary
 
 | Metric | Value |
 |--------|-------|
 | Gold annotations | 77 |
-| Detected | 13 |
-| True positives | 11 |
-| False positives | 2 |
-| False negatives | 66 |
-| Precision | 0.846 |
-| Recall | 0.143 |
-| F1 | 0.244 |
+| Detected | 46 |
+| True positives | 38 |
+| False positives | 8 |
+| False negatives | 39 |
+| Precision | 0.826 |
+| Recall | 0.494 |
+| F1 | 0.618 |
 | Unresolved | 0 |
 

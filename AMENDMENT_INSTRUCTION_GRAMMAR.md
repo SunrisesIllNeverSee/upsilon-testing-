@@ -56,7 +56,9 @@ Example:
 > The definition of Permitted Indebtedness is amended to include...
 
 Emit:
-`ADD_EXCEPTION` or explicit replacement of normalized exception set.
+`ADD` with `domain_effect: exception_expansion`, or `DELETE` with
+`domain_effect: exception_removal`, or explicit replacement of normalized
+exception set.
 
 ### 5. Temporal waiver
 

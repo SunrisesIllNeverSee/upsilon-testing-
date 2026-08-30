@@ -220,6 +220,7 @@ def _edge_type(ins: AmendmentInstruction) -> str:
         InstructionType.WAIVE_TEMPORARILY: "WAIVES",
         InstructionType.REINSTATE: "REINSTATES",
         InstructionType.DELETE_COMMITMENT: "SUPERSEDES",
+        InstructionType.DELETE: "SUPERSEDES",
     }.get(ins.instruction_type, "MODIFIES")
 
 

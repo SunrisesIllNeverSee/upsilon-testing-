@@ -19,20 +19,32 @@ CREATE TYPE commitment_status AS ENUM (
 CREATE TYPE instruction_type AS ENUM (
   'REPLACE_VALUE',
   'REPLACE_TEXT',
+  'ADD',
   'ADD_COMMITMENT',
+  'DELETE',
   'DELETE_COMMITMENT',
-  'MODIFY_SCOPE',
-  'ADD_EXCEPTION',
-  'REMOVE_EXCEPTION',
-  'EXTEND_DEADLINE',
-  'CHANGE_FREQUENCY',
-  'CHANGE_PARTY',
   'WAIVE_TEMPORARILY',
   'SUSPEND',
   'REINSTATE',
   'RESTATE_SECTION',
   'RENUMBER_REFERENCE',
+  'FIND_REPLACE_REFERENCE',
   'UNRESOLVED'
+);
+
+-- Domain effect: what changed in the commitment domain (separate from the
+-- legal-document transformation operation). See models.DomainEffect.
+CREATE TYPE domain_effect AS ENUM (
+  'covenant_threshold_change',
+  'commitment_amount_change',
+  'deadline_change',
+  'exception_expansion',
+  'exception_removal',
+  'party_change',
+  'frequency_change',
+  'scope_change',
+  'definition_change',
+  'unknown'
 );
 
 CREATE TYPE instruction_status AS ENUM (
@@ -169,6 +181,7 @@ CREATE TABLE amendment_instruction (
   source_span_id UUID REFERENCES source_span(id),
   instruction_order INTEGER NOT NULL,
   instruction_type instruction_type NOT NULL,
+  domain_effect domain_effect,
   target_commitment_id UUID REFERENCES commitment(id),
   target_section_ref TEXT,
   old_value JSONB,

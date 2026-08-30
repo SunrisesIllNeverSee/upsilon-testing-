@@ -6,54 +6,131 @@ documented in this file. The format is based on [Keep a Changelog](https://keepa
 ## [0.4] — 2026-08-30
 
 ### Changed
-- **Generalized reference targets**: `Section` → `Section|Article|Schedule|
-  Exhibit|Definition|Clause|Paragraph|Subsection`. The parser now matches
-  amendment instructions targeting Articles and Schedules, not just Sections.
-- **Broadened replace pattern**: `deleting...replacing` → `deleting...(replacing|
-  inserting|substituting)`. Handles "deleting the single instance of X and
-  inserting Y in lieu thereof" and "deleting...substituting in its place".
-- **New "amended to read" pattern**: "Section X is amended to read as follows"
+- **Generalized reference targets**: Section to Section|Article|Schedule|
+  Exhibit. The parser now matches amendment instructions targeting Articles,
+  Schedules, and Exhibits, not just Sections. Lowercase structural terms
+  (Definition, Clause, Paragraph, Subsection) are intentionally excluded
+  because they appear as common nouns in amendment text and cause false
+  positives. The actual amendment target is always the enclosing
+  Section/Article/Schedule/Exhibit.
+- **Broadened replace pattern**: deleting...replacing to deleting...(replacing|
+  inserting|substituting). Handles deleting the single instance of X and
+  inserting Y in lieu thereof and deleting...substituting in its place.
+- **New amended to read pattern**: Section X is amended to read as follows
   mapped to RESTATE_SECTION.
-- **New "amended as follows" pattern**: "Section X is hereby amended as follows"
-  mapped to RESTATE_SECTION.
-- **New "deleted from Section" pattern**: "is hereby deleted from Section X"
+- **New amended as follows pattern**: Section X of the Credit Agreement is
+  hereby amended as follows mapped to RESTATE_SECTION. Requires of the
+  Credit Agreement to exclude amendment section headings (Section 2 hereof).
+- **New deleted from Section pattern**: is hereby deleted from Section X
   mapped to DELETE_COMMITMENT.
-- **Broadened "amended by"**: `amended by adding` → `amended by (adding|inserting|
-  deleting|modifying)`.
-- **Bounded gaps**: Gap between target and verb bounded to 60-200 chars depending
-  on pattern to avoid matching section headings.
+- **Broadened amended by**: amended by adding to amended by (adding|inserting|
+  modifying). amended by deleting mapped to DELETE_COMMITMENT (not ADD).
+- **Bounded gaps**: Gap between target and verb bounded to 60-200 chars
+  depending on pattern to avoid matching section headings.
+- **Overlap deduplication**: When REPLACE_V04 and ADD_V04/DELETE_BY_V04 match
+  the same text span, only the more specific match (REPLACE_TEXT) is kept.
+- **REPLACE_V04 requires amended by**: Prevents matching cross-references
+  followed by deleting in a different instruction.
 
 ### Architecture
-- **Separated transformation type from domain effect**: `InstructionType`
-  describes how the legal document transformed (REPLACE_VALUE, RESTATE_SECTION,
-  etc.). New `DomainEffect` enum describes what changed in the commitment
-  domain (commitment_amount_change, covenant_threshold_change, etc.).
-- **Moved `COMMITMENT_AMOUNT_CHANGE`** from `InstructionType` to `DomainEffect`.
-  It describes what changed, not how the document transformed.
-- **`FIND_REPLACE_REFERENCE`** remains in `InstructionType` (describes the
+- **Separated transformation type from domain effect**: InstructionType
+  describes how the legal document transformed (REPLACE_VALUE, ADD, DELETE,
+  RESTATE_SECTION, etc.). DomainEffect describes what changed in the
+  commitment domain (commitment_amount_change, covenant_threshold_change, etc.).
+- **Removed domain-effect members from InstructionType**: ADD_EXCEPTION,
+  REMOVE_EXCEPTION, EXTEND_DEADLINE, CHANGE_FREQUENCY, CHANGE_PARTY,
+  MODIFY_SCOPE have been removed. Their semantics are now expressed as
+  DomainEffect values (EXCEPTION_EXPANSION, EXCEPTION_REMOVAL,
+  DEADLINE_CHANGE, FREQUENCY_CHANGE, PARTY_CHANGE, SCOPE_CHANGE).
+- **Added ADD and DELETE to InstructionType**: Generic transformation
+  operations that, combined with domain_effect, replace the removed
+  domain-specific instruction types.
+- **Executor uses domain_effect for field selection**: When
+  InstructionType.REPLACE_VALUE is used with DomainEffect.DEADLINE_CHANGE,
+  the executor applies the change to the deadline field. Similarly,
+  InstructionType.ADD with DomainEffect.EXCEPTION_EXPANSION adds to the
+  exceptions list.
+- **FIND_REPLACE_REFERENCE** remains in InstructionType (describes the
   transformation operation: global find-and-replace of defined terms).
-- **`AmendmentInstruction.domain_effect`** field added (Optional[DomainEffect]).
+- **AmendmentInstruction.domain_effect** field (Optional[DomainEffect]).
 
-### Performance (25-document parser-development sample)
+### Parser API
+- **parse_v03()** preserved as the v0.3.1 baseline (uses v0.3 regexes,
+  Section-only targets, no deduplication). Returns
+  parser: deterministic_baseline_v0.3.
+- **parse_v04()** added as the v0.4 parser (uses v0.4 regexes, generalized
+  targets, deduplication). Returns parser: deterministic_baseline_v0.4.
+- **parse()** preserved as the v0.2 parser for backward compatibility.
+- **CLI**: amendment_parser.py defaults to v0.4. Use --v3 for v0.3.1
+  baseline, --v2 for v0.2.
+
+### Evaluation methodology
+- **Gold annotations**: Explicit, reviewed, non-overlapping annotations in
+  data/development/gold_annotations.json (77 total across 25 documents).
+  Replaces the previous overlapping-regex-count method for expected instructions.
+- **False positive estimation**: No longer estimated from parser version
+  differences. FP/FN computed from gold annotation matching.
+- **Matching**: Detected instructions matched to gold annotations by
+  (normalized target_ref, instruction_type). Each gold annotation matched
+  at most once.
+
+### Performance (25-document parser-development sample, gold annotations)
 | Metric | v0.3.1 | v0.4 |
 |---|---:|---:|
-| Precision | 1.000 | 0.950 |
-| Recall | 0.138 | 0.844 |
-| F1 | 0.243 | 0.894 |
-| False positives | 0 | 4 |
-| False negatives | 81 | 14 |
+| Gold annotations | 77 | 77 |
+| Detected | 13 | 46 |
+| True positives | 11 | 38 |
+| False positives | 2 | 8 |
+| False negatives | 66 | 39 |
+| Precision | 0.846 | 0.826 |
+| Recall | 0.143 | 0.494 |
+| F1 | 0.244 | 0.618 |
+| Unresolved | 0 | 0 |
 
 ### Added
-- `test_parser_v04_regression.py`: 14 regression tests from real development
-  corpus patterns. All 14 failed on v0.3.1, all pass on v0.4.
-- `DomainEffect` enum in `models.py`.
+- test_parser_v04_regression.py: 36 regression tests with semantic assertions
+  (exact instruction type, target reference, FP regression tests). All pass
+  on v0.4; v0.3.1 baseline tests confirm v0.3 does NOT detect v0.4 patterns.
+- data/development/gold_annotations.json: Gold annotations for the 25-document
+  parser-development sample.
+- research/DEVELOPMENT_CENSUS_v0.4.md: v0.4 census report.
+- research/DEVELOPMENT_CENSUS_comparison.md: v0.3.1 vs v0.4 comparison.
+- DomainEffect enum in models.py.
+- ADD and DELETE instruction types in models.py.
 
 ### Fixed
-- **Dataset labeling**: "25-issuer development corpus" → "25-document
-  parser-development sample" (one document per issuer, NOT the agreement-chain
+- **Dataset labeling**: 25-issuer development corpus to 25-document
+  parser-development sample (one document per issuer, NOT the agreement-chain
   corpus).
 - **Table 2 inconsistency**: separated per-format rows from pooled total,
-  renamed pooled row to "All amendment documents".
+  renamed pooled row to All amendment documents.
+- **Amended by deleting mapping**: was mapped to ADD_COMMITMENT, now
+  correctly mapped to DELETE_COMMITMENT.
+- **Amended as follows false positives**: Section X hereof (amendment
+  section heading) no longer matched as target.
+- **Cross-reference false positives**: REPLACE_V04 no longer matches
+  cross-references followed by deleting in a different instruction.
+- **Overlap double-counting**: REPLACE_V04 and ADD_V04 no longer both emit
+  instructions for the same amended by deleting...inserting text.
+- **Baseline artifact overwrite**: produce_census_tables.py no longer
+  overwrites DEVELOPMENT_CENSUS_v0.3.1.md with v0.4 results. Generates
+  separate versioned reports.
+- **Schema drift**: schema.sql instruction_type enum updated to match
+  models.py (removed MODIFY_SCOPE, ADD_EXCEPTION, REMOVE_EXCEPTION,
+  EXTEND_DEADLINE, CHANGE_FREQUENCY, CHANGE_PARTY; added ADD, DELETE,
+  FIND_REPLACE_REFERENCE). Added domain_effect enum and
+  amendment_instruction.domain_effect column.
+- **Executor dead code**: removed unreachable ADD_COMMITMENT and
+  DELETE_COMMITMENT branches from the generic ADD/DELETE handler blocks.
+  ADD_COMMITMENT is handled before the target_key guard; DELETE_COMMITMENT
+  is handled before the ADD/DELETE branches.
+- **Generic ADD with dict payload**: ADD with a dict new_value now creates
+  a new commitment (mirroring ADD_COMMITMENT), no longer blocked by the
+  target_key guard. Previously the dict-payload branch was unreachable.
+- **persistence.py _edge_type**: added DELETE to the SUPERSEDES mapping
+  so generic DELETE instructions produce correct lineage edges.
+- **Documentation drift**: README.md and AMENDMENT_INSTRUCTION_GRAMMAR.md
+  updated to reflect the v0.4 instruction type / domain effect separation.
 
 ## [Unreleased] — 25-document parser-development sample
 

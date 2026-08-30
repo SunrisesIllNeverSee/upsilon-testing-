@@ -870,14 +870,14 @@ Expected impact: recall from 13.8% → 60-70%, precision stays at ~1.0
 
 ## Entry 010 — Parser v0.4: grammar expansion, error movement, and architecture separation
 
-**Timestamp:** 2026-08-30T04:15:00Z
+**Timestamp:** 2026-08-30T04:15:00Z (revised 2026-08-30T06:00:00Z)
 **Researcher:** Deric McHenry (via Devin CLI)
 **Study phase:** Development (grammar expansion)
 **Case / corpus:** 25-document parser-development sample
 **Git tag:** dev-baseline-v0.3.1 (baseline), v0.4 (this entry)
 
 ### Objective
-Expand the deterministic instruction grammar based on the evidence from the v0.3.1 census. The census showed 100% precision but only 13.8% recall, with 75 missed instructions across 5 pattern categories. The goal was to substantially raise recall while retaining the conservative execution posture (high precision).
+Expand the deterministic instruction grammar based on the evidence from the v0.3.1 census. The census showed high precision but only 13.8% recall. The goal was to substantially raise recall while retaining the conservative execution posture (high precision).
 
 ### Two corrections before v0.4
 
@@ -896,87 +896,138 @@ Separated `InstructionType` (how the legal document transformed) from `DomainEff
 TRANSFORMATION (InstructionType)     DOMAIN EFFECT (DomainEffect)
   REPLACE_VALUE                        covenant_threshold_change
   REPLACE_TEXT                         commitment_amount_change
-  ADD_COMMITMENT                       deadline_change
-  DELETE_COMMITMENT                    exception_expansion
-  RESTATE_SECTION                      party_change
-  FIND_REPLACE_REFERENCE               frequency_change
-  WAIVE_TEMPORARILY                    scope_change
-  UNRESOLVED                           definition_change
-                                       unknown
+  ADD                                  deadline_change
+  ADD_COMMITMENT                       exception_expansion
+  DELETE                               exception_removal
+  DELETE_COMMITMENT                    party_change
+  RESTATE_SECTION                      frequency_change
+  FIND_REPLACE_REFERENCE               scope_change
+  WAIVE_TEMPORARILY                    definition_change
+  UNRESOLVED                           unknown
 ```
+
+Domain-effect members previously in `InstructionType` (ADD_EXCEPTION, REMOVE_EXCEPTION, EXTEND_DEADLINE, CHANGE_FREQUENCY, CHANGE_PARTY, MODIFY_SCOPE) have been removed and migrated to `DomainEffect`. Generic `ADD` and `DELETE` instruction types replace them, combined with `domain_effect` to express the same semantics.
 
 `COMMITMENT_AMOUNT_CHANGE` was moved OUT of `InstructionType` and into `DomainEffect`. It describes what changed, not how the legal document transformed. A commitment amount change is a `REPLACE_VALUE` transformation with `commitment_amount_change` domain effect.
 
 `FIND_REPLACE_REFERENCE` remains in `InstructionType` because it describes the transformation operation (global find-and-replace of defined terms).
+
+The executor now uses `domain_effect` for field selection: `REPLACE_VALUE` with `DEADLINE_CHANGE` applies to the `deadline` field; `ADD` with `EXCEPTION_EXPANSION` adds to the exceptions list; etc.
 
 ### v0.4 grammar expansion
 
 #### Generalized reference targets
 ```
 v0.3.1: Section\s+[A-Za-z0-9.\-()]+
-v0.4:   (Section|Article|Schedule|Exhibit|Definition|Clause|Paragraph|Subsection)\s+[A-Za-z0-9.\-()]+
+v0.4:   (Section|Article|Schedule|Exhibit)\s+[A-Za-z0-9.\-()]+
 ```
+
+Lowercase structural terms (Definition, Clause, Paragraph, Subsection) were intentionally excluded because they appear as common nouns in amendment text and cause false positives. The actual amendment target is always the enclosing Section/Article/Schedule/Exhibit.
 
 #### New transformation patterns
 | Pattern | Example | InstructionType |
 |---------|---------|-----------------|
 | `amended to read as follows` | "Section 1.01 is amended to read as follows" | RESTATE_SECTION |
-| `amended as follows` | "Section 1.1 is hereby amended as follows" | RESTATE_SECTION |
+| `amended as follows` | "Section 1.1 of the Credit Agreement is hereby amended as follows" | RESTATE_SECTION |
 | `deleted from Section X` | "is hereby deleted from Section 1.1 in its entirety" | DELETE_COMMITMENT |
 | `deleting...inserting` | "deleting $95M and inserting $80M in lieu thereof" | REPLACE_TEXT |
 | `deleting...substituting` | "deleting the definition and substituting in its place" | REPLACE_TEXT |
 | `amended by inserting` | "Schedule 1.1 is hereby amended by inserting" | ADD_COMMITMENT |
-| `amended by deleting` | "Schedule 1.1 is hereby amended by deleting" | ADD_COMMITMENT |
+| `amended by deleting` | "Schedule 1.1 is hereby amended by deleting" | DELETE_COMMITMENT |
+| `amended by adding` | "Article I is hereby amended by adding" | ADD_COMMITMENT |
+| `amended and restated` | "Section 7.01 is amended and restated in its entirety" | RESTATE_SECTION |
+
+#### Overlap deduplication
+When REPLACE_V04 and ADD_V04/DELETE_BY_V04 match the same text span (e.g., "amended by deleting...inserting"), only the more specific match (REPLACE_TEXT) is kept. Type priority: REPLACE_TEXT > ADD_COMMITMENT/DELETE_COMMITMENT > RESTATE_SECTION/WAIVE_TEMPORARILY.
+
+#### "Amended as follows" false positive fix
+The pattern requires "of the Credit Agreement" to exclude amendment section headings ("Section 2 hereof, the Credit Agreement is hereby amended as follows"). This prevents treating the amendment's own section heading as an agreement target.
 
 #### Regression tests
-14 regression tests written from real development corpus patterns (test_parser_v04_regression.py). All 14 failed on v0.3.1 and pass on v0.4.
+36 regression tests written from real development corpus patterns (test_parser_v04_regression.py). Tests assert exact instruction types and target references, not just presence. Includes negative tests for amendment-section false positives and cross-reference-only occurrences. v0.3.1 baseline tests confirm v0.3 does NOT detect v0.4 patterns.
 
-### v0.3.1 vs v0.4 comparison
+### Evaluation methodology correction
+
+The previous version of this entry reported metrics (0.950 / 0.844 / 0.894) that were not reproducible from committed artifacts. The issues were:
+
+1. **Expected-instruction counts double-counted overlapping regex categories.** The `count_expected_instructions()` function summed independently overlapping regex matches, inflating the expected count.
+2. **False positives estimated from parser version differences.** The `estimate_false_positives()` function used `max(0, v02_count - v03_count)`, which is not a valid FP estimator.
+3. **`produce_census_tables.py` invoked v0.4 behavior through `parse_v03()`.** The baseline was contaminated.
+
+These have been corrected by:
+- **Gold annotations**: Explicit, reviewed, non-overlapping annotations in `data/development/gold_annotations.json` (77 total across 25 documents). Each annotation is one legal operation, manually identified.
+- **Gold-based matching**: TP/FP/FN computed by matching detected instructions to gold annotations by (normalized target_ref, instruction_type). Each gold annotation matched at most once.
+- **Separate parser entry points**: `parse_v03()` uses v0.3 regexes; `parse_v04()` uses v0.4 regexes. No cross-contamination.
+
+### v0.3.1 vs v0.4 comparison (gold annotations)
 
 | Metric | v0.3.1 | v0.4 |
 |---|---:|---:|
-| Detected | 13 | 80 |
-| True positives | 13 | 76 |
-| False positives | 0 | 4 |
-| False negatives | 81 | 14 |
+| Gold annotations | 77 | 77 |
+| Detected | 13 | 46 |
+| True positives | 11 | 38 |
+| False positives | 2 | 8 |
+| False negatives | 66 | 39 |
 | Unresolved | 0 | 0 |
-| **Precision** | **1.000** | **0.950** |
-| **Recall** | **0.138** | **0.844** |
-| **F1** | **0.243** | **0.894** |
+| **Precision** | **0.846** | **0.826** |
+| **Recall** | **0.143** | **0.494** |
+| **F1** | **0.244** | **0.618** |
 
 ### Error movement analysis
 
 #### What improved
-- **Recall: 0.138 → 0.844** (+70.6 points). The parser now detects 80 of 94 expected instructions.
-- **F1: 0.243 → 0.894** (+65.1 points). The harmonic mean improved dramatically.
+- **Recall: 0.143 → 0.494** (+35.1 points). The parser now detects 38 of 77 gold annotations.
+- **F1: 0.244 → 0.618** (+37.4 points). The harmonic mean improved substantially.
 - The biggest gains came from:
-  - `deleting...inserting` pattern: 33 missed → most now detected
-  - `Article/Schedule` targets: 26 missed → most now detected
-  - `amended to read` and `amended as follows`: 16 missed → all now detected
+  - `deleting...inserting` pattern: most now detected as REPLACE_TEXT
+  - `Article/Schedule` targets: now detected (DEV-013, DEV-025)
+  - `amended to read` and `amended as follows`: now detected (DEV-024, DEV-022)
+  - `amended by adding` for Articles: now detected (DEV-013)
 
 #### What regressed
-- **Precision: 1.000 → 0.950** (-5.0 points). 4 false positives introduced.
-- The false positives are all REPLACE_TEXT matches with spans > 500 chars, where the regex matched across multiple amendment instructions in a single long match. These are not hallucinated instructions — the amendment language is real — but the match span is too wide, capturing multiple instructions as one.
+- **Precision: 0.846 → 0.826** (-2.0 points). 8 false positives in v0.4 vs 2 in v0.3.1.
+- The v0.4 false positives include:
+  - DEV-001: ARTICLE II match in a non-credit-agreement document (partnership exchange agreement)
+  - DEV-003: Section 3 cross-reference matched as target
+  - DEV-011: broad Section 1 replacement and nested/broad matches
+  - DEV-022: duplicate Section 1.01 restatement matches
 
-#### Remaining false negatives (14)
-- DEV-023: 0 instructions detected (California Resources Corp, 10th amendment). The document uses non-standard language not covered by v0.4 patterns.
-- DEV-002: 1 instruction detected but 5 expected (Rite Aid). Some patterns still not matched.
-- DEV-006: 1 instruction detected but 3 expected (Ultra Petroleum).
-- DEV-021: 3 instructions detected but 6 expected (Venus Concept).
+#### Remaining false negatives (39)
+- DEV-004: "amended in its entirety as follows" pattern not captured
+- DEV-005: composite credit agreement with restatement references
+- DEV-016: large composite document (217K chars)
+- DEV-017: 19 "By deleting in its entirety" instructions targeting definitions (pattern format mismatch)
+- DEV-019: "amended by replacing X with Y" pattern not captured
+- DEV-023: "amended by amending and restating" pattern not captured
+- DEV-025: 2 Schedule 1.1 operations not captured
 
 ### Interpretation
 
-The v0.4 grammar expansion achieved the design goal: **substantially raised recall while retaining the conservative execution posture**. Precision dropped only 5 points (from 1.000 to 0.950) while recall rose 70 points (from 0.138 to 0.844). The F1 score improved from 0.243 to 0.894.
+The v0.4 grammar expansion raised recall from 0.143 to 0.494 (+35.1 points) while precision dropped only 2.0 points (from 0.846 to 0.826). F1 improved from 0.244 to 0.618. The conservative execution posture is largely preserved: 8 false positives out of 46 detections.
 
-The 4 false positives are all from the REPLACE_V04 regex matching across multiple instructions in long amendment sections. This can be fixed in v0.5 by splitting long matches or by using a tighter gap between `deleting` and `inserting/replacing`.
+The remaining 39 false negatives are primarily from three pattern categories not yet covered:
+1. "amended by replacing X with Y" (DEV-019)
+2. "amended by amending and restating" (DEV-023)
+3. "By deleting in its entirety" targeting definitions (DEV-017, 19 instances)
 
-The 14 remaining false negatives are from documents with non-standard amendment language that even the broadened v0.4 patterns don't cover. These will require either further pattern generalization or a different approach (e.g., section-level parsing rather than regex matching).
+These will require v0.5 grammar expansion. The DEV-017 case is particularly significant because it represents 19 of the 39 remaining false negatives in a single document.
+
+The 8 false positives require tighter target/context validation, particularly for cross-references (DEV-003) and non-credit-agreement documents (DEV-001).
 
 ### Artifacts produced
-- amendment_parser.py (v0.4 regexes, generalized targets, new patterns)
-- models.py (DomainEffect enum, domain_effect field on AmendmentInstruction)
-- test_parser_v04_regression.py (14 regression tests from real patterns)
-- development_corpus.csv (updated with v0.4 results)
+- amendment_parser.py (v0.4 regexes, generalized targets, new patterns, deduplication)
+- models.py (DomainEffect enum, ADD/DELETE instruction types, domain_effect field)
+- executor.py (domain_effect-based field selection)
+- test_parser_v04_regression.py (36 regression tests with semantic assertions)
+- test_executor.py (updated for ADD/DELETE + domain_effect)
+- test_persistence_plan.py (updated for ADD/DELETE + domain_effect)
+- data/development/gold_annotations.json (77 gold annotations)
+- classify_development_corpus.py (gold-based evaluation, parse_v04)
+- produce_census_tables.py (versioned reports, gold-based metrics)
+- development_corpus.csv (updated with v0.3.1 and v0.4 metrics)
 - data/development/classification_results.json (updated)
+- research/DEVELOPMENT_CENSUS_v0.3.1.md (regenerated with gold-based metrics)
+- research/DEVELOPMENT_CENSUS_v0.4.md (new)
+- research/DEVELOPMENT_CENSUS_comparison.md (new)
 
 ---

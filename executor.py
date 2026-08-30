@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from typing import Dict
-from models import AmendmentInstruction, CommitmentState, ExecutionResult, InstructionType
+from models import AmendmentInstruction, CommitmentState, DomainEffect, ExecutionResult, InstructionType
 
 
 class UnresolvedInstruction(Exception):
@@ -42,14 +42,17 @@ def apply_instruction(
             }
         )
 
-    if t == InstructionType.ADD_COMMITMENT:
-        if not isinstance(ins.new_value, dict):
-            raise UnresolvedInstruction("ADD_COMMITMENT requires object payload")
+    if t in {InstructionType.ADD_COMMITMENT, InstructionType.ADD} and isinstance(ins.new_value, dict):
+        # ADD / ADD_COMMITMENT with a dict payload → add a new commitment.
+        # This does not require target_key; the canonical_key comes from the payload.
         obj = CommitmentState(**ins.new_value)
         if obj.canonical_key in state:
             raise UnresolvedInstruction(f"Commitment already exists: {obj.canonical_key}")
         state[obj.canonical_key] = obj
         return {"action": "add", "target": obj.canonical_key}, None
+
+    if t == InstructionType.ADD_COMMITMENT:
+        raise UnresolvedInstruction("ADD_COMMITMENT requires new_value (dict payload)")
 
     if not ins.target_key:
         raise UnresolvedInstruction(f"{t} requires target_key")
@@ -90,20 +93,21 @@ def apply_instruction(
     if t in {
         InstructionType.REPLACE_VALUE,
         InstructionType.REPLACE_TEXT,
-        InstructionType.EXTEND_DEADLINE,
-        InstructionType.CHANGE_FREQUENCY,
-        InstructionType.CHANGE_PARTY,
-        InstructionType.MODIFY_SCOPE,
     }:
         field = ins.field
-        if t == InstructionType.EXTEND_DEADLINE:
-            field = field or "deadline"
-        elif t == InstructionType.CHANGE_FREQUENCY:
-            field = field or "frequency"
-        elif t == InstructionType.CHANGE_PARTY:
-            field = field or "party"
-        elif t == InstructionType.MODIFY_SCOPE:
-            field = field or "scope"
+        # Use domain_effect to determine the field if not explicitly set
+        if not field and ins.domain_effect:
+            de = ins.domain_effect
+            if de == DomainEffect.DEADLINE_CHANGE:
+                field = "deadline"
+            elif de == DomainEffect.FREQUENCY_CHANGE:
+                field = "frequency"
+            elif de == DomainEffect.PARTY_CHANGE:
+                field = "party"
+            elif de == DomainEffect.SCOPE_CHANGE:
+                field = "scope"
+            elif de == DomainEffect.COVENANT_THRESHOLD_CHANGE:
+                field = "threshold"
 
         if not field or not hasattr(c, field):
             raise UnresolvedInstruction(f"Unsupported or missing field: {field}")
@@ -123,16 +127,26 @@ def apply_instruction(
             "new": deepcopy(ins.new_value),
         }, None
 
-    if t == InstructionType.ADD_EXCEPTION:
-        old = deepcopy(c.exceptions)
-        if ins.new_value not in c.exceptions:
-            c.exceptions.append(deepcopy(ins.new_value))
-        return {"action": "add_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
+    if t == InstructionType.ADD:
+        # ADD with EXCEPTION_EXPANSION domain effect → add to exceptions list.
+        # ADD with a dict payload (new commitment) is handled before the
+        # target_key guard above.
+        if ins.domain_effect == DomainEffect.EXCEPTION_EXPANSION:
+            old = deepcopy(c.exceptions)
+            if ins.new_value not in c.exceptions:
+                c.exceptions.append(deepcopy(ins.new_value))
+            return {"action": "add_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
+        raise UnresolvedInstruction("ADD requires new_value (dict for commitment or value for exception with domain_effect)")
 
-    if t == InstructionType.REMOVE_EXCEPTION:
-        old = deepcopy(c.exceptions)
-        c.exceptions = [x for x in c.exceptions if x != ins.old_value]
-        return {"action": "remove_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
+    if t == InstructionType.DELETE:
+        # DELETE with EXCEPTION_REMOVAL domain effect → remove from exceptions list.
+        # DELETE without a domain_effect on a commitment is not supported here;
+        # use DELETE_COMMITMENT for that.
+        if ins.domain_effect == DomainEffect.EXCEPTION_REMOVAL:
+            old = deepcopy(c.exceptions)
+            c.exceptions = [x for x in c.exceptions if x != ins.old_value]
+            return {"action": "remove_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
+        raise UnresolvedInstruction("DELETE requires domain_effect=EXCEPTION_REMOVAL (use DELETE_COMMITMENT to delete a commitment)")
 
     if t == InstructionType.RESTATE_SECTION:
         raise UnresolvedInstruction(

@@ -1,0 +1,192 @@
+{
+  "_description": "Gold annotations for the 25-document parser-development sample. Each annotation is a reviewed, non-overlapping amendment instruction. These are used as ground truth for precision/recall/F1 computation. An instruction is identified by (target_ref, instruction_type). target_ref is normalized (whitespace-collapsed, lowercased) for matching.",
+  "_methodology": "Each document was manually reviewed to identify all amendment instructions in the amendment body. Instructions are non-overlapping: one legal operation = one annotation. Container phrases like 'amended as follows' are NOT annotated separately when they contain sub-instructions; only the actual operations (add/delete/restate/replace) are annotated. Cross-references and amendment section headings are NOT annotated.",
+  "DEV-001": {
+    "notes": "Not a credit agreement amendment — partnership exchange agreement. ARTICLE II match is a false positive.",
+    "expected": []
+  },
+  "DEV-002": {
+    "expected": [
+      {"target_ref": "Section 4.02", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-003": {
+    "notes": "Section 3 of the Fifth Amendment is not a Credit Agreement section. Schedule 1.1(B) is a real restatement. Section 9.2.1 is also amended and restated but the parser misses it.",
+    "expected": [
+      {"target_ref": "Schedule 1.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 9.2.1", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-004": {
+    "notes": "Section 1.1 is amended in its entirety as follows (restatement pattern not captured by parser).",
+    "expected": [
+      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-005": {
+    "notes": "Composite credit agreement with restatement. Body has 'amended and restated' references.",
+    "expected": [
+      {"target_ref": "Section 2.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 5.1", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-006": {
+    "expected": [
+      {"target_ref": "Section 8.12", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-007": {
+    "expected": [
+      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.1", "instruction_type": "DELETE_COMMITMENT"}
+    ]
+  },
+  "DEV-008": {
+    "notes": "Section 1.01 amended by deleting and inserting definitions. Parser detects 1 REPLACE_TEXT.",
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "REPLACE_TEXT"}
+    ]
+  },
+  "DEV-009": {
+    "expected": [
+      {"target_ref": "Section 1.4", "instruction_type": "ADD_COMMITMENT"}
+    ]
+  },
+  "DEV-010": {
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"},
+      {"target_ref": "Section 7.12(b)", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Exhibit D", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-011": {
+    "notes": "Multiple section amendments. Parser detects 9 but some are cross-reference FPs. Real instructions: Section 1.1 (add), Section 2.5 (replace), Section 2.6 (delete+replace), Section 2.14 (replace), Section 10.1 (replace), Section 11.6 (replace), Section 11.7 (replace), Exhibit B (replace).",
+    "expected": [
+      {"target_ref": "Section 1.1", "instruction_type": "ADD_COMMITMENT"},
+      {"target_ref": "Section 2.5", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 2.6", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 2.6", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 2.14", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 10.1", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 11.6", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 11.7", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Exhibit B", "instruction_type": "REPLACE_TEXT"}
+    ]
+  },
+  "DEV-012": {
+    "expected": [
+      {"target_ref": "Section 6.01(a)", "instruction_type": "ADD_COMMITMENT"}
+    ]
+  },
+  "DEV-013": {
+    "expected": [
+      {"target_ref": "Article I", "instruction_type": "ADD_COMMITMENT"},
+      {"target_ref": "Article XII", "instruction_type": "ADD_COMMITMENT"}
+    ]
+  },
+  "DEV-014": {
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"},
+      {"target_ref": "Section 13.01", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-015": {
+    "notes": "No standard amendment instruction patterns detected in body.",
+    "expected": []
+  },
+  "DEV-016": {
+    "notes": "Composite credit agreement. Body is very large (217K chars). Has 'amended and restated' references.",
+    "expected": [
+      {"target_ref": "Section 2.7", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-017": {
+    "notes": "19 'By deleting in its entirety' instructions targeting definitions in Section 1.01 and specific sections. Parser detects 0 due to pattern format mismatch.",
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"}
+    ]
+  },
+  "DEV-018": {
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"}
+    ]
+  },
+  "DEV-019": {
+    "notes": "Section 1.01 amended by replacing a date. 'amended by replacing X with Y' pattern not captured by parser.",
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "REPLACE_TEXT"}
+    ]
+  },
+  "DEV-020": {
+    "notes": "No standard amendment instruction patterns detected in body.",
+    "expected": []
+  },
+  "DEV-021": {
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"},
+      {"target_ref": "Section 2.06", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 7.02", "instruction_type": "REPLACE_TEXT"}
+    ]
+  },
+  "DEV-022": {
+    "notes": "Multiple definitions in Section 1.01 amended and restated. Section 7.01 amended and restated. Section 2.01 amended.",
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 2.01", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 7.01", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-023": {
+    "notes": "Multiple definitions amended by amending and restating. 'amended by amending and restating' pattern not captured by parser.",
+    "expected": [
+      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 2.17(b)", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-024": {
+    "notes": "Multiple definitions in Section 1.01 amended to read as follows. Section 7.06 amended as follows. Section 7.12(b) amended to read.",
+    "expected": [
+      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 7.06", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 7.12(b)", "instruction_type": "RESTATE_SECTION"}
+    ]
+  },
+  "DEV-025": {
+    "expected": [
+      {"target_ref": "Schedule 1.1", "instruction_type": "ADD_COMMITMENT"},
+      {"target_ref": "Schedule 1.1", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Schedule 1.1", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Schedule 1.1", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Schedule 1.1", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Schedule 1.1", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 2.4(e)", "instruction_type": "ADD_COMMITMENT"},
+      {"target_ref": "Section 2.12(d)", "instruction_type": "REPLACE_TEXT"},
+      {"target_ref": "Section 6", "instruction_type": "ADD_COMMITMENT"}
+    ]
+  }
+}

@@ -11,17 +11,32 @@ class InstructionType(str, Enum):
     Separated from DomainEffect: a single transformation (e.g., REPLACE_VALUE)
     can produce different domain effects (e.g., commitment_amount_change,
     covenant_threshold_change) depending on which field changed.
+
+    The transformation vocabulary aligns with the v0.4 grammar:
+        REPLACE_VALUE  — replace a specific field value
+        REPLACE_TEXT   — replace text content (broader than REPLACE_VALUE)
+        ADD            — add a new element (definition, clause, section)
+        ADD_COMMITMENT — add a new commitment (specific case of ADD)
+        DELETE         — delete an element
+        DELETE_COMMITMENT — delete/remove a commitment (specific case of DELETE)
+        RESTATE_SECTION — restate a section in its entirety
+        WAIVE_TEMPORARILY — temporarily waive compliance
+        SUSPEND        — suspend a commitment
+        REINSTATE      — reinstate a suspended commitment
+        RENUMBER_REFERENCE — renumber a section reference
+        FIND_REPLACE_REFERENCE — global find-and-replace of a defined term
+        UNRESOLVED     — parser could not resolve the instruction
+
+    Domain-effect concepts (ADD_EXCEPTION, EXTEND_DEADLINE, CHANGE_PARTY, etc.)
+    have been migrated to DomainEffect. The executor uses domain_effect to
+    determine which field to modify, while instruction_type determines how.
     """
     REPLACE_VALUE = "REPLACE_VALUE"
     REPLACE_TEXT = "REPLACE_TEXT"
+    ADD = "ADD"
     ADD_COMMITMENT = "ADD_COMMITMENT"
+    DELETE = "DELETE"
     DELETE_COMMITMENT = "DELETE_COMMITMENT"
-    MODIFY_SCOPE = "MODIFY_SCOPE"
-    ADD_EXCEPTION = "ADD_EXCEPTION"
-    REMOVE_EXCEPTION = "REMOVE_EXCEPTION"
-    EXTEND_DEADLINE = "EXTEND_DEADLINE"
-    CHANGE_FREQUENCY = "CHANGE_FREQUENCY"
-    CHANGE_PARTY = "CHANGE_PARTY"
     WAIVE_TEMPORARILY = "WAIVE_TEMPORARILY"
     SUSPEND = "SUSPEND"
     REINSTATE = "REINSTATE"

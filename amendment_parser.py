@@ -4,14 +4,22 @@ v0.4 broadens the instruction grammar based on the 25-document
 parser-development sample census (v0.3.1 baseline).
 
 Key changes from v0.3:
-- Generalized reference targets: Section, Article, Schedule, Exhibit,
-  Definition, clause, paragraph, subsection (not just Section).
+- Generalized reference targets: Section, Article, Schedule, Exhibit
+  (not just Section). Lowercase structural terms (Definition, Clause,
+  Paragraph, Subsection) are NOT included as targets because they appear
+  as common nouns in amendment text and cause false positives. The actual
+  amendment target is always the enclosing Section/Article/Schedule/Exhibit.
 - Broadened replace pattern: deleting...replacing, deleting...inserting,
   deleting...substituting (not just deleting...replacing).
 - New "amended to read" pattern: "Section X is amended to read as follows".
-- New "amended as follows" pattern: "Section X is hereby amended as follows".
+- New "amended as follows" pattern: "Section X is hereby amended as follows"
+  (excludes "Section X hereof" which is the amendment's own section number).
 - New "deleted from Section" pattern: "is hereby deleted from Section X".
-- Broadened "amended by": adding, deleting, inserting, modifying (not just adding).
+- Broadened "amended by": adding, deleting, inserting, modifying (not just
+  adding). "amended by deleting" maps to DELETE_COMMITMENT, not ADD_COMMITMENT.
+- Overlapping match deduplication: when REPLACE_V04 and ADD_V04 match the
+  same text span (e.g., "amended by deleting...inserting"), only the
+  more specific match is kept.
 
 v0.3 changes (preserved):
 - Document segmentation divides a filing into AMENDMENT_BODY, SIGNATURES,
@@ -29,8 +37,10 @@ Architecture:
     ANNEX A / COMPOSITE → CompositeTarget (ground truth)
 
 The v0.2 `parse()` function is preserved for backward compatibility and
-regression comparison. The `parse_v03()` function returns a richer
-result with segments, composite target, and instructions.
+regression comparison. `parse_v03()` returns the v0.3.1 baseline result
+(using v0.3 regexes). `parse_v04()` returns the v0.4 result (using
+broadened v0.4 regexes). Both share the same segmentation and composite
+detection logic.
 """
 from __future__ import annotations
 import argparse, json, re
@@ -112,13 +122,16 @@ ADD_V03 = re.compile(
 # v0.4 regexes — generalized targets + broadened transformations
 # ---------------------------------------------------------------------------
 
-# Generalized reference target: matches Section, Article, Schedule, Exhibit,
-# Definition, clause, paragraph, subsection (not just Section).
-# Captures the full reference (e.g., "Section 1.01", "Article I",
-# "Schedule 1.1", "Section 2.4(e)").
+# Generalized reference target: matches Section, Article, Schedule, Exhibit
+# (not just Section). These are always capitalized in legal documents when
+# used as section references.
+# Definition, Clause, Paragraph, Subsection are intentionally excluded —
+# they appear as common nouns in amendment text (e.g., "the definition of X",
+# "clause (a)(v)") and cause false positives when included as targets.
+# The actual amendment target is always the enclosing Section/Article/Schedule/Exhibit.
 _TARGET = (
     r'(?P<section>'
-    r'(?:Section|Article|Schedule|Exhibit|Definition|Clause|Paragraph|Subsection)'
+    r'(?:Section|Article|Schedule|Exhibit)'
     r'\s+[A-Za-z0-9.\-()]+'
     r')'
 )
@@ -126,13 +139,19 @@ _TARGET = (
 # v0.4 REPLACE: broadened to handle deleting...inserting, deleting...substituting,
 # and deleting...in lieu thereof (not just deleting...replacing).
 # Also handles "deleting the single instance of X and inserting Y in lieu thereof".
+# Requires "amended by" (or "modified and amended by") between target and "deleting"
+# to ensure the target is actually being amended (not a cross-reference followed by
+# "deleting" in a different instruction).
 # Gap between target and deleting is bounded to 200 chars.
 # Gap between deleting and inserting/replacing is bounded to 500 chars
 # (some definitions are long).
 REPLACE_V04 = re.compile(
     _TARGET + r'.{0,200}?'
+    r'(?:is\s+(?:hereby\s+)?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+)'
+    r'(?:\(\w+\)\s+)*'
     r'(?:deleting|delete)\s+'
-    r'(?:the\s+(?:single\s+instance\s+of\s+)?(?:definition\s+(?:of\s+)?[\u201c"])?[\u201c"]?)?'
+    r'(?:the\s+(?:single\s+instance\s+of\s+)?(?:definition\s+(?:of\s+)?[\u201c"]?)?)?'
+    r'[\u201c"]?'
     r'(?P<old>[^\u201c"]{1,200})[\u201d"]?'
     r'.{0,500}?'
     r'(?:replacing\s+(?:it|the same|each)?\s*(?:with|by)|'
@@ -157,16 +176,31 @@ DELETE_V04 = re.compile(
     re.I | re.S,
 )
 
-# v0.4 ADD: broadened to handle "amended by adding", "amended by inserting",
-# "amended by deleting", "amended by modifying".
-# The gap between target and verb is bounded to 60 chars to avoid matching
-# section headings that are far from the actual amendment instruction.
-# The target may be followed by "of the Credit Agreement" or similar.
+# v0.4 ADD: "amended by adding" or "amended by inserting" or "amended by modifying".
+# "amended by deleting" is handled by DELETE_BY_V04 (maps to DELETE_COMMITMENT).
+# Requires "of the Credit Agreement" (or similar) after the target to ensure
+# the target is a Credit Agreement section, not the amendment's own section heading.
+# Allows optional "[...]" or "(...)" descriptions after the section number.
+# Allows optional "(i) " or "(ii) " etc. between "by" and the verb.
 ADD_V04 = re.compile(
-    _TARGET + r'(?:\s+of\s+the\s+(?:Credit|Note\s+Purchase|Loan)\s+Agreement)?'
+    _TARGET + r'(?:\s*\[[^\]]*\])?(?:\s*\([^)]*\))?'
+    r'\s+of\s+the\s+(?:Credit|Note\s+Purchase|Loan)\s+Agreement'
     r'.{0,60}?'
     r'(?:is hereby )?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+'
-    r'(?:adding|inserting|deleting|modifying)',
+    r'(?:\(\w+\)\s+)*'
+    r'(?:adding|inserting|modifying)',
+    re.I | re.S,
+)
+
+# v0.4 DELETE_BY: "amended by deleting" — maps to DELETE_COMMITMENT, not ADD.
+# Same structure as ADD_V04 but only matches "deleting".
+DELETE_BY_V04 = re.compile(
+    _TARGET + r'(?:\s*\[[^\]]*\])?(?:\s*\([^)]*\))?'
+    r'\s+of\s+the\s+(?:Credit|Note\s+Purchase|Loan)\s+Agreement'
+    r'.{0,60}?'
+    r'(?:is hereby )?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+'
+    r'(?:\(\w+\)\s+)*'
+    r'deleting',
     re.I | re.S,
 )
 
@@ -186,12 +220,18 @@ AMENDED_TO_READ_V04 = re.compile(
     re.I | re.S,
 )
 
-# v0.4 AMENDED_AS_FOLLOWS: "Section X is hereby amended as follows"
+# v0.4 AMENDED_AS_FOLLOWS: "Section X of the Credit Agreement is hereby amended as follows"
 # This is a container pattern — it signals that amendment instructions follow,
 # typically in lettered subsections (a), (b), (c)...
+# Requires "of the Credit Agreement" (or similar) after the target to ensure
+# the target is a Credit Agreement section, not the amendment's own section number.
+# Without this, "Section 2 hereof, the Credit Agreement is hereby amended as follows"
+# would match "Section 2" as the target, which is the amendment's section heading.
 AMENDED_AS_FOLLOWS_V04 = re.compile(
-    _TARGET + r'.{0,200}?'
-    r'(?:is\s+(?:hereby\s+)?amended\s+as\s+follows)',
+    _TARGET + r'(?:\s*\[[^\]]*\])?'
+    r'\s+of\s+the\s+(?:Credit|Note\s+Purchase|Loan)\s+Agreement'
+    r'.{0,200}?'
+    r'is\s+(?:hereby\s+)?amended\s+as\s+follows',
     re.I | re.S,
 )
 
@@ -365,25 +405,18 @@ def nearby_v03(text: str, start: int, end: int, radius: int = MAX_CONTEXT) -> st
     return text[max(0, start - radius):min(len(text), end + radius)].strip()
 
 
-def _extract_instructions(text: str, body_start: int, body_end: int) -> list[dict]:
-    """Extract instructions from the amendment body only, using v0.4
-    broadened regexes with generalized targets."""
+def _extract_instructions_v03(text: str, body_start: int, body_end: int) -> list[dict]:
+    """Extract instructions from the amendment body only, using v0.3
+    tightened regexes (Section-only targets). This is the v0.3.1 baseline."""
     body_text = text[body_start:body_end]
 
     hits = []
-    # v0.4 specs: use broadened regexes with generalized targets.
-    # AMENDED_TO_READ and AMENDED_AS_FOLLOWS are mapped to RESTATE_SECTION
-    # since they signal section-level restatement.
-    # DELETED_FROM is mapped to DELETE_COMMITMENT.
     specs = [
-        ("REPLACE_TEXT", REPLACE_V04),
-        ("DELETE_COMMITMENT", DELETE_V04),
-        ("RESTATE_SECTION", RESTATE_V04),
-        ("WAIVE_TEMPORARILY", WAIVER_V04),
-        ("ADD_COMMITMENT", ADD_V04),
-        ("RESTATE_SECTION", AMENDED_TO_READ_V04),
-        ("RESTATE_SECTION", AMENDED_AS_FOLLOWS_V04),
-        ("DELETE_COMMITMENT", DELETED_FROM_V04),
+        ("REPLACE_TEXT", REPLACE_V03),
+        ("DELETE_COMMITMENT", DELETE_V03),
+        ("RESTATE_SECTION", RESTATE_V03),
+        ("WAIVE_TEMPORARILY", WAIVER_V03),
+        ("ADD_COMMITMENT", ADD_V03),
     ]
     seen = set()
     for typ, rx in specs:
@@ -392,7 +425,52 @@ def _extract_instructions(text: str, body_start: int, body_end: int) -> list[dic
             if key in seen:
                 continue
             seen.add(key)
-            # Convert body-relative offsets to document-absolute offsets
+            abs_start = body_start + m.start()
+            abs_end = body_start + m.end()
+            row = {
+                "instruction_type": typ,
+                "target_section_ref": m.groupdict().get("section"),
+                "target_key": None,
+                "source_start": abs_start,
+                "source_end": abs_end,
+                "source_text": nearby_v03(text, abs_start, abs_end),
+                "old_value": m.groupdict().get("old"),
+                "new_value": m.groupdict().get("new"),
+                "parser": "deterministic_baseline_v0.3",
+                "confidence": 1.0,
+            }
+            hits.append(row)
+    hits.sort(key=lambda x: x["source_start"])
+
+    for i, h in enumerate(hits, 1):
+        h["instruction_order"] = i
+    return hits
+
+
+def _extract_instructions_v04(text: str, body_start: int, body_end: int) -> list[dict]:
+    """Extract instructions from the amendment body only, using v0.4
+    broadened regexes with generalized targets and deduplication."""
+    body_text = text[body_start:body_end]
+
+    raw_hits = []
+    # v0.4 specs: use broadened regexes with generalized targets.
+    # AMENDED_TO_READ is mapped to RESTATE_SECTION (section is replaced entirely).
+    # AMENDED_AS_FOLLOWS is mapped to RESTATE_SECTION (container for sub-instructions).
+    # DELETED_FROM is mapped to DELETE_COMMITMENT.
+    # DELETE_BY ("amended by deleting") is mapped to DELETE_COMMITMENT.
+    specs = [
+        ("REPLACE_TEXT", REPLACE_V04),
+        ("DELETE_COMMITMENT", DELETE_V04),
+        ("RESTATE_SECTION", RESTATE_V04),
+        ("WAIVE_TEMPORARILY", WAIVER_V04),
+        ("ADD_COMMITMENT", ADD_V04),
+        ("DELETE_COMMITMENT", DELETE_BY_V04),
+        ("RESTATE_SECTION", AMENDED_TO_READ_V04),
+        ("RESTATE_SECTION", AMENDED_AS_FOLLOWS_V04),
+        ("DELETE_COMMITMENT", DELETED_FROM_V04),
+    ]
+    for typ, rx in specs:
+        for m in rx.finditer(body_text):
             abs_start = body_start + m.start()
             abs_end = body_start + m.end()
             row = {
@@ -406,23 +484,61 @@ def _extract_instructions(text: str, body_start: int, body_end: int) -> list[dic
                 "new_value": m.groupdict().get("new"),
                 "parser": "deterministic_baseline_v0.4",
                 "confidence": 1.0,
+                "_span": (abs_start, abs_end),
             }
-            hits.append(row)
-    hits.sort(key=lambda x: x["source_start"])
+            raw_hits.append(row)
 
-    for i, h in enumerate(hits, 1):
+    # Deduplicate overlapping matches.
+    # When two matches overlap (e.g., REPLACE_V04 and DELETE_BY_V04 both match
+    # "amended by deleting...inserting"), prefer the match that captures more
+    # information (has old/new values or a longer span that includes the
+    # inserting/replacing part).
+    # Priority: REPLACE_TEXT > ADD_COMMITMENT/DELETE_COMMITMENT > RESTATE_SECTION
+    # This ensures that "amended by deleting...inserting" is classified as
+    # REPLACE_TEXT (which captures old/new values), not DELETE_COMMITMENT.
+    type_priority = {
+        "REPLACE_TEXT": 0,
+        "ADD_COMMITMENT": 1,
+        "DELETE_COMMITMENT": 1,
+        "RESTATE_SECTION": 2,
+        "WAIVE_TEMPORARILY": 2,
+    }
+    raw_hits.sort(key=lambda x: (
+        x["source_start"],
+        type_priority.get(x["instruction_type"], 9),
+        -(x["source_end"] - x["source_start"]),
+    ))
+    deduped = []
+    for hit in raw_hits:
+        s, e = hit["_span"]
+        overlaps = False
+        for kept in deduped:
+            ks, ke = kept["_span"]
+            if s < ke and ks < e:
+                overlaps = True
+                break
+        if not overlaps:
+            deduped.append(hit)
+
+    # Sort by source_start and assign order
+    deduped.sort(key=lambda x: x["source_start"])
+    for i, h in enumerate(deduped, 1):
         h["instruction_order"] = i
-    return hits
+        del h["_span"]
+    return deduped
 
 
 def parse_v03(text: str) -> dict:
-    """Parse a filing with v0.3 structure-aware segmentation.
+    """Parse a filing with v0.3 structure-aware segmentation (v0.3.1 baseline).
+
+    Uses v0.3 tightened regexes (Section-only targets, bounded gaps).
+    Preserved for v0.3.1 vs v0.4 comparison on the same dataset.
 
     Returns:
         {
             "instructions": [...],
             "segments": {...},
-            "composite_ground_truth": {...} | None,
+            "composite_target": {...} | None,
             "parser": "deterministic_baseline_v0.3",
         }
     """
@@ -430,7 +546,36 @@ def parse_v03(text: str) -> dict:
     composite = detect_composite(text, segments)
 
     body = segments["amendment_body"]
-    instructions = _extract_instructions(text, body["start"], body["end"])
+    instructions = _extract_instructions_v03(text, body["start"], body["end"])
+
+    return {
+        "instructions": instructions,
+        "segments": segments,
+        "composite_target": composite,
+        "parser": "deterministic_baseline_v0.3",
+    }
+
+
+def parse_v04(text: str) -> dict:
+    """Parse a filing with v0.4 broadened grammar (generalized targets,
+    new patterns, deduplication).
+
+    Uses v0.4 regexes (Section|Article|Schedule|Exhibit targets, broadened
+    transformations, overlap deduplication).
+
+    Returns:
+        {
+            "instructions": [...],
+            "segments": {...},
+            "composite_target": {...} | None,
+            "parser": "deterministic_baseline_v0.4",
+        }
+    """
+    segments = segment_document(text)
+    composite = detect_composite(text, segments)
+
+    body = segments["amendment_body"]
+    instructions = _extract_instructions_v04(text, body["start"], body["end"])
 
     return {
         "instructions": instructions,
@@ -494,6 +639,7 @@ def main():
     ap.add_argument("text_file", help="Path to the source text file")
     ap.add_argument("--out", help="Output JSON path (default: <input>.instructions.json)")
     ap.add_argument("--v2", action="store_true", help="Use v0.2 parser (no segmentation)")
+    ap.add_argument("--v3", action="store_true", help="Use v0.3 parser (v0.3.1 baseline)")
     args = ap.parse_args()
 
     text = Path(args.text_file).read_text(encoding="utf-8", errors="ignore")
@@ -503,7 +649,7 @@ def main():
         out = Path(args.out) if args.out else Path(args.text_file).with_suffix(".instructions.json")
         out.write_text(json.dumps(result, indent=2), encoding="utf-8")
         print(json.dumps({"instructions": len(result), "parser": "v0.2", "out": str(out)}, indent=2))
-    else:
+    elif args.v3:
         result = parse_v03(text)
         out = Path(args.out) if args.out else Path(args.text_file).with_suffix(".instructions.json")
         out.write_text(json.dumps(result, indent=2), encoding="utf-8")
@@ -511,6 +657,21 @@ def main():
         print(json.dumps({
             "instructions": len(result["instructions"]),
             "parser": "v0.3",
+            "composite_target": comp if comp else None,
+            "segments": {
+                k: v if v else None
+                for k, v in result["segments"].items()
+            },
+            "out": str(out),
+        }, indent=2))
+    else:
+        result = parse_v04(text)
+        out = Path(args.out) if args.out else Path(args.text_file).with_suffix(".instructions.json")
+        out.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        comp = result["composite_target"]
+        print(json.dumps({
+            "instructions": len(result["instructions"]),
+            "parser": "v0.4",
             "composite_target": comp if comp else None,
             "segments": {
                 k: v if v else None

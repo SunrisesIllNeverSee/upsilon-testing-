@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from models import CommitmentState, AmendmentInstruction, InstructionType
+from models import CommitmentState, AmendmentInstruction, DomainEffect, InstructionType
 from executor import execute_amendment
 from persistence import build_persistence_plan
 
@@ -30,7 +30,8 @@ def test_two_instructions_same_commitment_plan_one_version():
         ),
         AmendmentInstruction(
             order=2,
-            instruction_type=InstructionType.ADD_EXCEPTION,
+            instruction_type=InstructionType.ADD,
+            domain_effect=DomainEffect.EXCEPTION_EXPANSION,
             target_key="financial_covenant.total_leverage_ratio",
             new_value="permitted_acquisition",
         ),

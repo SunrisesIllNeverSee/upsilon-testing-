@@ -1,4 +1,4 @@
-"""Regression tests for the 75 missed patterns from the 25-document
+"""Regression tests for the missed patterns from the 25-document
 parser-development sample census (v0.3.1 baseline).
 
 These tests use real amendment language extracted from the development
@@ -13,12 +13,12 @@ Pattern categories (from DEVELOPMENT_CENSUS_v0.3.1.md):
   - deleted_from_section (1 missed)
 
 Each test provides a minimal amendment body containing the pattern and
-asserts that parse_v04() (or parse_v03() after v0.4 changes) detects
-at least one instruction.
+asserts that parse_v04() detects at least one instruction with the
+correct instruction type.
 """
 from __future__ import annotations
 import pytest
-from amendment_parser import parse_v03
+from amendment_parser import parse_v03, parse_v04
 
 
 # ---------------------------------------------------------------------------
@@ -193,116 +193,384 @@ new clauses (ii) and (iii) in lieu thereof:
 (ii) Subject to the provisions set forth in Section 2.12(d)(iii) hereof.
 """
 
+# From DEV-011 (AGCO): "modified and amended by deleting ... inserting in lieu thereof"
+BODY_MODIFIED_AND_AMENDED_DELETING_INSERTING = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 2.4 of the Credit Agreement is hereby modified and amended by
+deleting sub-clause (v) of clause (b) of such section in its entirety
+and inserting in lieu thereof the following:
+
+(v) Each Borrower shall prepay the outstanding Loans.
+"""
+
+# From DEV-011 (AGCO): "modified and amended by deleting Section X in its entirety"
+BODY_MODIFIED_AND_AMENDED_DELETING_SECTION = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 11.6 of the Credit Agreement is hereby modified and amended by
+deleting Section 11.6 in its entirety and inserting in lieu thereof the
+following:
+
+11.6 Acknowledgement. Each party acknowledges the terms herein.
+"""
+
+# From DEV-022 (Brinker): "amended and restated in its entirety"
+BODY_AMENDED_AND_RESTATED = """
+SIXTH AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 7.01 of the Credit Agreement is hereby amended and restated in its
+entirety to read as follows:
+
+7.01 Financial Reporting. The Borrower shall furnish financial statements.
+"""
+
+# From DEV-010 (e.l.f. Beauty): "Exhibit D ... amended and restated in its entirety"
+BODY_EXHIBIT_AMENDED_AND_RESTATED = """
+THIRD AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Exhibit D to the Credit Agreement is hereby amended and restated in its
+entirety to read as follows:
+
+Exhibit D. Form of Compliance Certificate.
+"""
+
+# From DEV-008 (XpresSpa): "amended by inserting the following"
+BODY_AMENDED_BY_INSERTING = """
+SIXTH AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 1.01 of the Credit Agreement is hereby amended by inserting the
+following new definition in appropriate alphabetical order:
+
+"Adjusted Term SOFR" means the Term SOFR plus the applicable spread.
+"""
+
+# From DEV-009 (BlueLinx): "shall be amended by adding"
+BODY_SHALL_BE_AMENDED_BY_ADDING = """
+SIXTH AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 1.4 of the Credit Agreement shall be amended by adding the following
+new definition:
+
+"Adjusted Term SOFR" means the Term SOFR plus the applicable spread.
+"""
+
+# Synthetic: "amended by modifying" pattern
+BODY_AMENDED_BY_MODIFYING = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 2.1 of the Credit Agreement is hereby amended by modifying the
+following provision to read as follows:
+
+2.1 Interest Rate. The interest rate shall be the Base Rate.
+"""
+
+# Synthetic: "deleted from Schedule X in its entirety"
+BODY_DELETED_FROM_SCHEDULE = """
+SECOND AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+The definition of "Old Term" is hereby deleted from Schedule 1.1 in its
+entirety.
+"""
+
+# Synthetic: "amended to read as follows" with Article target
+BODY_ARTICLE_AMENDED_TO_READ = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Article I of the Credit Agreement is amended to read as follows:
+
+Article I. Definitions. All defined terms shall have the meanings set forth.
+"""
+
+# Synthetic: "amended as follows" with Schedule target
+BODY_SCHEDULE_AMENDED_AS_FOLLOWS = """
+SECOND AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Schedule 1.1 of the Credit Agreement is hereby amended as follows:
+
+(a) The following defined term is hereby deleted: "Old Term"
+"""
+
+# Synthetic: "deleting ... replacing it with"
+BODY_DELETING_REPLACING_IT_WITH = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 1.01 of the Credit Agreement is hereby amended by deleting the
+definition of "Old Term" and replacing it with the following:
+
+"New Term" means the new defined term.
+"""
+
+# Synthetic: "deleting ... replacing each with"
+BODY_DELETING_REPLACING_EACH_WITH = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 1.01 of the Credit Agreement is hereby amended by deleting the
+definitions of "Term A" and "Term B" and replacing each with the following:
+
+"Term A" means the updated definition.
+"""
+
+# Synthetic: "deleting ... replace with"
+BODY_DELETING_REPLACE_WITH = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 1.01 of the Credit Agreement is hereby amended by deleting the
+definition of "Old Term" and replace with the following:
+
+"New Term" means the new defined term.
+"""
+
+# Synthetic: "deleting ... inserting the following new"
+BODY_DELETING_INSERTING_FOLLOWING_NEW = """
+FIRST AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 1.01 of the Credit Agreement is hereby amended by deleting the
+definition of "Old Term" and inserting the following new definition:
+
+"New Term" means the new defined term.
+"""
+
 
 # ---------------------------------------------------------------------------
 # Regression tests: each should detect at least one instruction after v0.4
+# with the correct instruction type.
 # ---------------------------------------------------------------------------
 
 class TestArticleAmendedByAdding:
     """Article I/Article XII ... is hereby amended by adding."""
 
     def test_article_amended_by_adding(self):
-        result = parse_v03(BODY_ARTICLE_AMENDED_BY_ADDING)
-        assert len(result["instructions"]) >= 1, (
-            "Article I ... amended by adding should produce an instruction"
-        )
-        # At least one instruction should target an Article
+        result = parse_v04(BODY_ARTICLE_AMENDED_BY_ADDING)
+        assert len(result["instructions"]) >= 1
         refs = [i.get("target_section_ref") or "" for i in result["instructions"]]
-        assert any("Article" in r for r in refs), (
-            f"No instruction targets an Article; refs={refs}"
-        )
+        assert any("Article" in r for r in refs), f"No Article target; refs={refs}"
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "ADD_COMMITMENT" in types
 
     def test_article_xii_amended_by_adding(self):
-        result = parse_v03(BODY_ARTICLE_XII_AMENDED_BY_ADDING)
-        assert len(result["instructions"]) >= 1, (
-            "Article XII ... amended by adding should produce an instruction"
-        )
+        result = parse_v04(BODY_ARTICLE_XII_AMENDED_BY_ADDING)
+        assert len(result["instructions"]) >= 1
+        refs = [i.get("target_section_ref") or "" for i in result["instructions"]]
+        assert any("Article" in r for r in refs)
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "ADD_COMMITMENT" in types
 
 
 class TestScheduleAmendedByInserting:
     """Schedule 1.1 ... is hereby amended by inserting."""
 
     def test_schedule_amended_by_inserting(self):
-        result = parse_v03(BODY_SCHEDULE_AMENDED_BY_INSERTING)
-        assert len(result["instructions"]) >= 1, (
-            "Schedule 1.1 ... amended by inserting should produce an instruction"
-        )
+        result = parse_v04(BODY_SCHEDULE_AMENDED_BY_INSERTING)
+        assert len(result["instructions"]) >= 1
         inst = result["instructions"][0]
         assert "Schedule" in (inst.get("target_section_ref") or "")
+        assert inst["instruction_type"] == "ADD_COMMITMENT"
 
     def test_schedule_amended_by_deleting(self):
-        result = parse_v03(BODY_SCHEDULE_AMENDED_BY_DELETING)
-        assert len(result["instructions"]) >= 1, (
-            "Schedule 1.1 ... amended by deleting should produce an instruction"
-        )
+        result = parse_v04(BODY_SCHEDULE_AMENDED_BY_DELETING)
+        assert len(result["instructions"]) >= 1
+        inst = result["instructions"][0]
+        assert "Schedule" in (inst.get("target_section_ref") or "")
+        assert inst["instruction_type"] == "DELETE_COMMITMENT"
 
 
 class TestAmendedToRead:
     """Section X ... is amended to read as follows."""
 
     def test_amended_to_read(self):
-        result = parse_v03(BODY_AMENDED_TO_READ)
-        assert len(result["instructions"]) >= 1, (
-            "Section 1.01 ... amended to read as follows should produce an instruction"
-        )
+        result = parse_v04(BODY_AMENDED_TO_READ)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "RESTATE_SECTION" in types
+
+    def test_article_amended_to_read(self):
+        result = parse_v04(BODY_ARTICLE_AMENDED_TO_READ)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "RESTATE_SECTION" in types
 
 
 class TestAmendedAsFollows:
-    """Section X ... is hereby amended as follows."""
+    """Section X of the Credit Agreement ... is hereby amended as follows."""
 
     def test_amended_as_follows(self):
-        result = parse_v03(BODY_AMENDED_AS_FOLLOWS)
-        assert len(result["instructions"]) >= 1, (
-            "Section 1.1 ... amended as follows should produce an instruction"
-        )
+        result = parse_v04(BODY_AMENDED_AS_FOLLOWS)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "RESTATE_SECTION" in types
+
+    def test_schedule_amended_as_follows(self):
+        result = parse_v04(BODY_SCHEDULE_AMENDED_AS_FOLLOWS)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "RESTATE_SECTION" in types
 
 
 class TestDeletingInserting:
     """deleting ... inserting / deleting ... substituting / deleting ... in lieu thereof."""
 
     def test_deleting_substituting(self):
-        result = parse_v03(BODY_DELETING_SUBSTITUTING)
-        assert len(result["instructions"]) >= 1, (
-            "deleting ... substituting in its place should produce an instruction"
-        )
+        result = parse_v04(BODY_DELETING_SUBSTITUTING)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
 
     def test_deleting_inserting_in_lieu(self):
-        result = parse_v03(BODY_DELETING_INSERTING_IN_LIEU)
-        assert len(result["instructions"]) >= 1, (
-            "deleting the single instance of ... inserting ... in lieu thereof should produce an instruction"
-        )
+        result = parse_v04(BODY_DELETING_INSERTING_IN_LIEU)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
 
     def test_deleting_replacing_definitions(self):
-        result = parse_v03(BODY_DELETING_REPLACING_DEFINITIONS)
-        assert len(result["instructions"]) >= 1, (
-            "deleting the definitions of ... and replacing each with should produce an instruction"
-        )
+        result = parse_v04(BODY_DELETING_REPLACING_DEFINITIONS)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
 
     def test_amended_by_deleting_inserting_numbered(self):
-        result = parse_v03(BODY_AMENDED_BY_DELETING_INSERTING_NUMBERED)
-        assert len(result["instructions"]) >= 1, (
-            "amended by (i) deleting ... (ii) inserting should produce an instruction"
-        )
+        result = parse_v04(BODY_AMENDED_BY_DELETING_INSERTING_NUMBERED)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
+
+    def test_modified_and_amended_deleting_inserting(self):
+        result = parse_v04(BODY_MODIFIED_AND_AMENDED_DELETING_INSERTING)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
+
+    def test_modified_and_amended_deleting_section(self):
+        result = parse_v04(BODY_MODIFIED_AND_AMENDED_DELETING_SECTION)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
+
+    def test_deleting_replacing_it_with(self):
+        result = parse_v04(BODY_DELETING_REPLACING_IT_WITH)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
+
+    def test_deleting_replacing_each_with(self):
+        result = parse_v04(BODY_DELETING_REPLACING_EACH_WITH)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
+
+    def test_deleting_replace_with(self):
+        result = parse_v04(BODY_DELETING_REPLACE_WITH)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
+
+    def test_deleting_inserting_following_new(self):
+        result = parse_v04(BODY_DELETING_INSERTING_FOLLOWING_NEW)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
 
 
 class TestDeletedFromSection:
     """is hereby deleted from Section X in its entirety."""
 
     def test_deleted_from_section(self):
-        result = parse_v03(BODY_DELETED_FROM_SECTION)
-        assert len(result["instructions"]) >= 1, (
-            "is hereby deleted from Section 1.1 in its entirety should produce an instruction"
-        )
+        result = parse_v04(BODY_DELETED_FROM_SECTION)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "DELETE_COMMITMENT" in types
+
+    def test_deleted_from_schedule(self):
+        result = parse_v04(BODY_DELETED_FROM_SCHEDULE)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "DELETE_COMMITMENT" in types
 
 
 class TestSectionAmendedByAddingClause:
     """Section 2.4(e) ... is hereby amended by adding the following new clause."""
 
     def test_section_amended_by_adding_clause(self):
-        result = parse_v03(BODY_SECTION_AMENDED_BY_ADDING_CLAUSE)
-        assert len(result["instructions"]) >= 1, (
-            "Section 2.4(e) ... amended by adding the following new clause should produce an instruction"
-        )
+        result = parse_v04(BODY_SECTION_AMENDED_BY_ADDING_CLAUSE)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "ADD_COMMITMENT" in types
+
+
+class TestAmendedByInserting:
+    """Section X ... is hereby amended by inserting."""
+
+    def test_amended_by_inserting(self):
+        result = parse_v04(BODY_AMENDED_BY_INSERTING)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "ADD_COMMITMENT" in types
+
+
+class TestShallBeAmendedByAdding:
+    """Section X ... shall be amended by adding."""
+
+    def test_shall_be_amended_by_adding(self):
+        result = parse_v04(BODY_SHALL_BE_AMENDED_BY_ADDING)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "ADD_COMMITMENT" in types
+
+
+class TestAmendedByModifying:
+    """Section X ... is hereby amended by modifying."""
+
+    def test_amended_by_modifying(self):
+        result = parse_v04(BODY_AMENDED_BY_MODIFYING)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "ADD_COMMITMENT" in types
+
+
+class TestAmendedAndRestated:
+    """Section X ... is hereby amended and restated in its entirety."""
+
+    def test_amended_and_restated(self):
+        result = parse_v04(BODY_AMENDED_AND_RESTATED)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "RESTATE_SECTION" in types
+
+    def test_exhibit_amended_and_restated(self):
+        result = parse_v04(BODY_EXHIBIT_AMENDED_AND_RESTATED)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "RESTATE_SECTION" in types
+        refs = [i.get("target_section_ref") or "" for i in result["instructions"]]
+        assert any("Exhibit" in r for r in refs)
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +592,7 @@ and restated in its entirety to read as follows:
 4.02 Conditions Precedent to each Credit Event. The Administrative Agent
 shall not be required to make any credit event.
 """
-        result = parse_v03(body)
+        result = parse_v04(body)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
         assert "RESTATE_SECTION" in types
@@ -340,7 +608,117 @@ adding the following new definition:
 
 "Adjusted Term SOFR" means the Term SOFR plus the applicable spread.
 """
-        result = parse_v03(body)
+        result = parse_v04(body)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
         assert "ADD_COMMITMENT" in types
+
+    def test_replace_text_still_detected(self):
+        body = """
+AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 6.11(a) is amended by deleting "4.00 to 1.00" and
+replacing it with "5.00 to 1.00".
+"""
+        result = parse_v04(body)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "REPLACE_TEXT" in types
+
+    def test_waiver_still_detected(self):
+        body = """
+AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+1. Waiver. Compliance with Section 6.11(a) is hereby waived for the fiscal
+quarter ending June 30, 2026.
+"""
+        result = parse_v04(body)
+        assert len(result["instructions"]) >= 1
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "WAIVE_TEMPORARILY" in types
+
+
+# ---------------------------------------------------------------------------
+# V0.3.1 baseline: these patterns should NOT be detected by v0.3
+# (verifying that v0.3 is preserved and v0.4 is a separate function)
+# ---------------------------------------------------------------------------
+
+class TestV03BaselineDoesNotDetectV04Patterns:
+    """Verify that parse_v03 (v0.3.1 baseline) does NOT detect v0.4 patterns.
+    This confirms the v0.3 baseline is preserved for comparison."""
+
+    def test_v03_does_not_detect_article_target(self):
+        result = parse_v03(BODY_ARTICLE_AMENDED_BY_ADDING)
+        assert len(result["instructions"]) == 0
+
+    def test_v03_does_not_detect_schedule_target(self):
+        result = parse_v03(BODY_SCHEDULE_AMENDED_BY_INSERTING)
+        assert len(result["instructions"]) == 0
+
+    def test_v03_does_not_detect_amended_to_read(self):
+        result = parse_v03(BODY_AMENDED_TO_READ)
+        assert len(result["instructions"]) == 0
+
+    def test_v03_does_not_detect_amended_as_follows(self):
+        result = parse_v03(BODY_AMENDED_AS_FOLLOWS)
+        assert len(result["instructions"]) == 0
+
+
+# ---------------------------------------------------------------------------
+# False positive regression: ensure v0.4 fixes don't introduce new FPs
+# ---------------------------------------------------------------------------
+
+class TestFalsePositiveRegression:
+    """Ensure v0.4 doesn't match amendment section numbers as targets."""
+
+    def test_section_hereof_not_matched(self):
+        """'Section 2 hereof, the Credit Agreement is hereby amended as follows'
+        should NOT match — 'Section 2' is the amendment's section number."""
+        body = """
+AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+Section 2 hereof, the Credit Agreement is hereby amended as follows:
+
+(a) Section 1.01 of the Credit Agreement is hereby amended by adding
+the following new definition:
+
+"New Term" means the new defined term.
+"""
+        result = parse_v04(body)
+        # Should only detect the real instruction (Section 1.01 amended by adding),
+        # not the container "Section 2 hereof ... amended as follows"
+        for inst in result["instructions"]:
+            ref = inst.get("target_section_ref") or ""
+            matched = body[inst["source_start"]:inst["source_end"]]
+            assert not ("Section 2" in ref and "hereof" in matched), \
+                f"Amendment section number matched as target: {ref} in {matched[:80]}"
+
+    def test_cross_reference_not_matched_as_target(self):
+        """A cross-reference 'Schedule 2.01A' should not be matched as a
+        REPLACE_TEXT target when the actual deleting/inserting is in a
+        different instruction."""
+        body = """
+AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+(a) The definition of "Old Term" in Schedule 2.01A
+or in the Assignment and Assumption pursuant to which such Lender becomes
+a party hereto, as applicable."
+
+(b) By deleting in its entirety the table set forth in the definition of
+"Applicable Rate" appearing in Section 1.01 of the Credit Agreement and
+inserting in lieu thereof the following new table.
+"""
+        result = parse_v04(body)
+        # Should not match Schedule 2.01A as a REPLACE_TEXT target
+        for inst in result["instructions"]:
+            ref = inst.get("target_section_ref") or ""
+            if "Schedule 2.01A" in ref:
+                pytest.fail(f"Cross-reference Schedule 2.01A matched as target: {ref}")
