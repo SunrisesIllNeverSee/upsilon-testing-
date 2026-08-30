@@ -70,12 +70,38 @@ def _span_intersects(s1: tuple[int, int], s2: tuple[int, int]) -> bool:
     return s1[0] < s2[1] and s2[0] < s1[1]
 
 
+# ---------------------------------------------------------------------------
+# Historical evaluation adapter
+# ---------------------------------------------------------------------------
+
+# Maps legacy commitment-specific instruction types to the generic gold ontology.
+# This allows fair comparison of v0.3.1 (which emits ADD_COMMITMENT/DELETE_COMMITMENT)
+# against the v0.4.1 gold ontology (which uses ADD/DELETE).
+# The adapter is applied to DETECTED instructions only; gold is never altered.
+_HISTORICAL_TYPE_MAP = {
+    "ADD_COMMITMENT": "ADD",
+    "DELETE_COMMITMENT": "DELETE",
+}
+
+
+def _adapt_instruction_type(typ: str) -> str:
+    """Map legacy instruction types to the current gold ontology.
+    ADD_COMMITMENT → ADD, DELETE_COMMITMENT → DELETE.
+    All other types pass through unchanged."""
+    return _HISTORICAL_TYPE_MAP.get(typ, typ)
+
+
 def match_instructions_to_gold(
     detected: list[dict], gold: list[dict]
 ) -> tuple[int, int, int, dict]:
     """Match detected instructions to gold annotations using span overlap +
     instruction type. Falls back to key-based matching for gold annotations
     without source spans.
+
+    A historical type adapter is applied to detected instructions so that
+    legacy parsers (v0.3.1 emitting ADD_COMMITMENT/DELETE_COMMITMENT) are
+    evaluated against the same gold ontology (ADD/DELETE) as current parsers.
+    The gold annotations are never altered.
 
     Returns (tp, fp, fn, semantic_details) where:
       tp = true positives (detected instructions that match a gold annotation)
@@ -111,7 +137,9 @@ def match_instructions_to_gold(
 
     for inst in detected:
         ref = _normalize_ref(inst.get("target_section_ref"))
-        typ = inst["instruction_type"]
+        # Apply historical type adapter so legacy parsers are evaluated
+        # against the same gold ontology as current parsers.
+        typ = _adapt_instruction_type(inst["instruction_type"])
         inst_span = (inst.get("source_start", 0), inst.get("source_end", 0))
 
         # Try to find an unmatched gold annotation

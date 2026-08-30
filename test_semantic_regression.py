@@ -233,10 +233,9 @@ class TestGoldAnnotationStructure:
             for ann in doc.get("expected", []):
                 if ann.get("source_span") is None:
                     missing.append(ann["id"])
-        # 3 annotations in composite docs (DEV-005, DEV-016) may not have spans
-        # because the target_ref doesn't appear in the source text
-        assert len(missing) <= 3, (
-            f"Too many annotations without source_span: {missing}"
+        # All 77 annotations have source spans
+        assert len(missing) == 0, (
+            f"Annotations without source_span: {missing}"
         )
 
     def test_annotation_ids_are_unique(self, gold_data):
@@ -333,6 +332,60 @@ class TestSpanBasedMatching:
         ]
         tp, fp, fn, sem = match_instructions_to_gold(detected, gold)
         assert tp == 1
+        assert fp == 0
+        assert fn == 0
+
+
+class TestHistoricalTypeAdapter:
+    """Verify the historical evaluation adapter maps legacy types to the
+    current gold ontology so v0.3.1 and v0.4.1 are evaluated fairly."""
+
+    def test_add_commitment_maps_to_add(self):
+        from classify_development_corpus import _adapt_instruction_type
+        assert _adapt_instruction_type("ADD_COMMITMENT") == "ADD"
+
+    def test_delete_commitment_maps_to_delete(self):
+        from classify_development_corpus import _adapt_instruction_type
+        assert _adapt_instruction_type("DELETE_COMMITMENT") == "DELETE"
+
+    def test_other_types_pass_through(self):
+        from classify_development_corpus import _adapt_instruction_type
+        assert _adapt_instruction_type("RESTATE_SECTION") == "RESTATE_SECTION"
+        assert _adapt_instruction_type("REPLACE_TEXT") == "REPLACE_TEXT"
+        assert _adapt_instruction_type("ADD") == "ADD"
+        assert _adapt_instruction_type("DELETE") == "DELETE"
+
+    def test_legacy_add_commitment_matches_gold_add(self):
+        """A v0.3.1 instruction emitting ADD_COMMITMENT should match a gold
+        annotation with type ADD after the adapter is applied."""
+        from classify_development_corpus import match_instructions_to_gold
+        gold = [
+            {"id": "g1", "target_ref": "Section 1.01", "instruction_type": "ADD",
+             "source_span": [100, 200]},
+        ]
+        detected = [
+            {"instruction_type": "ADD_COMMITMENT", "target_section_ref": "Section 1.01",
+             "source_start": 110, "source_end": 190},
+        ]
+        tp, fp, fn, sem = match_instructions_to_gold(detected, gold)
+        assert tp == 1, f"Legacy ADD_COMMITMENT should match gold ADD via adapter, got tp={tp}"
+        assert fp == 0
+        assert fn == 0
+
+    def test_legacy_delete_commitment_matches_gold_delete(self):
+        """A v0.3.1 instruction emitting DELETE_COMMITMENT should match a gold
+        annotation with type DELETE after the adapter is applied."""
+        from classify_development_corpus import match_instructions_to_gold
+        gold = [
+            {"id": "g1", "target_ref": "Section 1.01", "instruction_type": "DELETE",
+             "source_span": [100, 200]},
+        ]
+        detected = [
+            {"instruction_type": "DELETE_COMMITMENT", "target_section_ref": "Section 1.01",
+             "source_start": 110, "source_end": 190},
+        ]
+        tp, fp, fn, sem = match_instructions_to_gold(detected, gold)
+        assert tp == 1, f"Legacy DELETE_COMMITMENT should match gold DELETE via adapter, got tp={tp}"
         assert fp == 0
         assert fn == 0
 

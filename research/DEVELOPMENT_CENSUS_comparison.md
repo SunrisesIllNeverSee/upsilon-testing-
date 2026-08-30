@@ -15,18 +15,18 @@ mutation correctness.
 |--------|--------|------|
 | Gold annotations | 77 | 77 |
 | Detected | 13 | 44 |
-| True positives | 7 | 41 |
-| False positives | 6 | 3 |
-| False negatives | 70 | 36 |
-| Precision | 0.538 | 0.932 |
-| Recall | 0.091 | 0.532 |
-| F1 | 0.156 | 0.678 |
+| True positives | 13 | 41 |
+| False positives | 0 | 3 |
+| False negatives | 64 | 36 |
+| Precision | 1.000 | 0.932 |
+| Recall | 0.169 | 0.532 |
+| F1 | 0.289 | 0.678 |
 | Unresolved | 0 | 0 |
 
 ## Key findings
 
-- Recall improved from 0.091 to 0.532 (+0.442)
-- Precision changed from 0.538 to 0.932 (+0.393)
-- F1 improved from 0.156 to 0.678
-- False positives: 6 → 3
-- False negatives: 70 → 36
+- Recall improved from 0.169 to 0.532 (+0.364)
+- Precision changed from 1.000 to 0.932 (-0.068)
+- F1 improved from 0.289 to 0.678
+- False positives: 0 → 3
+- False negatives: 64 → 36

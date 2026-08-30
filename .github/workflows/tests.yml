@@ -27,12 +27,8 @@ jobs:
           pip install -e .
           pip install pytest
 
-      - name: Run unit tests
-        run: |
-          pytest -q \
-            test_executor.py \
-            test_schema.py \
-            test_persistence_plan.py
+      - name: Run full test suite
+        run: pytest -q
 
   postgres-integration:
     runs-on: ubuntu-latest

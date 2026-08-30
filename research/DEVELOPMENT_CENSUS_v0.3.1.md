@@ -31,13 +31,13 @@ measurement.
 
 | Format | Precision | Recall | F1 | Unresolved | Docs |
 |--------|-----------|--------|----|------------|------|
-| Inline | 0.538 | 0.096 | 0.163 | 0 | 20 |
+| Inline | 1.000 | 0.178 | 0.302 | 0 | 20 |
 | Composite | N/A | N/A | N/A | 0 | 0 |
 | Restated | N/A | N/A | N/A | 0 | 0 |
 | Referential | N/A | N/A | N/A | 0 | 0 |
 | Waiver | 1.000 | 1.000 | 1.000 | 0 | 1 |
 | Mixed | 1.000 | 0.000 | 0.000 | 0 | 4 |
-| **All amendment documents** | **0.538** | **0.091** | **0.156** | **0** | **25** |
+| **All amendment documents** | **1.000** | **0.169** | **0.289** | **0** | **25** |
 
 ## Pooled summary
 
@@ -45,11 +45,11 @@ measurement.
 |--------|-------|
 | Gold annotations | 77 |
 | Detected | 13 |
-| True positives | 7 |
-| False positives | 6 |
-| False negatives | 70 |
-| Precision | 0.538 |
-| Recall | 0.091 |
-| F1 | 0.156 |
+| True positives | 13 |
+| False positives | 0 |
+| False negatives | 64 |
+| Precision | 1.000 |
+| Recall | 0.169 |
+| F1 | 0.289 |
 | Unresolved | 0 |
 

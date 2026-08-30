@@ -18,10 +18,16 @@ documented in this file. The format is based on [Keep a Changelog](https://keepa
   `ADD`/`DELETE` instead of `ADD_COMMITMENT`/`DELETE_COMMITMENT`.
 - **Gold annotations have IDs and source spans**: Each annotation has a unique
   `id` (e.g., `DEV-007-001`) and a `source_span` `[start, end]` pointing to
-  the instruction text in the source document.
+  the instruction text in the source document. All 77 annotations have spans.
 - **Span-based matching**: `match_instructions_to_gold` now uses span overlap
-  + instruction_type for matching, with key-based fallback for gold without
-  spans. This is more precise than key-only matching.
+  + instruction_type for matching, with key-based fallback only if a span is
+  absent. This is more precise than key-only matching.
+- **Historical evaluation adapter**: The evaluator applies a type adapter to
+  detected instructions before matching, mapping `ADD_COMMITMENT` → `ADD` and
+  `DELETE_COMMITMENT` → `DELETE`. This allows fair comparison of frozen v0.3.1
+  (which emits commitment-specific types) against the v0.4.1 gold ontology
+  (which uses generic types). The gold annotations are never altered; only
+  detected instructions are adapted.
 - **Semantic scoring**: Each match includes `span_iou`, `old_value_match`, and
   `new_value_match` fields in the classification results.
 - **No confidence on raw hits**: Parser no longer sets `confidence=1.0` on raw
@@ -32,31 +38,40 @@ documented in this file. The format is based on [Keep a Changelog](https://keepa
   `UNRESOLVED` (all failed). PARTIAL/UNRESOLVED executions must not be
   promoted to authoritative state.
 - **Parser label**: `deterministic_baseline_v0.4.1`.
+- **CI workflow**: Unit test job now runs the full test suite (`pytest -q`)
+  instead of only three test files.
 
-### Instruction-detection performance (25-document parser-development sample, gold annotations, span-based matching)
+### Instruction-detection performance (25-document parser-development sample, gold annotations, span-based matching, historical type adapter)
+
+Both parsers evaluated against the same gold ontology (ADD/DELETE), span rules,
+and scoring logic. The v0.3.1 parser is frozen; only the evaluator adapts its
+legacy types.
+
 | Metric | v0.3.1 | v0.4.1 |
 |---|---:|---:|
 | Gold annotations | 77 | 77 |
 | Detected | 13 | 44 |
-| True positives | 7 | 41 |
-| False positives | 6 | 3 |
-| False negatives | 70 | 36 |
-| Precision | 0.538 | 0.932 |
-| Recall | 0.091 | 0.532 |
-| F1 | 0.156 | 0.678 |
+| True positives | 13 | 41 |
+| False positives | 0 | 3 |
+| False negatives | 64 | 36 |
+| Precision | 1.000 | 0.932 |
+| Recall | 0.169 | 0.532 |
+| F1 | 0.289 | 0.678 |
 | Unresolved | 0 | 0 |
 
-Note: v0.3.1 baseline metrics dropped because gold annotations now use generic
-ADD/DELETE types while v0.3.1 still emits ADD_COMMITMENT/DELETE_COMMITMENT.
-The v0.3.1 parser is frozen as the historical baseline.
+Interpretation: v0.3.1 has perfect precision but very low recall (it only
+detects what it can detect correctly). v0.4.1 trades a small precision drop
+(3 false positives) for a 3.1x recall improvement, yielding 2.3x F1 improvement.
 
 ### Added
-- test_semantic_regression.py: 21 exact semantic regression tests covering
+- test_semantic_regression.py: 26 exact semantic regression tests covering
   generic ADD/DELETE emission, source spans, old/new value extraction,
   no-confidence verification, gold annotation structure, span-based matching,
-  and execution status.
+  historical type adapter, and execution status.
 - ExecutionStatus tests in test_executor.py (COMPLETE/PARTIAL/UNRESOLVED).
 - MODIFIED_BY_V04 regex for "amended by modifying" → UNRESOLVED.
+- Historical type adapter (`_adapt_instruction_type`) in
+  classify_development_corpus.py.
 
 ### Held-out protocol
 Not altered. Development corpus changes only. No held-out files created or modified.
