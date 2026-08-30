@@ -99,23 +99,39 @@ PROPAGATION FAILURE  = authoritative state changed, downstream state did not
 
 ## Amendment instruction types
 
-The initial deterministic executor supports:
+The deterministic executor separates **transformation type** (how the legal
+document transformed) from **domain effect** (what changed in the commitment
+domain). A single transformation (e.g., `REPLACE_VALUE`) can produce different
+domain effects (e.g., `commitment_amount_change`, `covenant_threshold_change`)
+depending on which field changed.
+
+**Instruction types** (transformation operations):
 
 - `REPLACE_VALUE`
 - `REPLACE_TEXT`
+- `ADD`
 - `ADD_COMMITMENT`
+- `DELETE`
 - `DELETE_COMMITMENT`
-- `MODIFY_SCOPE`
-- `ADD_EXCEPTION`
-- `REMOVE_EXCEPTION`
-- `EXTEND_DEADLINE`
-- `CHANGE_FREQUENCY`
-- `CHANGE_PARTY`
 - `WAIVE_TEMPORARILY`
 - `SUSPEND`
 - `REINSTATE`
 - `RESTATE_SECTION`
 - `RENUMBER_REFERENCE`
+- `FIND_REPLACE_REFERENCE`
+
+**Domain effects** (semantic impact on the commitment domain):
+
+- `covenant_threshold_change`
+- `commitment_amount_change`
+- `deadline_change`
+- `exception_expansion`
+- `exception_removal`
+- `party_change`
+- `frequency_change`
+- `scope_change`
+- `definition_change`
+- `unknown`
 
 Anything outside the supported grammar is stored as `UNRESOLVED` and routed to validation rather than guessed.
 

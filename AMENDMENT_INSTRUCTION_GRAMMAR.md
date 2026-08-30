@@ -56,7 +56,9 @@ Example:
 > The definition of Permitted Indebtedness is amended to include...
 
 Emit:
-`ADD_EXCEPTION` or explicit replacement of normalized exception set.
+`ADD` with `domain_effect: exception_expansion`, or `DELETE` with
+`domain_effect: exception_removal`, or explicit replacement of normalized
+exception set.
 
 ### 5. Temporal waiver
 
@@ -83,6 +85,11 @@ Emit:
 `RESTATE_SECTION` at parse time, then decompose the restated section against the prior section into explicit commitment-level changes before execution.
 
 **Never blindly replace the whole kernel.**
+
+Note: "Section X is hereby amended as follows" is a **structural/container marker**,
+not a restatement. It signals that child operations follow (typically in lettered
+subsections (a), (b), (c)...). The parser does NOT emit `RESTATE_SECTION` for the
+container phrase; only the child operations (add/delete/restate/replace) are emitted.
 
 ### 8. Cross-reference / renumbering
 

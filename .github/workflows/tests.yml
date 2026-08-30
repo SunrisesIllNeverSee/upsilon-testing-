@@ -21,18 +21,13 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install package
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest
+          pip install pytest pydantic
 
-      - name: Run unit tests
-        run: |
-          pytest -q \
-            test_executor.py \
-            test_schema.py \
-            test_persistence_plan.py
+      - name: Run full test suite
+        run: pytest -q
 
   postgres-integration:
     runs-on: ubuntu-latest
@@ -65,11 +60,10 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install package
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest
+          pip install pytest pydantic sqlalchemy psycopg[binary]
 
       - name: Initialize database schema
         env:
