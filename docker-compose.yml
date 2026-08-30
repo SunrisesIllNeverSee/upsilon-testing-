@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: upsilon
+      POSTGRES_USER: upsilon
+      POSTGRES_PASSWORD: upsilon
+    ports:
+      - "5432:5432"
+    volumes:
+      - upsilon_pg:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+
+volumes:
+  upsilon_pg:

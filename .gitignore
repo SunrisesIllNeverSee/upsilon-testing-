@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Local environment / secrets
+.env
+
+# macOS
+.DS_Store
+
+# Local data and generated outputs
+data/
+results/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Research exception:
+# Do NOT ignore research/run_records if you intentionally want to commit
+# immutable formal run records after review.
