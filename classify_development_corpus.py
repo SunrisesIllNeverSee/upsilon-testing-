@@ -358,6 +358,8 @@ def main():
         "document_count": len(results),
         "dataset_description": "25-document parser-development sample (not the eventual 25-issuer agreement-chain corpus)",
         "gold_annotation_source": str(GOLD_PATH),
+        "metric_type": "instruction_detection",
+        "metric_note": "Precision/recall/F1 measure instruction DETECTION only (matched by normalized target_ref + instruction_type). They do not verify extracted old_value, new_value, amount, exception, or actual semantic mutation correctness. Full reconstruction accuracy is a separate measurement.",
         "results": results,
     }
     OUTPUT_JSON.write_text(json.dumps(json_output, indent=2), encoding="utf-8")
@@ -378,8 +380,12 @@ def main():
 
     print()
     print("=" * 70)
-    print("POOLED METRICS (All amendment documents)")
+    print("POOLED INSTRUCTION-DETECTION METRICS (All amendment documents)")
     print("=" * 70)
+    print("  NOTE: These are instruction-DETECTION metrics, not full reconstruction")
+    print("  accuracy. Matching is by (normalized target_ref, instruction_type) only.")
+    print("  It does not verify extracted old_value, new_value, amount, exception,")
+    print("  or actual semantic mutation correctness.")
     # Pool TP/FP/FN across all documents
     v03_tp_total = sum(r["v03_tp"] for r in results)
     v03_fp_total = sum(r["v03_fp"] for r in results)

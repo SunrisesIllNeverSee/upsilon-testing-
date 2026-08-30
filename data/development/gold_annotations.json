@@ -36,9 +36,10 @@
     ]
   },
   "DEV-007": {
+    "notes": "Section 1.1 'amended as follows' is a container, not annotated. Children: (a) delete definition, (b) add definitions.",
     "expected": [
-      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.1", "instruction_type": "DELETE_COMMITMENT"}
+      {"target_ref": "Section 1.1", "instruction_type": "DELETE_COMMITMENT"},
+      {"target_ref": "Section 1.1", "instruction_type": "ADD_COMMITMENT"}
     ]
   },
   "DEV-008": {
@@ -167,12 +168,12 @@
     ]
   },
   "DEV-024": {
-    "notes": "Multiple definitions in Section 1.01 amended to read as follows. Section 7.06 amended as follows. Section 7.12(b) amended to read.",
+    "notes": "Multiple definitions in Section 1.01 amended to read as follows. Section 7.06 'amended as follows' is a container, not annotated; child (ii) adds a proviso to Section 7.06(e). Section 7.12(b) amended to read.",
     "expected": [
       {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
       {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
       {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 7.06", "instruction_type": "RESTATE_SECTION"},
+      {"target_ref": "Section 7.06(e)", "instruction_type": "ADD_COMMITMENT"},
       {"target_ref": "Section 7.12(b)", "instruction_type": "RESTATE_SECTION"}
     ]
   },

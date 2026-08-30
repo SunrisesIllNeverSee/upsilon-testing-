@@ -11,16 +11,21 @@ documented in this file. The format is based on [Keep a Changelog](https://keepa
   Schedules, and Exhibits, not just Sections. Lowercase structural terms
   (Definition, Clause, Paragraph, Subsection) are intentionally excluded
   because they appear as common nouns in amendment text and cause false
-  positives. The actual amendment target is always the enclosing
-  Section/Article/Schedule/Exhibit.
+  positives. In the current 25-document development sample, restricting
+  primary targets to Section/Article/Schedule/Exhibit reduced false
+  positives; finer-grained targets remain future work.
 - **Broadened replace pattern**: deleting...replacing to deleting...(replacing|
   inserting|substituting). Handles deleting the single instance of X and
   inserting Y in lieu thereof and deleting...substituting in its place.
 - **New amended to read pattern**: Section X is amended to read as follows
   mapped to RESTATE_SECTION.
-- **New amended as follows pattern**: Section X of the Credit Agreement is
-  hereby amended as follows mapped to RESTATE_SECTION. Requires of the
-  Credit Agreement to exclude amendment section headings (Section 2 hereof).
+- **amended as follows is a container, not an instruction**: Section X of
+  the Credit Agreement is hereby amended as follows is a STRUCTURAL/CONTAINER
+  MARKER. The parser does NOT emit RESTATE_SECTION for it. Child operations
+  beneath it (detected by ADD_V04, DELETE_BY_V04, REPLACE_V04,
+  DELETED_FROM_V04, AMENDED_TO_READ_V04) are the actual instructions.
+  Requires of the Credit Agreement to exclude amendment section headings
+  (Section 2 hereof).
 - **New deleted from Section pattern**: is hereby deleted from Section X
   mapped to DELETE_COMMITMENT.
 - **Broadened amended by**: amended by adding to amended by (adding|inserting|
@@ -73,18 +78,25 @@ documented in this file. The format is based on [Keep a Changelog](https://keepa
 - **Matching**: Detected instructions matched to gold annotations by
   (normalized target_ref, instruction_type). Each gold annotation matched
   at most once.
+- **Metric type**: Instruction DETECTION only. Matching does NOT verify
+  extracted old_value, new_value, amount, exception, or actual semantic
+  mutation correctness. Full reconstruction accuracy is a separate
+  measurement.
+- **Container phrases**: "amended as follows" is NOT annotated as a separate
+  instruction when sub-instructions follow; only the actual child operations
+  (add/delete/restate/replace) are annotated.
 
-### Performance (25-document parser-development sample, gold annotations)
+### Instruction-detection performance (25-document parser-development sample, gold annotations)
 | Metric | v0.3.1 | v0.4 |
 |---|---:|---:|
 | Gold annotations | 77 | 77 |
-| Detected | 13 | 46 |
-| True positives | 11 | 38 |
+| Detected | 13 | 44 |
+| True positives | 11 | 36 |
 | False positives | 2 | 8 |
-| False negatives | 66 | 39 |
-| Precision | 0.846 | 0.826 |
-| Recall | 0.143 | 0.494 |
-| F1 | 0.244 | 0.618 |
+| False negatives | 66 | 41 |
+| Precision | 0.846 | 0.818 |
+| Recall | 0.143 | 0.468 |
+| F1 | 0.244 | 0.595 |
 | Unresolved | 0 | 0 |
 
 ### Added

@@ -110,7 +110,11 @@ def _write_report(path, title, parser_label, tag, results, format_counts, total_
         f.write(f"study ultimately requires.\n")
         f.write(f"**Gold annotations:** data/development/gold_annotations.json ({gold_total} total)\n")
         f.write(f"**Methodology:** TP/FP/FN computed from explicit gold annotations.\n")
-        f.write(f"Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).\n\n")
+        f.write(f"Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).\n")
+        f.write(f"**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,\n")
+        f.write(f"instruction_type) only. These metrics do NOT verify extracted old_value,\n")
+        f.write(f"new_value, amount, exception, or actual semantic mutation correctness.\n")
+        f.write(f"Full reconstruction accuracy is a separate measurement.\n\n")
 
         # Table 1
         f.write("## Table 1 — Corpus structure\n\n")
@@ -125,7 +129,7 @@ def _write_report(path, title, parser_label, tag, results, format_counts, total_
         f.write(f"| **Total** | **{total_docs}** | **100.0%** |\n\n")
 
         # Table 2
-        f.write("## Table 2 — Parser performance by format\n\n")
+        f.write("## Table 2 — Instruction-detection performance by format\n\n")
         f.write("| Format | Precision | Recall | F1 | Unresolved | Docs |\n")
         f.write("|--------|-----------|--------|----|------------|------|\n")
         for fmt_name in TABLE2_FORMATS:
@@ -206,7 +210,7 @@ def main():
     ]:
         print()
         print("=" * 60)
-        print(f"Table 2 — {label} performance by format")
+        print(f"Table 2 — {label} instruction-detection by format")
         print("=" * 60)
         print(f"{'Format':<30} {'Precision':>10} {'Recall':>10} {'F1':>8} {'Unr':>6} {'Docs':>6}")
         print("-" * 60)
@@ -253,9 +257,12 @@ def main():
         f.write(f"**Sample:** 25-document parser-development sample (DEV-001 through DEV-025)\n")
         f.write(f"**Note:** This is one document per issuer, NOT the 25-issuer agreement-chain\n")
         f.write(f"corpus that the reconstruction study ultimately requires.\n")
-        f.write(f"**Gold annotations:** {gold_total} total\n\n")
+        f.write(f"**Gold annotations:** {gold_total} total\n")
+        f.write(f"**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,\n")
+        f.write(f"instruction_type) only. Does NOT verify extracted old_value, new_value, amount,\n")
+        f.write(f"exception, or actual semantic mutation correctness.\n\n")
 
-        f.write("## Pooled metrics comparison\n\n")
+        f.write("## Pooled instruction-detection metrics comparison\n\n")
         f.write("| Metric | v0.3.1 | v0.4 |\n")
         f.write("|--------|--------|------|\n")
         v03_p, v03_r, v03_f1 = compute_metrics(v03_pooled["tp"], v03_pooled["fp"], v03_pooled["fn"])

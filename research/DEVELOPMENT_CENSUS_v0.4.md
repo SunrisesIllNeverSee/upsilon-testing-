@@ -8,6 +8,10 @@ study ultimately requires.
 **Gold annotations:** data/development/gold_annotations.json (77 total)
 **Methodology:** TP/FP/FN computed from explicit gold annotations.
 Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).
+**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,
+instruction_type) only. These metrics do NOT verify extracted old_value,
+new_value, amount, exception, or actual semantic mutation correctness.
+Full reconstruction accuracy is a separate measurement.
 
 ## Table 1 — Corpus structure
 
@@ -22,29 +26,29 @@ Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).
 | Mixed | 4 | 16.0% |
 | **Total** | **25** | **100.0%** |
 
-## Table 2 — Parser performance by format
+## Table 2 — Instruction-detection performance by format
 
 | Format | Precision | Recall | F1 | Unresolved | Docs |
 |--------|-----------|--------|----|------------|------|
-| Inline | 0.826 | 0.521 | 0.639 | 0 | 20 |
+| Inline | 0.818 | 0.493 | 0.615 | 0 | 20 |
 | Composite | N/A | N/A | N/A | 0 | 0 |
 | Restated | N/A | N/A | N/A | 0 | 0 |
 | Referential | N/A | N/A | N/A | 0 | 0 |
 | Waiver | 1.000 | 1.000 | 1.000 | 0 | 1 |
 | Mixed | 1.000 | 0.000 | 0.000 | 0 | 4 |
-| **All amendment documents** | **0.826** | **0.494** | **0.618** | **0** | **25** |
+| **All amendment documents** | **0.818** | **0.468** | **0.595** | **0** | **25** |
 
 ## Pooled summary
 
 | Metric | Value |
 |--------|-------|
 | Gold annotations | 77 |
-| Detected | 46 |
-| True positives | 38 |
+| Detected | 44 |
+| True positives | 36 |
 | False positives | 8 |
-| False negatives | 39 |
-| Precision | 0.826 |
-| Recall | 0.494 |
-| F1 | 0.618 |
+| False negatives | 41 |
+| Precision | 0.818 |
+| Recall | 0.468 |
+| F1 | 0.595 |
 | Unresolved | 0 |
 

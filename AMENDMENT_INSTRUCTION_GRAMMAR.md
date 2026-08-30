@@ -86,6 +86,11 @@ Emit:
 
 **Never blindly replace the whole kernel.**
 
+Note: "Section X is hereby amended as follows" is a **structural/container marker**,
+not a restatement. It signals that child operations follow (typically in lettered
+subsections (a), (b), (c)...). The parser does NOT emit `RESTATE_SECTION` for the
+container phrase; only the child operations (add/delete/restate/replace) are emitted.
+
 ### 8. Cross-reference / renumbering
 
 Emit:

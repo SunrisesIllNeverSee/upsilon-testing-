@@ -922,13 +922,13 @@ v0.3.1: Section\s+[A-Za-z0-9.\-()]+
 v0.4:   (Section|Article|Schedule|Exhibit)\s+[A-Za-z0-9.\-()]+
 ```
 
-Lowercase structural terms (Definition, Clause, Paragraph, Subsection) were intentionally excluded because they appear as common nouns in amendment text and cause false positives. The actual amendment target is always the enclosing Section/Article/Schedule/Exhibit.
+Lowercase structural terms (Definition, Clause, Paragraph, Subsection) were intentionally excluded because they appear as common nouns in amendment text and cause false positives. In the current 25-document development sample, restricting primary targets to Section/Article/Schedule/Exhibit reduced false positives; finer-grained targets remain future work.
 
 #### New transformation patterns
 | Pattern | Example | InstructionType |
 |---------|---------|-----------------|
 | `amended to read as follows` | "Section 1.01 is amended to read as follows" | RESTATE_SECTION |
-| `amended as follows` | "Section 1.1 of the Credit Agreement is hereby amended as follows" | RESTATE_SECTION |
+| `amended as follows` | "Section 1.1 of the Credit Agreement is hereby amended as follows" | CONTAINER (not an instruction; child ops detected) |
 | `deleted from Section X` | "is hereby deleted from Section 1.1 in its entirety" | DELETE_COMMITMENT |
 | `deleting...inserting` | "deleting $95M and inserting $80M in lieu thereof" | REPLACE_TEXT |
 | `deleting...substituting` | "deleting the definition and substituting in its place" | REPLACE_TEXT |
@@ -937,11 +937,13 @@ Lowercase structural terms (Definition, Clause, Paragraph, Subsection) were inte
 | `amended by adding` | "Article I is hereby amended by adding" | ADD_COMMITMENT |
 | `amended and restated` | "Section 7.01 is amended and restated in its entirety" | RESTATE_SECTION |
 
+#### "Amended as follows" is a container, not an instruction
+"Section X of the Credit Agreement is hereby amended as follows" is a STRUCTURAL/CONTAINER MARKER. The parser does NOT emit RESTATE_SECTION for it. Child operations beneath it (detected by ADD_V04, DELETE_BY_V04, REPLACE_V04, DELETED_FROM_V04, AMENDED_TO_READ_V04) are the actual instructions. This aligns with the gold annotation methodology, which states that container phrases are NOT annotated separately when sub-instructions follow.
+
+The pattern still requires "of the Credit Agreement" to exclude amendment section headings ("Section 2 hereof, the Credit Agreement is hereby amended as follows"). This prevents treating the amendment's own section heading as an agreement target.
+
 #### Overlap deduplication
 When REPLACE_V04 and ADD_V04/DELETE_BY_V04 match the same text span (e.g., "amended by deleting...inserting"), only the more specific match (REPLACE_TEXT) is kept. Type priority: REPLACE_TEXT > ADD_COMMITMENT/DELETE_COMMITMENT > RESTATE_SECTION/WAIVE_TEMPORARILY.
-
-#### "Amended as follows" false positive fix
-The pattern requires "of the Credit Agreement" to exclude amendment section headings ("Section 2 hereof, the Credit Agreement is hereby amended as follows"). This prevents treating the amendment's own section heading as an agreement target.
 
 #### Regression tests
 36 regression tests written from real development corpus patterns (test_parser_v04_regression.py). Tests assert exact instruction types and target references, not just presence. Includes negative tests for amendment-section false positives and cross-reference-only occurrences. v0.3.1 baseline tests confirm v0.3 does NOT detect v0.4 patterns.
@@ -957,62 +959,71 @@ The previous version of this entry reported metrics (0.950 / 0.844 / 0.894) that
 These have been corrected by:
 - **Gold annotations**: Explicit, reviewed, non-overlapping annotations in `data/development/gold_annotations.json` (77 total across 25 documents). Each annotation is one legal operation, manually identified.
 - **Gold-based matching**: TP/FP/FN computed by matching detected instructions to gold annotations by (normalized target_ref, instruction_type). Each gold annotation matched at most once.
+- **Metric type**: These are instruction-DETECTION metrics, not full reconstruction accuracy. Matching by (target_ref, instruction_type) does not verify extracted old_value, new_value, amount, exception, or actual semantic mutation correctness. Full reconstruction accuracy is a separate measurement.
+- **Container phrases**: "amended as follows" is NOT annotated as a separate instruction when sub-instructions follow; only the actual child operations are annotated.
 - **Separate parser entry points**: `parse_v03()` uses v0.3 regexes; `parse_v04()` uses v0.4 regexes. No cross-contamination.
 
-### v0.3.1 vs v0.4 comparison (gold annotations)
+### v0.3.1 vs v0.4 comparison (instruction-detection, gold annotations)
 
 | Metric | v0.3.1 | v0.4 |
 |---|---:|---:|
 | Gold annotations | 77 | 77 |
-| Detected | 13 | 46 |
-| True positives | 11 | 38 |
+| Detected | 13 | 44 |
+| True positives | 11 | 36 |
 | False positives | 2 | 8 |
-| False negatives | 66 | 39 |
+| False negatives | 66 | 41 |
 | Unresolved | 0 | 0 |
-| **Precision** | **0.846** | **0.826** |
-| **Recall** | **0.143** | **0.494** |
-| **F1** | **0.244** | **0.618** |
+| **Precision** | **0.846** | **0.818** |
+| **Recall** | **0.143** | **0.468** |
+| **F1** | **0.244** | **0.595** |
 
 ### Error movement analysis
 
 #### What improved
-- **Recall: 0.143 → 0.494** (+35.1 points). The parser now detects 38 of 77 gold annotations.
-- **F1: 0.244 → 0.618** (+37.4 points). The harmonic mean improved substantially.
+- **Recall: 0.143 → 0.468** (+32.5 points). The parser now detects 36 of 77 gold annotations.
+- **F1: 0.244 → 0.595** (+35.1 points). The harmonic mean improved substantially.
 - The biggest gains came from:
   - `deleting...inserting` pattern: most now detected as REPLACE_TEXT
   - `Article/Schedule` targets: now detected (DEV-013, DEV-025)
-  - `amended to read` and `amended as follows`: now detected (DEV-024, DEV-022)
+  - `amended to read`: now detected (DEV-024, DEV-022)
   - `amended by adding` for Articles: now detected (DEV-013)
+- **"amended as follows" reclassified as container**: The parser no longer emits a spurious RESTATE_SECTION for the container phrase. Child operations beneath it are detected by other regexes. This removed container false positives in DEV-007 and DEV-024.
 
 #### What regressed
-- **Precision: 0.846 → 0.826** (-2.0 points). 8 false positives in v0.4 vs 2 in v0.3.1.
+- **Precision: 0.846 → 0.818** (-2.8 points). 8 false positives in v0.4 vs 2 in v0.3.1.
 - The v0.4 false positives include:
   - DEV-001: ARTICLE II match in a non-credit-agreement document (partnership exchange agreement)
   - DEV-003: Section 3 cross-reference matched as target
   - DEV-011: broad Section 1 replacement and nested/broad matches
   - DEV-022: duplicate Section 1.01 restatement matches
+  - DEV-024: Section 7.06(c) cross-reference matched as RESTATE_SECTION target
 
-#### Remaining false negatives (39)
+#### Remaining false negatives (41)
 - DEV-004: "amended in its entirety as follows" pattern not captured
 - DEV-005: composite credit agreement with restatement references
+- DEV-007: child (b) "are hereby added to Section 1.1" not captured (non-standard phrasing)
 - DEV-016: large composite document (217K chars)
 - DEV-017: 19 "By deleting in its entirety" instructions targeting definitions (pattern format mismatch)
 - DEV-019: "amended by replacing X with Y" pattern not captured
 - DEV-023: "amended by amending and restating" pattern not captured
+- DEV-024: child (ii) "proviso is added" not captured; Section 7.12(b) suppressed by overlap with 7.06(c) FP
 - DEV-025: 2 Schedule 1.1 operations not captured
 
 ### Interpretation
 
-The v0.4 grammar expansion raised recall from 0.143 to 0.494 (+35.1 points) while precision dropped only 2.0 points (from 0.846 to 0.826). F1 improved from 0.244 to 0.618. The conservative execution posture is largely preserved: 8 false positives out of 46 detections.
+The v0.4 grammar expansion raised recall from 0.143 to 0.468 (+32.5 points) while precision dropped 2.8 points (from 0.846 to 0.818). F1 improved from 0.244 to 0.595. The conservative execution posture is largely preserved: 8 false positives out of 44 detections.
 
-The remaining 39 false negatives are primarily from three pattern categories not yet covered:
+These are instruction-DETECTION metrics, not full reconstruction accuracy. Matching by (target_ref, instruction_type) does not verify extracted old_value, new_value, amount, exception, or actual semantic mutation correctness.
+
+The remaining 41 false negatives are primarily from three pattern categories not yet covered:
 1. "amended by replacing X with Y" (DEV-019)
 2. "amended by amending and restating" (DEV-023)
 3. "By deleting in its entirety" targeting definitions (DEV-017, 19 instances)
+4. Non-standard child operations beneath "amended as follows" containers (DEV-007, DEV-024)
 
-These will require v0.5 grammar expansion. The DEV-017 case is particularly significant because it represents 19 of the 39 remaining false negatives in a single document.
+These will require v0.5 grammar expansion. The DEV-017 case is particularly significant because it represents 19 of the 41 remaining false negatives in a single document.
 
-The 8 false positives require tighter target/context validation, particularly for cross-references (DEV-003) and non-credit-agreement documents (DEV-001).
+The 8 false positives require tighter target/context validation, particularly for cross-references (DEV-003, DEV-024) and non-credit-agreement documents (DEV-001).
 
 ### Artifacts produced
 - amendment_parser.py (v0.4 regexes, generalized targets, new patterns, deduplication)

@@ -420,19 +420,41 @@ class TestAmendedToRead:
 
 
 class TestAmendedAsFollows:
-    """Section X of the Credit Agreement ... is hereby amended as follows."""
+    """Section X of the Credit Agreement ... is hereby amended as follows.
 
-    def test_amended_as_follows(self):
+    AMENDED_AS_FOLLOWS is a STRUCTURAL/CONTAINER MARKER, not an instruction.
+    The parser must NOT emit RESTATE_SECTION for the container phrase itself.
+    Child operations beneath it (detected by other regexes) are the actual
+    instructions.
+    """
+
+    def test_amended_as_follows_container_not_restate(self):
+        """The container phrase 'amended as follows' must NOT emit
+        RESTATE_SECTION. Only child operations should be detected."""
         result = parse_v04(BODY_AMENDED_AS_FOLLOWS)
-        assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "RESTATE_SECTION" in types
+        assert "RESTATE_SECTION" not in types, (
+            "AMENDED_AS_FOLLOWS container must not emit RESTATE_SECTION"
+        )
 
-    def test_schedule_amended_as_follows(self):
-        result = parse_v04(BODY_SCHEDULE_AMENDED_AS_FOLLOWS)
-        assert len(result["instructions"]) >= 1
+    def test_amended_as_follows_child_delete_detected(self):
+        """The child operation 'is hereby deleted from Section 1.1' beneath
+        the 'amended as follows' container should be detected as
+        DELETE_COMMITMENT."""
+        result = parse_v04(BODY_AMENDED_AS_FOLLOWS)
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "RESTATE_SECTION" in types
+        assert "DELETE_COMMITMENT" in types, (
+            "Child DELETE operation beneath container should be detected"
+        )
+
+    def test_schedule_amended_as_follows_container_not_restate(self):
+        """The container phrase 'amended as follows' with a Schedule target
+        must NOT emit RESTATE_SECTION."""
+        result = parse_v04(BODY_SCHEDULE_AMENDED_AS_FOLLOWS)
+        types = [i["instruction_type"] for i in result["instructions"]]
+        assert "RESTATE_SECTION" not in types, (
+            "AMENDED_AS_FOLLOWS container must not emit RESTATE_SECTION"
+        )
 
 
 class TestDeletingInserting:

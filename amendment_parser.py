@@ -7,13 +7,16 @@ Key changes from v0.3:
 - Generalized reference targets: Section, Article, Schedule, Exhibit
   (not just Section). Lowercase structural terms (Definition, Clause,
   Paragraph, Subsection) are NOT included as targets because they appear
-  as common nouns in amendment text and cause false positives. The actual
-  amendment target is always the enclosing Section/Article/Schedule/Exhibit.
+  as common nouns in amendment text and cause false positives. In the
+  current 25-document development sample, restricting primary targets to
+  Section/Article/Schedule/Exhibit reduced false positives; finer-grained
+  targets remain future work.
 - Broadened replace pattern: deleting...replacing, deleting...inserting,
   deleting...substituting (not just deleting...replacing).
 - New "amended to read" pattern: "Section X is amended to read as follows".
-- New "amended as follows" pattern: "Section X is hereby amended as follows"
-  (excludes "Section X hereof" which is the amendment's own section number).
+- "amended as follows" is a STRUCTURAL/CONTAINER MARKER, not an instruction.
+  It does NOT emit RESTATE_SECTION. Child operations beneath it are detected
+  by the other regexes (ADD_V04, DELETE_BY_V04, REPLACE_V04, etc.).
 - New "deleted from Section" pattern: "is hereby deleted from Section X".
 - Broadened "amended by": adding, deleting, inserting, modifying (not just
   adding). "amended by deleting" maps to DELETE_COMMITMENT, not ADD_COMMITMENT.
@@ -128,7 +131,9 @@ ADD_V03 = re.compile(
 # Definition, Clause, Paragraph, Subsection are intentionally excluded —
 # they appear as common nouns in amendment text (e.g., "the definition of X",
 # "clause (a)(v)") and cause false positives when included as targets.
-# The actual amendment target is always the enclosing Section/Article/Schedule/Exhibit.
+# In the current 25-document development sample, restricting primary targets
+# to Section/Article/Schedule/Exhibit reduced false positives; finer-grained
+# targets remain future work.
 _TARGET = (
     r'(?P<section>'
     r'(?:Section|Article|Schedule|Exhibit)'
@@ -221,8 +226,11 @@ AMENDED_TO_READ_V04 = re.compile(
 )
 
 # v0.4 AMENDED_AS_FOLLOWS: "Section X of the Credit Agreement is hereby amended as follows"
-# This is a container pattern — it signals that amendment instructions follow,
-# typically in lettered subsections (a), (b), (c)...
+# This is a STRUCTURAL/CONTAINER MARKER, not an instruction. It signals that
+# amendment instructions follow, typically in lettered subsections (a), (b), (c)...
+# The parser does NOT emit a RESTATE_SECTION for this pattern. Child operations
+# beneath it (detected by ADD_V04, DELETE_BY_V04, REPLACE_V04, DELETED_FROM_V04,
+# AMENDED_TO_READ_V04, etc.) are the actual instructions.
 # Requires "of the Credit Agreement" (or similar) after the target to ensure
 # the target is a Credit Agreement section, not the amendment's own section number.
 # Without this, "Section 2 hereof, the Credit Agreement is hereby amended as follows"
@@ -455,7 +463,9 @@ def _extract_instructions_v04(text: str, body_start: int, body_end: int) -> list
     raw_hits = []
     # v0.4 specs: use broadened regexes with generalized targets.
     # AMENDED_TO_READ is mapped to RESTATE_SECTION (section is replaced entirely).
-    # AMENDED_AS_FOLLOWS is mapped to RESTATE_SECTION (container for sub-instructions).
+    # AMENDED_AS_FOLLOWS is a STRUCTURAL/CONTAINER MARKER — it does NOT emit an
+    # instruction. Child operations beneath it are detected by the other regexes
+    # (ADD_V04, DELETE_BY_V04, REPLACE_V04, DELETED_FROM_V04, AMENDED_TO_READ_V04).
     # DELETED_FROM is mapped to DELETE_COMMITMENT.
     # DELETE_BY ("amended by deleting") is mapped to DELETE_COMMITMENT.
     specs = [
@@ -466,7 +476,6 @@ def _extract_instructions_v04(text: str, body_start: int, body_end: int) -> list
         ("ADD_COMMITMENT", ADD_V04),
         ("DELETE_COMMITMENT", DELETE_BY_V04),
         ("RESTATE_SECTION", AMENDED_TO_READ_V04),
-        ("RESTATE_SECTION", AMENDED_AS_FOLLOWS_V04),
         ("DELETE_COMMITMENT", DELETED_FROM_V04),
     ]
     for typ, rx in specs:

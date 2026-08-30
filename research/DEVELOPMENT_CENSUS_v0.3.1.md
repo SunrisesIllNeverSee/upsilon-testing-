@@ -8,6 +8,10 @@ study ultimately requires.
 **Gold annotations:** data/development/gold_annotations.json (77 total)
 **Methodology:** TP/FP/FN computed from explicit gold annotations.
 Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).
+**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,
+instruction_type) only. These metrics do NOT verify extracted old_value,
+new_value, amount, exception, or actual semantic mutation correctness.
+Full reconstruction accuracy is a separate measurement.
 
 ## Table 1 — Corpus structure
 
@@ -22,7 +26,7 @@ Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).
 | Mixed | 4 | 16.0% |
 | **Total** | **25** | **100.0%** |
 
-## Table 2 — Parser performance by format
+## Table 2 — Instruction-detection performance by format
 
 | Format | Precision | Recall | F1 | Unresolved | Docs |
 |--------|-----------|--------|----|------------|------|
