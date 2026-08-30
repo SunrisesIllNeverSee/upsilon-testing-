@@ -1,0 +1,34 @@
+{
+  "label": "smoke_acquisition",
+  "recorded_at_utc": "2026-08-30T02:21:23.722974+00:00",
+  "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "git_commit": "47f64b2940549eda93b8f7673cb2825b2d56455a",
+  "git_status": "?? upsilon_financial_integrity.egg-info/",
+  "pip_freeze": "alembic==1.19.1\nannotated-doc==0.0.5\nannotated-types==0.8.0\nanyio==4.14.2\nbeautifulsoup4==4.15.0\ncertifi==2026.7.22\nfastapi==0.141.1\nh11==0.16.0\nhttpcore==1.0.9\nhttpx==0.28.1\nidna==3.19\niniconfig==2.3.0\nMako==1.4.1\nMarkupSafe==3.0.3\nnumpy==2.5.2\npackaging==26.3\npandas==3.0.5\npluggy==1.6.0\npsycopg==3.3.4\npsycopg-binary==3.3.4\npydantic==2.13.5\npydantic_core==2.46.5\nPygments==2.21.0\npytest==9.1.1\npython-dateutil==2.9.0.post0\nsix==1.17.0\nsoupsieve==2.9.2\nSQLAlchemy==2.0.52\nstarlette==1.6.0\ntyping-inspection==0.4.4\ntyping_extensions==4.16.0\n-e git+https://github.com/SunrisesIllNeverSee/upsilon-testing-.git@47f64b2940549eda93b8f7673cb2825b2d56455a#egg=upsilon_financial_integrity",
+  "protocol_lock": {
+    "frozen_at_utc": "2026-08-30T02:20:24.321008+00:00",
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "git_commit": "466f7b0088fad939bd5e532c4aecf5de73e639d7",
+    "git_status": "?? upsilon_financial_integrity.egg-info/",
+    "files": {
+      "research/PREREGISTRATION.md": "3bb202333ec97eb728a7542358de43afff2703a62bd0539650121f8cd5ecc911",
+      "research/SMOKE_TEST_PROTOCOL.md": "7a3f00c38df9dc2c9418f8ff1dd4b309b139f8aca4a3fa4fc4d0a08be2fe9c9e",
+      "research/ANNOTATION_GUIDE.md": "b94d879515e8f885742ee1fbda723e4007c6c9be73fcfc4291aecda4666f36b0",
+      "research/RESULTS_TEMPLATE.md": "69e28e0ef25a38d9621d5340bfa13dd344f11d6d668c02e6729abfa676a4c785",
+      "research/REPRODUCIBILITY_CHECKLIST.md": "46081463ad76f8d5e42e07efea3a866a2476ecd5b337e800705031c363500ad2",
+      "smoke_cases.csv": "ffacb0ae83dbeedba4b857ac95a384d1ee10b08287efe977e8127a6158f971bf"
+    }
+  },
+  "input_hashes": {
+    "data/smoke/DKS-001/source.html": "a3e3271652e50f4de3c71af71780e72de1fc53bb062bfab47d0a276c77232ee1",
+    "data/smoke/DKS-001/source.txt": "d0704de7e83ff8eff5891a09d4e0c51901c897fcb92e8c390a889bbab705ee15",
+    "data/smoke/DKS-001/source_meta.json": "ecbd7a04bc8d270a2c82d25ea6b3fa7778b48d24694f1b28a0e6dba552261840",
+    "data/smoke/SW-001/source.html": "ef77effbc10ffb48c45c0e23fa81f4b0021804914904de0fe3d0c414d1095a87",
+    "data/smoke/SW-001/source.txt": "331a70ec9fd66fc4c6d329d017bc900bd24b23d0b5a47f109a1dacdc9ea00a72",
+    "data/smoke/SW-001/source_meta.json": "1ec59e10aa68fb6f32d031a5ebecce1caf44062018d3e9b682a3818dc18d5ec7"
+  },
+  "output_hashes": {}
+}
