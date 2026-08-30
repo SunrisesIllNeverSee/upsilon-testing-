@@ -324,15 +324,17 @@ def _extract_maturity_date(source_text: str) -> str | None:
     if not re.search(r"Maturity\s+Date", source_text, re.IGNORECASE):
         return None
 
-    # Pattern 1: "Maturity Date" followed by amendment language and
-    # then a date.  The amendment language ("amended to mean",
-    # "extended to", "shall be", "means", "to") signals that the
-    # following date is the NEW value.
+    # Pattern 1: "Maturity Date" followed by explicit amendment
+    # language and then a date.  Only explicit amendment constructions
+    # are accepted — a bare "to" is intentionally excluded because it
+    # is too common in legal text (e.g., "adjustments to the Maturity
+    # Date provisions set forth in Section X") and would produce false
+    # positives.  Precision > recall.
     amend_pattern = re.compile(
         r"Maturity\s+Date"
         r"[^.]{0,80}?"
         r"(?:amended\s+to\s+mean|extended\s+to|shall\s+be|"
-        r"means|to)\s+"
+        r"means)\s+"
         r"\"?([A-Za-z]+\s+\d{1,2},?\s+\d{4})\"?",
         re.IGNORECASE,
     )
@@ -771,8 +773,11 @@ def _rule_party_change(
     released" or "is hereby added as" followed by a party role
     (Guarantor, Borrower, Lender).
 
-    Produces a REPLACE_VALUE mutation on the party field of the
-    commitment identified by target_section_ref.
+    Produces an ADD mutation (party joining) or a DELETE mutation
+    (party leaving) on the party field of the commitment identified
+    by target_section_ref.  The operation is derived from the trigger
+    phrase: "is hereby released" → DELETE, "shall become a party" or
+    "is hereby added as" → ADD.
 
     Returns None if the rule does not match.
     """

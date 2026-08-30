@@ -155,6 +155,11 @@ def apply_instruction(
         # - Otherwise → UNRESOLVED
         if ins.domain_effect == DomainEffect.EXCEPTION_REMOVAL:
             old = deepcopy(c.exceptions)
+            if ins.old_value not in c.exceptions:
+                raise UnresolvedInstruction(
+                    f"Exception not found for removal from {ins.target_key}: "
+                    f"{ins.old_value!r} not in {c.exceptions!r}"
+                )
             c.exceptions = [x for x in c.exceptions if x != ins.old_value]
             return {"action": "remove_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
         if ins.domain_effect == DomainEffect.PARTY_CHANGE:

@@ -928,9 +928,31 @@ def test_e2e_exception_add():
     assert len(er.state["financial_covenant.leverage_ratio"].exceptions) == 1
 
 
-def test_e2e_exception_delete():
-    """Exception DELETE maps and executes end-to-end."""
+def test_e2e_exception_delete_unresolved_when_representation_differs():
+    """Exception DELETE is UNRESOLVED when the stored representation differs
+    from the amendment language and no deterministic normalization proves
+    identity.
+
+    This test replaces the previous circular test which extracted the
+    exception text from the mapper, placed it into the state, then
+    re-ran the mapper and executor — guaranteeing exact-match success
+    by construction.  That proved nothing about real-world behavior.
+
+    The replacement uses an INDEPENDENT initial state whose exception
+    is stored in a canonical short form ("JCA indebtedness permitted
+    up to $50M") that differs from the full amendment-language
+    sentence the mapper extracts ("The Borrower shall not permit any
+    liens except that liens securing the Junior Credit Agreement shall
+    no longer be permitted.").  The executor uses exact-match
+    identity for exception removal (no normalization layer exists in
+    v0.1), so the DELETE is correctly rejected as UNRESOLVED.
+
+    This is the honest v0.1 behavior: when deterministic normalization
+    cannot prove identity, the instruction is UNRESOLVED — never a
+    forced exact-match success.
+    """
     from models import CommitmentState
+    from executor import execute_amendment
 
     parser_ins = AmendmentInstruction(
         order=1,
@@ -942,21 +964,30 @@ def test_e2e_exception_delete():
         ),
         provenance=InstructionProvenance.PARSER,
     )
-    # First map to get the exception text, then set up state with it
-    result = map_instruction(parser_ins)
-    assert len(result.mutations) == 1
-    exc_text = result.mutations[0].new_value if result.mutations[0].operation == InstructionType.ADD else result.mutations[0].old_value
+    # Independent initial state: exception stored in a canonical short
+    # form that does NOT match the amendment-language sentence.
     state = {
         "financial_covenant.leverage_ratio": CommitmentState(
             canonical_key="financial_covenant.leverage_ratio",
             commitment_type="financial_covenant",
-            exceptions=[exc_text],
+            exceptions=["JCA indebtedness permitted up to $50M"],
         )
     }
-    er = _map_and_execute(parser_ins, state)
-    assert er.status.value == "COMPLETE"
-    assert len(er.unresolved) == 0
-    assert er.state["financial_covenant.leverage_ratio"].exceptions == []
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    assert mut.operation == InstructionType.DELETE
+    exec_ins = mut.to_amendment_instruction(order=parser_ins.order)
+    er = execute_amendment(state, [exec_ins])
+    # The executor must reject the DELETE — the stored representation
+    # does not match the amendment-language sentence, and v0.1 has no
+    # normalization layer to prove identity.
+    assert len(er.unresolved) == 1
+    assert er.status.value in ("UNRESOLVED", "PARTIAL")
+    # The original exception must remain untouched (no silent removal)
+    assert er.state["financial_covenant.leverage_ratio"].exceptions == [
+        "JCA indebtedness permitted up to $50M"
+    ]
 
 
 def test_e2e_party_add_guarantor():

@@ -257,22 +257,42 @@ def run_semantic_pipeline(chain: IssuerChain) -> SemanticPipelineResult:
     matched = 0
     total_gt = len(ground_truth)
 
+    # v0.1 final-state comparator: every field the mapper claims to
+    # support must agree with ground truth.  A commitment matches only
+    # when ALL of the following fields are equal:
+    #   threshold, rate, deadline, party, exceptions,
+    #   applicability, status, unit
+    # Any field mismatch → the commitment is counted as a mismatch and
+    # the specific field differences are recorded for diagnosis.
+    _COMPARE_FIELDS = (
+        "threshold",
+        "rate",
+        "deadline",
+        "party",
+        "exceptions",
+        "applicability",
+        "status",
+        "unit",
+    )
+
     for key, gt_commitment in ground_truth.items():
         if key not in current_state:
             state_mismatches.append(f"Missing: {key}")
             continue
         recon = current_state[key]
-        # Compare key fields
-        if (recon.threshold == gt_commitment.threshold
-                and recon.unit == gt_commitment.unit
-                and recon.applicability == gt_commitment.applicability
-                and recon.status == gt_commitment.status):
+        field_diffs: list[str] = []
+        for fname in _COMPARE_FIELDS:
+            recon_val = getattr(recon, fname, None)
+            gt_val = getattr(gt_commitment, fname, None)
+            if recon_val != gt_val:
+                field_diffs.append(
+                    f"{fname}: {recon_val!r} vs {gt_val!r}"
+                )
+        if not field_diffs:
             matched += 1
         else:
             state_mismatches.append(
-                f"Mismatch {key}: "
-                f"threshold {recon.threshold} vs {gt_commitment.threshold}, "
-                f"applicability {recon.applicability} vs {gt_commitment.applicability}"
+                f"Mismatch {key}: " + ", ".join(field_diffs)
             )
 
     # Check for extra commitments in reconstructed state
@@ -438,10 +458,33 @@ def render_metrics_report(results: list[SemanticPipelineResult]) -> str:
     lines.append("")
     if any_clean:
         lines.append(
-            "Result: SUCCESS — at least one chain meets the v0.1 criterion.  "
-            "Ameresco reconstructs end-to-end from filed amendment text with "
+            "Result: SUCCESS — at least one chain meets the v0.1 criterion."
+        )
+        lines.append("")
+        lines.append("Per-chain outcomes (locked language):")
+        lines.append(
+            "- EDGAR-AMERESCO: successful automated end-to-end reconstruction.  "
             "3 mapped mutations (A1 leverage, A2 leverage, A3 JCA), 0% "
-            "incorrect mutations, and 100% final state agreement."
+            "incorrect mutations, 100% final supported-field state agreement.  "
+            "All unsupported instructions safely UNRESOLVED."
+        )
+        lines.append(
+            "- EDGAR-AMEDISYS: unsupported format (full restatement).  "
+            "0 parser instructions — the parser finds nothing because the "
+            "amendment replaces the entire agreement via Annex A composite.  "
+            "Safely UNRESOLVED; no false authoritative promotion."
+        )
+        lines.append(
+            "- EDGAR-BAUSCH-LOMB: unsupported format (conformed copy).  "
+            "0 parser instructions — the parser finds nothing because the "
+            "amendment is a redline conformed copy, not incremental amendment "
+            "language.  Safely UNRESOLVED; no false authoritative promotion."
+        )
+        lines.append("")
+        lines.append(
+            "Only Ameresco is a successful automated reconstruction.  "
+            "Amedisys and Bausch-Lomb are unsupported formats that are "
+            "safely UNRESOLVED — they are NOT successful reconstructions."
         )
     else:
         lines.append(

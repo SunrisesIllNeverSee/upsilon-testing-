@@ -217,7 +217,13 @@ def test_pipeline_ameresco_meets_success_criterion():
 
 
 def test_pipeline_metrics_report_renders():
-    """The metrics report renders without errors and honestly reports criterion status."""
+    """The metrics report renders without errors and honestly reports criterion status.
+
+    Locked language: Ameresco is the only successful automated
+    reconstruction.  Amedisys and Bausch-Lomb are explicitly described
+    as unsupported formats that are safely UNRESOLVED — never as
+    successful reconstructions.
+    """
     results = run_all_semantic_pipelines()
     report = render_metrics_report(results)
     assert "Semantic Mapper v0.1" in report
@@ -228,6 +234,11 @@ def test_pipeline_metrics_report_renders():
     assert "meets_criterion" in report
     # The report must honestly state whether the success criterion is met
     assert "NOT YET" in report or "SUCCESS" in report
+    # Locked per-chain language: Ameresco = success, others = unsupported
+    assert "EDGAR-AMERESCO: successful automated end-to-end reconstruction" in report
+    assert "EDGAR-AMEDISYS: unsupported format" in report
+    assert "EDGAR-BAUSCH-LOMB: unsupported format" in report
+    assert "NOT successful reconstructions" in report
 
 
 def test_pipeline_no_manual_in_mapped_mutations():
