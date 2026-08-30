@@ -111,6 +111,8 @@ def _dt(s: str) -> datetime:
 # A2 (Amendment No. 4, Dec 11, 2023) Section 7.10(a) replaced:
 #   Q4 2023 (Dec 31): <= 3.75
 #   Thereafter: <= 3.50
+#   (Parser now captures this — previously missed due to a regex
+#   bridging bug in REPLACE_V04, fixed with a tempered group.)
 #
 # A3 (Amendment No. 6, Jun 28, 2024): does NOT change Section 7.10.
 #   Adds Junior Credit Agreement (Second Lien) provisions.

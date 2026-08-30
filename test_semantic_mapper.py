@@ -38,7 +38,7 @@ def test_is_implemented_returns_true():
 
 def test_rules_registered():
     """Mapping rules are registered (validated against real parser output)."""
-    assert len(_RULES) >= 2
+    assert len(_RULES) >= 6
 
 
 def test_map_instruction_returns_mapping_result_for_unmapped():
@@ -134,6 +134,56 @@ def test_structured_mutation_to_amendment_instruction_sets_domain_effect():
     )
     ins2 = mut2.to_amendment_instruction()
     assert ins2.domain_effect == DomainEffect.COMMITMENT_AMOUNT_CHANGE
+
+    # Deadline → DEADLINE_CHANGE
+    mut4 = StructuredMutation(
+        commitment_id="facility.credit_agreement",
+        field="deadline",
+        operation=InstructionType.REPLACE_VALUE,
+        provenance=InstructionProvenance.SEMANTIC_MAPPER,
+    )
+    ins4 = mut4.to_amendment_instruction()
+    assert ins4.domain_effect == DomainEffect.DEADLINE_CHANGE
+
+    # Rate → RATE_CHANGE
+    mut5 = StructuredMutation(
+        commitment_id="facility.credit_agreement",
+        field="rate",
+        operation=InstructionType.REPLACE_VALUE,
+        provenance=InstructionProvenance.SEMANTIC_MAPPER,
+    )
+    ins5 = mut5.to_amendment_instruction()
+    assert ins5.domain_effect == DomainEffect.RATE_CHANGE
+
+    # Exceptions ADD → EXCEPTION_EXPANSION
+    mut6 = StructuredMutation(
+        commitment_id="financial_covenant.leverage_ratio",
+        field="exceptions",
+        operation=InstructionType.ADD,
+        provenance=InstructionProvenance.SEMANTIC_MAPPER,
+    )
+    ins6 = mut6.to_amendment_instruction()
+    assert ins6.domain_effect == DomainEffect.EXCEPTION_EXPANSION
+
+    # Exceptions DELETE → EXCEPTION_REMOVAL
+    mut7 = StructuredMutation(
+        commitment_id="financial_covenant.leverage_ratio",
+        field="exceptions",
+        operation=InstructionType.DELETE,
+        provenance=InstructionProvenance.SEMANTIC_MAPPER,
+    )
+    ins7 = mut7.to_amendment_instruction()
+    assert ins7.domain_effect == DomainEffect.EXCEPTION_REMOVAL
+
+    # Party → PARTY_CHANGE
+    mut8 = StructuredMutation(
+        commitment_id="facility.credit_agreement",
+        field="party",
+        operation=InstructionType.ADD,
+        provenance=InstructionProvenance.SEMANTIC_MAPPER,
+    )
+    ins8 = mut8.to_amendment_instruction()
+    assert ins8.domain_effect == DomainEffect.PARTY_CHANGE
 
     # UNRESOLVED → no domain effect
     mut3 = StructuredMutation(

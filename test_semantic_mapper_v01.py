@@ -26,14 +26,15 @@ from models import (
 )
 from semantic_mapper import (
     AmbiguityReason,
-    MappingResult,
     StructuredMutation,
     _extract_dollar_amount,
+    _extract_maturity_date,
+    _extract_percentage,
     _extract_step_down_schedule,
     _parse_date,
+    _section_to_commitment_id,
     is_implemented,
     map_instruction,
-    map_instructions,
 )
 from semantic_gold import (
     all_gold_mappings,
@@ -178,6 +179,114 @@ def test_extract_dollar_amount():
     assert _extract_dollar_amount("no amount") is None
 
 
+def test_extract_maturity_date_standard():
+    """Maturity Date extraction with nearby date."""
+    assert _extract_maturity_date(
+        'Maturity Date is hereby amended to mean "June 30, 2025".'
+    ) == "2025-06-30"
+    assert _extract_maturity_date(
+        "The Maturity Date shall be extended to December 31, 2025."
+    ) == "2025-12-31"
+
+
+def test_extract_maturity_date_no_keyword():
+    """No 'Maturity Date' keyword → None."""
+    assert _extract_maturity_date("The effective date is June 30, 2025.") is None
+
+
+def test_extract_maturity_date_no_date_nearby():
+    """Maturity Date mentioned but no date within 80 chars → None."""
+    assert _extract_maturity_date(
+        "The Maturity Date is hereby amended as set forth in Annex A "
+        "which is attached hereto and incorporated by reference. "
+        "The date of the agreement is June 30, 2025."
+    ) is None
+
+
+def test_extract_maturity_date_returns_new_not_old():
+    """When both old and new dates appear, the NEW date is returned.
+
+    Regression test: the old implementation returned the first date
+    near the keyword, which was the OLD value.  Amendment text like
+    "The Maturity Date of June 30, 2024 is hereby extended to
+    December 31, 2025" must yield 2025-12-31 (the new date), not
+    2024-06-30 (the old date).
+    """
+    assert _extract_maturity_date(
+        "The Maturity Date of June 30, 2024 is hereby extended to "
+        "December 31, 2025."
+    ) == "2025-12-31"
+
+
+def test_extract_maturity_date_multiple_dates_no_amend_lang_is_ambiguous():
+    """Multiple dates near 'Maturity Date' without amendment language → None.
+
+    Without amendment verbs (amended to mean, extended to, etc.) we
+    cannot determine which date is the new value, so the extraction
+    must return None rather than guessing.
+    """
+    assert _extract_maturity_date(
+        "The Maturity Date is June 30, 2024 and also December 31, 2025."
+    ) is None
+
+
+def test_extract_maturity_date_single_date_no_amend_lang():
+    """A single date near 'Maturity Date' with no amendment language maps.
+
+    When only one date appears near the keyword, it must be the new
+    value (there is no old value stated to confuse the extraction).
+    """
+    assert _extract_maturity_date(
+        "The Maturity Date is June 30, 2025."
+    ) == "2025-06-30"
+
+
+def test_extract_percentage_standard():
+    """Percentage extraction."""
+    assert _extract_percentage("2.50%") == 2.50
+    assert _extract_percentage("amended to 1.75% per annum") == 1.75
+    assert _extract_percentage("no percentage here") is None
+
+
+def test_extract_percentage_returns_new_not_old():
+    """When both old and new percentages appear, the NEW value is returned.
+
+    Regression test: the old implementation returned the first
+    percentage in the text, which was the OLD rate.  Amendment text
+    like "The Applicable Rate of 3.00% is hereby amended to 2.50%"
+    must yield 2.50 (the new rate), not 3.00 (the old rate).
+    """
+    assert _extract_percentage(
+        "The Applicable Rate of 3.00% is hereby amended to 2.50% per annum."
+    ) == 2.50
+
+
+def test_extract_percentage_multiple_no_amend_lang_is_ambiguous():
+    """Multiple percentages without amendment language → None.
+
+    Without amendment verbs (amended to, to mean, set at, etc.) we
+    cannot determine which percentage is the new value, so the
+    extraction must return None rather than guessing.
+    """
+    assert _extract_percentage(
+        "The rate is 3.00% and the margin is 2.50%."
+    ) is None
+
+
+def test_section_to_commitment_id_known():
+    """Known sections map to commitment IDs."""
+    assert _section_to_commitment_id("Section 7.10") == "financial_covenant.leverage_ratio"
+    assert _section_to_commitment_id("Section 7.01") == "facility.credit_agreement"
+    assert _section_to_commitment_id("section 7.10(a)") == "financial_covenant.leverage_ratio"
+
+
+def test_section_to_commitment_id_unknown():
+    """Unknown sections return None."""
+    assert _section_to_commitment_id("Section 99.99") is None
+    assert _section_to_commitment_id("") is None
+    assert _section_to_commitment_id(None) is None
+
+
 # ---------------------------------------------------------------------------
 # Rule tests — leverage ratio
 # ---------------------------------------------------------------------------
@@ -317,6 +426,337 @@ def test_rule_junior_credit_agreement_no_amount_is_ambiguous():
 
 
 # ---------------------------------------------------------------------------
+# Rule tests — maturity date replacement
+# ---------------------------------------------------------------------------
+
+
+def test_rule_maturity_date_maps_explicit_amendment():
+    """An explicit Maturity Date amendment with a parseable date maps."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text=(
+            'The definition of "Maturity Date" is hereby amended to mean '
+            '"June 30, 2025."'
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    assert mut.commitment_id == "facility.credit_agreement"
+    assert mut.field == "deadline"
+    assert mut.operation == InstructionType.REPLACE_VALUE
+    assert mut.new_value == "2025-06-30"
+    assert mut.unit == "date"
+    assert mut.provenance == InstructionProvenance.SEMANTIC_MAPPER
+    assert mut.ambiguity_reason is None
+
+
+def test_rule_maturity_date_extended_to():
+    """Maturity Date extended to a new date maps correctly."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text=(
+            "The Maturity Date shall be extended to December 31, 2025."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    assert result.mutations[0].new_value == "2025-12-31"
+
+
+def test_rule_maturity_date_no_date_is_ambiguous():
+    """Maturity Date mentioned but no parseable date nearby → AMBIGUOUS_VALUE."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text="The Maturity Date is hereby amended as set forth in Annex A.",
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 0
+    assert len(result.unresolved) == 1
+    assert result.unresolved[0].ambiguity_reason == AmbiguityReason.AMBIGUOUS_VALUE
+
+
+def test_rule_maturity_date_does_not_fire_without_keyword():
+    """Text with a date but no 'Maturity Date' keyword does not trigger the rule."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text="The effective date is June 30, 2025.",
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    # Should not map to maturity date
+    assert not any(
+        m.commitment_id == "facility.credit_agreement" and m.field == "deadline"
+        for m in result.mutations
+    )
+
+
+# ---------------------------------------------------------------------------
+# Rule tests — rate / percentage replacement
+# ---------------------------------------------------------------------------
+
+
+def test_rule_rate_percentage_maps_applicable_rate():
+    """An explicit Applicable Rate change with a percentage maps."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text=(
+            'The definition of "Applicable Rate" is hereby amended to '
+            "mean 2.50% per annum."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    assert mut.commitment_id == "facility.credit_agreement"
+    assert mut.field == "rate"
+    assert mut.operation == InstructionType.REPLACE_VALUE
+    assert mut.new_value == 2.50
+    assert mut.unit == "percent"
+    assert mut.provenance == InstructionProvenance.SEMANTIC_MAPPER
+    assert mut.ambiguity_reason is None
+
+
+def test_rule_rate_percentage_maps_applicable_margin():
+    """An explicit Applicable Margin change with a percentage maps."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 2.03",
+        source_text=(
+            'The "Applicable Margin" for Term Loans is hereby amended to 1.75%.'
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    assert result.mutations[0].new_value == 1.75
+
+
+def test_rule_rate_percentage_no_percentage_is_ambiguous():
+    """Applicable Rate mentioned but no percentage → AMBIGUOUS_VALUE."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text="The Applicable Rate shall be determined per Annex A.",
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 0
+    assert len(result.unresolved) == 1
+    assert result.unresolved[0].ambiguity_reason == AmbiguityReason.AMBIGUOUS_VALUE
+
+
+# ---------------------------------------------------------------------------
+# Rule tests — exception add / remove
+# ---------------------------------------------------------------------------
+
+
+def test_rule_exception_add_maps_notwithstanding():
+    """An ADD with 'notwithstanding' language on a known section maps."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 7.10",
+        source_text=(
+            "Notwithstanding the foregoing, the Borrower may permit "
+            "Indebtedness under the Junior Credit Agreement up to $50,000,000."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    assert mut.commitment_id == "financial_covenant.leverage_ratio"
+    assert mut.field == "exceptions"
+    assert mut.operation == InstructionType.ADD
+    assert mut.provenance == InstructionProvenance.SEMANTIC_MAPPER
+    assert mut.ambiguity_reason is None
+    assert "Notwithstanding" in mut.new_value
+
+
+def test_rule_exception_delete_maps_except_that():
+    """A DELETE with 'except that' language on a known section maps."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.DELETE,
+        target_section_ref="Section 7.10",
+        source_text=(
+            "The Borrower shall not permit any liens except that liens "
+            "securing the Junior Credit Agreement shall no longer be permitted."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    assert mut.commitment_id == "financial_covenant.leverage_ratio"
+    assert mut.field == "exceptions"
+    assert mut.operation == InstructionType.DELETE
+    assert mut.provenance == InstructionProvenance.SEMANTIC_MAPPER
+    assert mut.ambiguity_reason is None
+
+
+def test_rule_exception_unknown_section_returns_none():
+    """An exception instruction on an unmapped section falls through to UNKNOWN_COMMITMENT."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 99.99",
+        source_text="Notwithstanding anything herein, the Borrower may do X.",
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 0
+    assert len(result.unresolved) == 1
+    assert result.unresolved[0].ambiguity_reason == AmbiguityReason.UNKNOWN_COMMITMENT
+
+
+def test_rule_exception_no_carveout_language_does_not_fire():
+    """An ADD on a known section without exception language does not trigger the rule."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 7.10",
+        source_text="The Borrower shall maintain a minimum liquidity of $10,000,000.",
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    # Should not map as an exception — no notwithstanding/except language
+    assert not any(
+        m.field == "exceptions" for m in result.mutations
+    )
+
+
+# ---------------------------------------------------------------------------
+# Rule tests — party change
+# ---------------------------------------------------------------------------
+
+
+def test_rule_party_change_add_guarantor():
+    """An explicit 'shall become a party' + Guarantor maps to party ADD."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 6.01",
+        source_text=(
+            "Each Subsidiary of the Borrower shall become a party to "
+            "this Agreement as a Guarantor."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    assert mut.commitment_id == "facility.credit_agreement"
+    assert mut.field == "party"
+    assert mut.operation == InstructionType.ADD
+    assert mut.new_value == "guarantor"
+    assert mut.provenance == InstructionProvenance.SEMANTIC_MAPPER
+    assert mut.ambiguity_reason is None
+
+
+def test_rule_party_change_release_guarantor():
+    """An explicit 'is hereby released' + Guarantor maps to party DELETE."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.DELETE,
+        target_section_ref="Section 6.01",
+        source_text=(
+            "Subsidiary X is hereby released as a Guarantor from its "
+            "obligations under the Guarantee."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    assert mut.commitment_id == "facility.credit_agreement"
+    assert mut.field == "party"
+    assert mut.operation == InstructionType.DELETE
+    assert mut.old_value == "guarantor"
+    assert mut.provenance == InstructionProvenance.SEMANTIC_MAPPER
+
+
+def test_rule_party_change_no_role_does_not_fire():
+    """Party-change language without a role (Guarantor/Borrower/Lender) does not fire."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 6.01",
+        source_text="The Company shall become a party to this Agreement.",
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    # No Guarantor/Borrower/Lender role → should not map as party change
+    assert not any(
+        m.field == "party" for m in result.mutations
+    )
+
+
+def test_rule_party_change_unknown_section_returns_none():
+    """A party change on an unmapped section falls through to UNKNOWN_COMMITMENT."""
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 99.99",
+        source_text="New Co shall become a party to this Agreement as a Guarantor.",
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 0
+    assert len(result.unresolved) == 1
+    assert result.unresolved[0].ambiguity_reason == AmbiguityReason.UNKNOWN_COMMITMENT
+
+
+def test_rule_party_change_add_not_corrupted_by_release_elsewhere():
+    """ADD trigger must not be flipped to DELETE by release language elsewhere.
+
+    Regression test: the old implementation determined the operation
+    (ADD vs DELETE) by searching the ENTIRE source text for
+    "is hereby released".  If the trigger phrase was "shall become a
+    party" (an ADD) but "is hereby released" appeared elsewhere in
+    the text, the mapper incorrectly produced a DELETE.  The
+    operation must be derived from the trigger phrase that actually
+    matched, not from an unrelated phrase elsewhere in the text.
+    """
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 6.01",
+        source_text=(
+            "Each Subsidiary of the Borrower shall become a party to "
+            "this Agreement as a Guarantor. "
+            "Note: Subsidiary Y is hereby released as a Guarantor from "
+            "a separate agreement."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    mut = result.mutations[0]
+    # Critical: the operation must be ADD, not DELETE
+    assert mut.operation == InstructionType.ADD
+    assert mut.new_value == "guarantor"
+    assert mut.provenance == InstructionProvenance.SEMANTIC_MAPPER
+
+
+# ---------------------------------------------------------------------------
 # Default UNRESOLVED tests
 # ---------------------------------------------------------------------------
 
@@ -375,6 +815,288 @@ def test_mapper_never_provides_best_guess():
 
 
 # ---------------------------------------------------------------------------
+# End-to-end mapper → executor integration tests
+#
+# These tests verify that mapped mutations are actually executable by the
+# executor and produce the correct commitment-state changes.  They catch
+# mismatches between the mapper's output schema and the executor's input
+# expectations (e.g., a field that the mapper sets but CommitmentState
+# does not have, or a domain_effect the executor does not handle).
+# ---------------------------------------------------------------------------
+
+
+def _map_and_execute(parser_ins, state):
+    """Map a parser instruction and execute the result against the given state.
+
+    Returns the ExecutionResult.  Asserts that the instruction was mapped
+    (not unresolved) before executing.
+    """
+    from executor import execute_amendment
+
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1, (
+        f"Expected 1 mapped mutation, got {len(result.mutations)} mapped "
+        f"and {len(result.unresolved)} unresolved"
+    )
+    mut = result.mutations[0]
+    exec_ins = mut.to_amendment_instruction(order=parser_ins.order)
+    return execute_amendment(state, [exec_ins])
+
+
+def test_e2e_maturity_date_replacement():
+    """Maturity date replacement maps and executes end-to-end."""
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text=(
+            'The definition of "Maturity Date" is hereby amended to mean '
+            '"June 30, 2025."'
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            deadline="2024-06-30",
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    assert er.state["facility.credit_agreement"].deadline == "2025-06-30"
+
+
+def test_e2e_rate_percentage_replacement():
+    """Rate/percentage replacement maps and executes end-to-end.
+
+    The mapper produces field='rate', domain_effect=RATE_CHANGE.  The
+    executor must update the 'rate' field on CommitmentState.
+    """
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text=(
+            'The definition of "Applicable Rate" is hereby amended to '
+            "mean 2.50% per annum."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            rate=1.5,
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    assert er.state["facility.credit_agreement"].rate == 2.5
+
+
+def test_e2e_exception_add():
+    """Exception ADD maps and executes end-to-end."""
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 7.10",
+        source_text=(
+            "Notwithstanding the foregoing, the Borrower may permit "
+            "Indebtedness under the Junior Credit Agreement up to $50,000,000."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    state = {
+        "financial_covenant.leverage_ratio": CommitmentState(
+            canonical_key="financial_covenant.leverage_ratio",
+            commitment_type="financial_covenant",
+            exceptions=[],
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    assert len(er.state["financial_covenant.leverage_ratio"].exceptions) == 1
+
+
+def test_e2e_exception_delete():
+    """Exception DELETE maps and executes end-to-end."""
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.DELETE,
+        target_section_ref="Section 7.10",
+        source_text=(
+            "The Borrower shall not permit any liens except that liens "
+            "securing the Junior Credit Agreement shall no longer be permitted."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    # First map to get the exception text, then set up state with it
+    result = map_instruction(parser_ins)
+    assert len(result.mutations) == 1
+    exc_text = result.mutations[0].new_value if result.mutations[0].operation == InstructionType.ADD else result.mutations[0].old_value
+    state = {
+        "financial_covenant.leverage_ratio": CommitmentState(
+            canonical_key="financial_covenant.leverage_ratio",
+            commitment_type="financial_covenant",
+            exceptions=[exc_text],
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    assert er.state["financial_covenant.leverage_ratio"].exceptions == []
+
+
+def test_e2e_party_add_guarantor():
+    """Party ADD (guarantor joins) maps and executes end-to-end.
+
+    The mapper produces operation=ADD, field='party', domain_effect=PARTY_CHANGE.
+    The executor must append to the party list, not reject the instruction.
+    """
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.ADD,
+        target_section_ref="Section 6.01",
+        source_text=(
+            "Each Subsidiary of the Borrower shall become a party to "
+            "this Agreement as a Guarantor."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            party=["borrower"],
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    assert "guarantor" in er.state["facility.credit_agreement"].party
+    assert er.state["facility.credit_agreement"].status == "ACTIVE"
+
+
+def test_e2e_party_delete_guarantor_release():
+    """Party DELETE (guarantor release) maps and executes end-to-end.
+
+    The mapper produces operation=DELETE, field='party', domain_effect=PARTY_CHANGE.
+    The executor must remove the guarantor from the party list and must NOT
+    mark the entire commitment as DELETED.
+    """
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.DELETE,
+        target_section_ref="Section 6.01",
+        source_text=(
+            "Subsidiary X is hereby released as a Guarantor from its "
+            "obligations under the Guarantee."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            party=["borrower", "guarantor"],
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    # Critical: the guarantor must be removed from the party list
+    assert "guarantor" not in er.state["facility.credit_agreement"].party
+    # Critical: the commitment itself must NOT be marked DELETED
+    assert er.state["facility.credit_agreement"].status == "ACTIVE"
+
+
+def test_e2e_rate_with_old_and_new_percentage():
+    """Rate replacement with both old and new percentages in text.
+
+    Regression test: when the amendment text states both the old and
+    new rate (e.g., "The Applicable Rate of 3.00% is hereby amended
+    to 2.50%"), the mapper must extract the NEW rate (2.50), not the
+    old rate (3.00).  The executor must then update the rate field to
+    the new value.
+    """
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text=(
+            "The Applicable Rate of 3.00% is hereby amended to "
+            "2.50% per annum."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            rate=3.0,
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    # Critical: the rate must be the NEW value (2.5), not the old (3.0)
+    assert er.state["facility.credit_agreement"].rate == 2.5
+
+
+def test_e2e_maturity_date_with_old_and_new_date():
+    """Maturity date replacement with both old and new dates in text.
+
+    Regression test: when the amendment text states both the old and
+    new maturity date (e.g., "The Maturity Date of June 30, 2024 is
+    hereby extended to December 31, 2025"), the mapper must extract
+    the NEW date (2025-12-31), not the old date (2024-06-30).  The
+    executor must then update the deadline field to the new value.
+    """
+    from models import CommitmentState
+
+    parser_ins = AmendmentInstruction(
+        order=1,
+        instruction_type=InstructionType.REPLACE_TEXT,
+        target_section_ref="Section 1.01",
+        source_text=(
+            "The Maturity Date of June 30, 2024 is hereby extended to "
+            "December 31, 2025."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            deadline="2024-06-30",
+        )
+    }
+    er = _map_and_execute(parser_ins, state)
+    assert er.status.value == "COMPLETE"
+    assert len(er.unresolved) == 0
+    # Critical: the deadline must be the NEW value, not the old
+    assert er.state["facility.credit_agreement"].deadline == "2025-12-31"
+
+
+# ---------------------------------------------------------------------------
 # Gold-mapping tests — mapper output vs gold for real EDGAR parser output
 # ---------------------------------------------------------------------------
 
@@ -401,7 +1123,16 @@ def _load_parser_instructions(chain_dir: str, filename: str) -> list[AmendmentIn
 
 
 def _compare_mutation(actual: StructuredMutation, gold: StructuredMutation, context: str):
-    """Compare an actual mutation to a gold mutation."""
+    """Compare an actual mutation to a gold mutation.
+
+    For MAPPED mutations, compares commitment_id, field, operation,
+    provenance, new_value, unit, and source_span.  old_value is only
+    compared when both gold and actual have a non-None value — the
+    mapper cannot always extract old_value from amendment text (e.g.,
+    when the amendment says "deleting paragraph (a) in its entirety"
+    without stating the old numeric values), so gold may carry the
+    known prior state value while the mapper produces None.
+    """
     if gold.ambiguity_reason is not None:
         # Gold expects UNRESOLVED
         assert actual.ambiguity_reason is not None, \
@@ -425,6 +1156,30 @@ def _compare_mutation(actual: StructuredMutation, gold: StructuredMutation, cont
         # Compare new_value
         assert actual.new_value == gold.new_value, \
             f"{context}: new_value {actual.new_value} != {gold.new_value}"
+        # Compare unit if gold specifies it
+        if gold.unit is not None:
+            assert actual.unit == gold.unit, \
+                f"{context}: unit {actual.unit} != {gold.unit}"
+        # Compare source_span: the mapper sets source_span to the full
+        # parser source_text, which may be longer than the gold's
+        # source_span (the gold captures the key amendment language).
+        # We verify that the actual source_span contains the gold's
+        # key text, rather than requiring an exact match.
+        if gold.source_span:
+            # Use a representative substring from the gold source_span
+            # (the first 60 chars of the core amendment language) to
+            # verify the mapper operated on the right text.
+            gold_key = gold.source_span[:60]
+            assert gold_key in actual.source_span, \
+                f"{context}: source_span does not contain gold key text " \
+                f"'{gold_key}...'"
+        # Compare old_value only when both sides have a value — the
+        # mapper may not be able to extract old_value from amendment
+        # text, so gold's old_value (known from chain context) may
+        # differ from the mapper's None.
+        if gold.old_value is not None and actual.old_value is not None:
+            assert actual.old_value == gold.old_value, \
+                f"{context}: old_value {actual.old_value} != {gold.old_value}"
 
 
 def test_gold_ameresco_a1_mapping():
@@ -443,13 +1198,20 @@ def test_gold_ameresco_a1_mapping():
 
 
 def test_gold_ameresco_a2_mapping():
-    """Mapper output matches gold for Ameresco A2 (all UNRESOLVED)."""
+    """Mapper output matches gold for Ameresco A2.
+
+    A2 ins 3 (Section 7.10) is MAPPED → leverage ratio schedule change.
+    All other instructions are UNRESOLVED.
+    """
     instructions = _load_parser_instructions("ameresco", "A2_amend_2023_12.v04.json")
     gold = gold_ameresco_a2()
     assert len(instructions) == len(gold)
     for i, (gold_idx, gold_mut) in enumerate(gold):
         result = map_instruction(instructions[i], citation_document="Amendment No. 4")
-        actual = result.unresolved[0]
+        if gold_mut.ambiguity_reason is None:
+            actual = result.mutations[0]
+        else:
+            actual = result.unresolved[0]
         _compare_mutation(actual, gold_mut, f"A2 ins {i}")
 
 

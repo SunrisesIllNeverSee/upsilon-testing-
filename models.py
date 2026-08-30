@@ -75,6 +75,7 @@ class DomainEffect(str, Enum):
     FREQUENCY_CHANGE = "frequency_change"
     SCOPE_CHANGE = "scope_change"
     DEFINITION_CHANGE = "definition_change"
+    RATE_CHANGE = "rate_change"
     UNKNOWN = "unknown"
 
 
@@ -112,6 +113,7 @@ class CommitmentState(BaseModel):
     unit: Optional[str] = None
     frequency: Optional[str] = None
     deadline: Optional[str] = None
+    rate: Optional[float] = None
     scope: dict[str, Any] = Field(default_factory=dict)
     exceptions: list[Any] = Field(default_factory=list)
     trigger: dict[str, Any] = Field(default_factory=dict)

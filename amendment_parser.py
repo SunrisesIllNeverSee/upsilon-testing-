@@ -147,11 +147,16 @@ _TARGET = (
 # Requires "amended by" (or "modified and amended by") between target and "deleting"
 # to ensure the target is actually being amended (not a cross-reference followed by
 # "deleting" in a different instruction).
-# Gap between target and deleting is bounded to 200 chars.
+# Gap between target and "amended by" is bounded to 200 chars and uses a tempered
+# group that stops at another Section/Article/Schedule/Exhibit reference.  This
+# prevents the regex from bridging across a section boundary to match amendment
+# language that belongs to a different section (observed in Ameresco A2 where
+# "Section 7.04(c)(xiii) is hereby amended to replace..." was incorrectly matched
+# as the target for "Section 7.10 ... amended by deleting..." language).
 # Gap between deleting and inserting/replacing is bounded to 500 chars
 # (some definitions are long).
 REPLACE_V04 = re.compile(
-    _TARGET + r'.{0,200}?'
+    _TARGET + r'(?:(?!\b(?:Section|Article|Schedule|Exhibit)\b\s+[A-Za-z0-9]).){0,200}?'
     r'(?:is\s+(?:hereby\s+)?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+)'
     r'(?:\(\w+\)\s+)*'
     r'(?:deleting|delete)\s+'

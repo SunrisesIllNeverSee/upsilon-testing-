@@ -108,6 +108,8 @@ def apply_instruction(
                 field = "scope"
             elif de == DomainEffect.COVENANT_THRESHOLD_CHANGE:
                 field = "threshold"
+            elif de == DomainEffect.RATE_CHANGE:
+                field = "rate"
 
         if not field or not hasattr(c, field):
             raise UnresolvedInstruction(f"Unsupported or missing field: {field}")
@@ -129,6 +131,7 @@ def apply_instruction(
 
     if t == InstructionType.ADD:
         # ADD with EXCEPTION_EXPANSION domain effect → add to exceptions list.
+        # ADD with PARTY_CHANGE domain effect → add to party list.
         # ADD with a dict payload (new commitment) is handled before the
         # target_key guard above.
         if ins.domain_effect == DomainEffect.EXCEPTION_EXPANSION:
@@ -136,11 +139,17 @@ def apply_instruction(
             if ins.new_value not in c.exceptions:
                 c.exceptions.append(deepcopy(ins.new_value))
             return {"action": "add_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
-        raise UnresolvedInstruction("ADD requires new_value (dict for commitment or value for exception with domain_effect)")
+        if ins.domain_effect == DomainEffect.PARTY_CHANGE:
+            old = deepcopy(c.party)
+            if ins.new_value not in c.party:
+                c.party.append(deepcopy(ins.new_value))
+            return {"action": "add_party", "target": ins.target_key, "old": old, "new": deepcopy(c.party)}, None
+        raise UnresolvedInstruction("ADD requires new_value (dict for commitment or value for exception/party with domain_effect)")
 
     if t == InstructionType.DELETE:
         # DELETE is the generic legal operation. Commitment-level resolution:
         # - DELETE with EXCEPTION_REMOVAL domain_effect → remove from exceptions
+        # - DELETE with PARTY_CHANGE domain_effect → remove from party list
         # - DELETE with target_key pointing to a commitment → delete the commitment
         #   (resolves to DELETE_COMMITMENT behavior)
         # - Otherwise → UNRESOLVED
@@ -148,6 +157,10 @@ def apply_instruction(
             old = deepcopy(c.exceptions)
             c.exceptions = [x for x in c.exceptions if x != ins.old_value]
             return {"action": "remove_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
+        if ins.domain_effect == DomainEffect.PARTY_CHANGE:
+            old = deepcopy(c.party)
+            c.party = [x for x in c.party if x != ins.old_value]
+            return {"action": "remove_party", "target": ins.target_key, "old": old, "new": deepcopy(c.party)}, None
         # Generic DELETE on a commitment → resolve to DELETE_COMMITMENT behavior
         old = c.status
         c.status = "DELETED"

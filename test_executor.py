@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from models import CommitmentState, AmendmentInstruction, DomainEffect, ExecutionStatus, InstructionType
 from executor import execute_amendment
 
@@ -104,6 +104,145 @@ def test_exception_add_remove_idempotent():
     )
     result = execute_amendment(state, [add, add2, rem])
     assert result.state["financial_covenant.total_leverage_ratio"].exceptions == []
+
+
+def test_rate_change_via_domain_effect():
+    """RATE_CHANGE domain effect resolves to the 'rate' field on the commitment."""
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            rate=1.5,
+        )
+    }
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            domain_effect=DomainEffect.RATE_CHANGE,
+            target_key="facility.credit_agreement",
+            old_value=1.5,
+            new_value=2.5,
+        )
+    ])
+    assert not result.unresolved
+    assert result.state["facility.credit_agreement"].rate == 2.5
+
+
+def test_rate_change_via_explicit_field():
+    """Explicit field='rate' on REPLACE_VALUE updates the rate field."""
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            rate=1.5,
+        )
+    }
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_key="facility.credit_agreement",
+            field="rate",
+            old_value=1.5,
+            new_value=2.5,
+        )
+    ])
+    assert not result.unresolved
+    assert result.state["facility.credit_agreement"].rate == 2.5
+
+
+def test_party_add_via_domain_effect():
+    """ADD with PARTY_CHANGE domain effect appends to the party list."""
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            party=["borrower"],
+        )
+    }
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.ADD,
+            domain_effect=DomainEffect.PARTY_CHANGE,
+            target_key="facility.credit_agreement",
+            new_value="guarantor",
+        )
+    ])
+    assert not result.unresolved
+    assert result.state["facility.credit_agreement"].party == ["borrower", "guarantor"]
+
+
+def test_party_add_idempotent():
+    """ADD with PARTY_CHANGE for an existing party is a no-op (idempotent)."""
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            party=["borrower", "guarantor"],
+        )
+    }
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.ADD,
+            domain_effect=DomainEffect.PARTY_CHANGE,
+            target_key="facility.credit_agreement",
+            new_value="guarantor",
+        )
+    ])
+    assert not result.unresolved
+    assert result.state["facility.credit_agreement"].party == ["borrower", "guarantor"]
+
+
+def test_party_remove_via_domain_effect():
+    """DELETE with PARTY_CHANGE domain effect removes from the party list
+    and does NOT mark the commitment as DELETED."""
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            party=["borrower", "guarantor"],
+        )
+    }
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.DELETE,
+            domain_effect=DomainEffect.PARTY_CHANGE,
+            target_key="facility.credit_agreement",
+            old_value="guarantor",
+        )
+    ])
+    assert not result.unresolved
+    assert result.state["facility.credit_agreement"].party == ["borrower"]
+    # Critical: the commitment itself must not be marked DELETED
+    assert result.state["facility.credit_agreement"].status == "ACTIVE"
+
+
+def test_party_remove_missing_party_is_noop():
+    """DELETE with PARTY_CHANGE for a party not in the list is a no-op
+    (the commitment stays ACTIVE, party list unchanged)."""
+    state = {
+        "facility.credit_agreement": CommitmentState(
+            canonical_key="facility.credit_agreement",
+            commitment_type="facility_commitment",
+            party=["borrower"],
+        )
+    }
+    result = execute_amendment(state, [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.DELETE,
+            domain_effect=DomainEffect.PARTY_CHANGE,
+            target_key="facility.credit_agreement",
+            old_value="guarantor",
+        )
+    ])
+    assert not result.unresolved
+    assert result.state["facility.credit_agreement"].party == ["borrower"]
+    assert result.state["facility.credit_agreement"].status == "ACTIVE"
 
 
 def test_generic_add_with_dict_payload_creates_new_commitment():

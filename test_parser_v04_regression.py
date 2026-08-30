@@ -748,3 +748,56 @@ inserting in lieu thereof the following new table.
             ref = inst.get("target_section_ref") or ""
             if "Schedule 2.01A" in ref:
                 pytest.fail(f"Cross-reference Schedule 2.01A matched as target: {ref}")
+
+    def test_replace_v04_does_not_bridge_across_sections(self):
+        """REPLACE_V04 must not bridge from one section reference to another
+        section's 'amended by deleting' language.
+
+        Regression test: the old REPLACE_V04 regex used a bare .{0,200}?
+        gap between the target and 'amended by'.  This allowed it to
+        match 'Section 7.04(c)(xiii) is hereby amended to replace...'
+        as the target while using 'Section 7.10 ... amended by deleting...'
+        as the amendment language — producing a wrong target and causing
+        finditer to skip the real Section 7.10 instruction entirely.
+
+        The fix (tempered group that stops at another
+        Section/Article/Schedule/Exhibit reference) ensures each
+        section's amendment language is matched to the correct target.
+        """
+        body = """
+AMENDMENT TO CREDIT AGREEMENT
+
+NOW, THEREFORE, the parties agree as follows:
+
+(g) Section 7.04(c)(xiii) is hereby amended to replace the term
+"Net Cash Proceeds" in the first line thereof with the term
+"Net Cash Payments."
+
+(h) Section 7.10 of the Credit Agreement is hereby amended by deleting
+paragraph (a) in its entirety and replacing it with the following:
+(a) Total Funded Debt to EBITDA Ratio. The Loan Parties shall not
+permit the Core Leverage Ratio as of the end of each fiscal quarter
+(i) ending on December 31, 2023 to exceed 3.75 to 1.00, and (ii) for
+any quarter ending thereafter, to exceed 3.50 to 1.00.
+"""
+        result = parse_v04(body)
+        refs = [i.get("target_section_ref") or "" for i in result["instructions"]]
+        # Section 7.10 must be detected as a REPLACE_TEXT target
+        assert any("7.10" in r for r in refs), (
+            f"Section 7.10 not detected — refs: {refs}.  "
+            f"REPLACE_V04 may be bridging across section boundaries."
+        )
+        # Section 7.04(c)(xiii) should NOT be matched as a REPLACE_TEXT
+        # target for Section 7.10's amendment language.  It uses a
+        # different pattern ("amended to replace the term") that
+        # REPLACE_V04 does not handle.
+        for inst in result["instructions"]:
+            ref = inst.get("target_section_ref") or ""
+            if "7.04" in ref and inst["instruction_type"] == "REPLACE_TEXT":
+                matched = body[inst["source_start"]:inst["source_end"]]
+                if "deleting" in matched.lower():
+                    pytest.fail(
+                        f"Section 7.04(c)(xiii) incorrectly matched with "
+                        f"Section 7.10's 'amended by deleting' language: "
+                        f"{matched[:100]}"
+                    )
