@@ -3,6 +3,65 @@
 All notable changes to the Upsilon Financial Commitment Integrity system are
 documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased] — System smoke test (end-to-end chain reconstruction)
+
+### Added
+- **End-to-end amendment-chain reconstruction harness** (`chain_reconstruction.py`):
+  drives the full pipeline S0 → A1 → reconstruct S1 → A2 → reconstruct S2 →
+  ... → compare reconstructed current state against filed composite /
+  amended-and-restated ground truth. Uses the real `executor.execute_amendment`
+  and `persistence.build_persistence_plan` — no mocks.
+- **Synthetic issuer-chain fixtures** (`synthetic_chains.py`): 3 chains
+  modeling real amendment-chain structure:
+  - CHAIN-ACME: 3 clean sequential amendments, A&R ground truth.
+  - CHAIN-BETA: 2 amendments, A1 has an intentional UNRESOLVED
+    (RESTATE_SECTION) → PARTIAL → not authoritative; A2 clean → authoritative.
+  - CHAIN-GAMMA: 2 amendments with a temporary waiver + reinstatement,
+    then a threshold change. Exercises the waiver/restore persistence path.
+  Real multi-amendment chain acquisition from EDGAR is the next phase
+  (25-issuer chain study); these fixtures validate the system plumbing
+  before that acquisition work.
+- **Ground-truth comparison engine** (`compare_to_ground_truth`): field-by-field
+  comparison of reconstructed vs ground-truth state across 14 semantic fields
+  (status, threshold, party, frequency, exceptions, operator, etc.).
+  Commitments DELETED in reconstructed and absent from ground truth are not
+  counted as errors. Temporal/infrastructure fields (valid_from, valid_to,
+  applicability) are excluded — the ground truth carries semantic state, not
+  Upsilon's temporal model.
+- **"Kernel at time T" waiver restore** (`_apply_expired_waiver_restores`):
+  when carrying state forward between amendments, expired waivers are
+  restored to their post-amendment terms per the temporal authority rule in
+  COMMITMENT_LINEAGE_SCHEMA.md. This is the reconstruction layer's
+  responsibility — the executor and persistence plan are correct as-is.
+- **System smoke test runner** (`run_smoke_test.py`): CLI that runs all 3
+  chains and produces a markdown report answering the four smoke-test
+  questions. Output: `results/system_smoke_test.md` (gitignored).
+- **23 new tests** (`test_chain_reconstruction.py`): per-chain reconstruction
+  tests, per-question tests for Q1–Q4, comparison engine unit tests, and an
+  aggregate gate test (`test_all_four_questions_pass_all_three_chains`).
+
+### System smoke test results (3 synthetic chains)
+
+The smoke test answers four questions:
+
+| Question | ACME | BETA | GAMMA |
+|---|:---:|:---:|:---:|
+| Q1: Preserve authoritative state across amendments | PASS | PASS | PASS |
+| Q2: Maintain complete lineage from origin to current | PASS | PASS | PASS |
+| Q3: Unresolved blocks authoritative promotion | PASS | PASS | PASS |
+| Q4: Reconstructed state matches ground truth | PASS | PASS | PASS |
+
+Finding: the smoke test surfaced a real architectural issue on the first run
+— the reconstruction harness was carrying forward the in-amendment state
+(WAIVED) rather than the effective state at the time of the next amendment.
+Fixed by implementing the "kernel at time T" waiver restore in the
+reconstruction layer. The executor and persistence plan were correct as-is.
+
+### Next phase
+25-issuer chain study with real EDGAR multi-amendment chains. The system
+smoke test validates the plumbing; the chain study validates accuracy on
+real documents.
+
 ## [0.4.1] — 2026-08-30
 
 ### Changed
