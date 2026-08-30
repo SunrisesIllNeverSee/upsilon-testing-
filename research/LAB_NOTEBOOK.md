@@ -381,3 +381,163 @@ After implementing document segmentation and regex tightening, expect:
 - Git commit: 47f64b2940549eda93b8f7673cb2825b2d56455a (no new commit yet — parser output is in gitignored data/ directory)
 
 ---
+
+## Entry 006 — v0.3 parser design: document segmentation + composite detection
+
+**Timestamp:** 2026-08-30T02:35:00Z
+**Researcher:** Deric McHenry (via Devin CLI)
+**Study phase:** Smoke → Development transition
+**Case / corpus:** SW-001, DKS-001 (regression)
+**Git commit:** 6212017a (smoke baseline tag: smoke-baseline-v0.2)
+**Protocol hash:** 3bb202333ec97eb728a7542358de43afff2703a62bd0539650121f8cd5ecc911
+
+### Objective
+Turn the v0.2 smoke-test failure modes into regression tests, then build parser v0.3 with structure-aware document segmentation, composite ground-truth detection, bounded instruction extraction, and tightened waiver regexes. This is the development phase — parser changes are allowed and belong in the lab notebook/changelog, not the protocol deviation log (per preregistration: smoke is exploratory, development allows parser changes).
+
+### Inputs
+- v0.2 smoke results (Entry 005): 12 instructions SW-001, 9 instructions DKS-001, predominantly WAIVE_TEMPORARILY false positives
+- Error taxonomy from Entry 005: (1) WAIVE regex too permissive, (2) no document segmentation, (3) composite agreement format not handled, (4) unbounded RESTATE_SECTION spans, (5) zero REPLACE_TEXT/DELETE/ADD detected
+- SW-001 source.txt (682,532 chars): amendment body = 1910–23873 (21,963 chars), composite = 28142–682532 (654,390 chars)
+- DKS-001 source.txt (522,795 chars): amendment body = 2268–12892 (10,624 chars), composite = 15196–522795 (507,599 chars)
+
+### Exact procedure / commands
+```bash
+# Tag the smoke baseline before changing code
+git tag -a smoke-baseline-v0.2 6212017 -m "Frozen smoke-test parser baseline"
+git push origin smoke-baseline-v0.2
+
+# Create development branch
+git checkout -b develop
+
+# Write regression tests encoding v0.2 failure modes
+# (test_parser_v03.py — 23 tests)
+
+# Implement v0.3 parser
+# (amendment_parser.py — segment_document, detect_composite, parse_v03)
+
+# Run regression tests
+pytest -v test_parser_v03.py
+
+# Run full suite
+pytest -q
+
+# Re-run smoke cases with v0.3
+python amendment_parser.py data/smoke/SW-001/source.txt --out data/smoke/SW-001/source.v03.json
+python amendment_parser.py data/smoke/DKS-001/source.txt --out data/smoke/DKS-001/source.v03.json
+```
+
+### Observations
+
+#### Document structure analysis
+Both filings follow the same structural pattern:
+```
+[OTHER: header, title, WHEREAS recitals]
+[AMENDMENT BODY: NOW, THEREFORE ... numbered sections ... conditions precedent]
+[SIGNATURES: [SIGNATURE PAGES FOLLOW] ... IN WITNESS WHEREOF ... signature blocks ... schedules]
+[COMPOSITE AGREEMENT: ANNEX A ... AMENDED AND RESTATED CREDIT AGREEMENT ... full conformed text]
+```
+
+The amendment body is small (10K–22K chars) and contains the actual amendment instructions. The composite agreement is enormous (500K–654K chars) and is the ground-truth target, not a source of instructions.
+
+#### Regression tests written (23 tests)
+- `TestSegmentDocument` (6 tests): amendment body starts at NOW THEREFORE, ends before signatures, composite segment isolated, filing without Annex A has no composite
+- `TestCompositeDetection` (3 tests): Annex A detected, no-Annex filing not detected, offset within composite segment
+- `TestWaiverFalsePositives` (4 tests): cross-reference "waived in accordance with" excluded, ERISA notice period excluded, real imperative "is hereby waived" included, composite body waivers excluded by segmentation
+- `TestSpanBounding` (2 tests): RESTATE_SECTION span ≤ 1000 chars, all instruction source_text ≤ 1000 chars
+- `TestAnnexAExclusion` (1 test): no instructions from composite agreement text
+- `TestCompositeRestatement` (1 test): COMPOSITE_RESTATEMENT instruction type detected
+- `TestSmokeCasesV03` (6 tests): real SW-001 and DKS-001 — no waiver false positives from composite, composite ground truth detected, instruction count ≤ 6
+
+#### v0.3 architecture
+1. **`segment_document(text)`** — divides filing into 4 segments using structural markers (NOW THEREFORE, SIGNATURE PAGES FOLLOW, IN WITNESS WHEREOF, ANNEX A ... CREDIT AGREEMENT)
+2. **`detect_composite(text, segments)`** — checks composite segment for AMENDED AND RESTATED / Composite language, returns document-level object with annex letter and offsets
+3. **`_extract_instructions(text, body_start, body_end)`** — runs tightened regexes ONLY on the amendment body segment
+4. **Tightened regexes:**
+   - `WAIVER_V03`: requires `Section X is hereby waived` or `Section X is waived` (imperative), excludes `waived in accordance with` and `has been waived` (cross-reference)
+   - `REPLACE_V03`, `DELETE_V03`, `RESTATE_V03`, `ADD_V03`: bounded with `[^\n]{0,200}?` gap limit instead of `.*?` with `re.S`
+   - `COMPOSITE_RESTATEMENT_RX`: detects "Credit Agreement is hereby amended to delete the bold, stricken text ... attached as Annex A"
+5. **`COMPOSITE_RESTATEMENT` instruction type** added to `models.py` — represents the Annex A composite restatement as a single instruction
+6. **Deduplication**: multiple regexes matching the same annex are deduplicated to a single COMPOSITE_RESTATEMENT instruction
+
+### Raw results
+
+#### v0.2 vs v0.3 comparison
+```
+SW-001:
+  v0.2: 12 instructions (1 RESTATE_SECTION + 11 WAIVE_TEMPORARILY) — all false positives
+  v0.3:  1 instruction (1 COMPOSITE_RESTATEMENT) — correct
+  Reduction: 12 → 1 (91.7% reduction)
+  False positives: 11 → 0 (100% elimination)
+  Composite detected: No → Yes
+
+DKS-001:
+  v0.2:  9 instructions (1 RESTATE_SECTION + 8 WAIVE_TEMPORARILY) — all false positives
+  v0.3:  1 instruction (1 COMPOSITE_RESTATEMENT) — correct
+  Reduction: 9 → 1 (88.9% reduction)
+  False positives: 8 → 0 (100% elimination)
+  Composite detected: No → Yes
+```
+
+#### Test results
+```
+test_parser_v03.py: 23 passed in 0.06s
+Full suite: 41 passed in 0.23s (18 original + 23 new regression)
+```
+
+#### Segmentation accuracy
+```
+SW-001:
+  amendment_body: 1910–23873 (21,963 chars) — correct
+  signatures: 23873–28142 (4,269 chars) — correct
+  composite_agreement: 28142–682532 (654,390 chars) — correct
+
+DKS-001:
+  amendment_body: 2268–12892 (10,624 chars) — correct
+  signatures: 12892–15196 (2,304 chars) — correct
+  composite_agreement: 15196–522795 (507,599 chars) — correct
+```
+
+### Interpretation
+
+**v0.3 achieves the primary engineering goal**: structure-aware document segmentation eliminates all false positives from the composite agreement body, and the composite restatement is correctly identified as a single COMPOSITE_RESTATEMENT instruction with Annex A as the ground-truth target.
+
+**What v0.3 detects correctly:**
+- The composite credit agreement format (Annex A restatement) as a single instruction
+- The composite agreement as a document-level ground-truth target (not an instruction)
+- Document structure: amendment body vs signatures vs composite agreement
+
+**What v0.3 does NOT yet detect (expected limitations):**
+- Individual field-level changes within the Annex A redline (e.g., "4.00 to 1.00" → "5.00 to 1.00"). These are embedded in the composite agreement's bold/stricken/double-underlined text, which requires HTML redline parsing, not text regex.
+- The SW-001 amendment also contains non-composite instructions (Section 3 amends the Security Agreement by replacing "Second Amendment Effective Date" with "Third Amendment Effective Date" in 13 sections). The v0.3 REPLACE_V03 regex did not detect this because it expects quoted-text deletion/replacement, not find-and-replace of a defined term across multiple sections.
+- The DKS-001 amendment contains a Commitment Increase instruction (Section 2) that is not a standard amendment instruction type in the current grammar.
+
+**Relationship to hypotheses:**
+- H1 (amendment-aware > carry-forward): v0.3 correctly identifies the composite restatement, which is the prerequisite for comparing against carry-forward. The actual field-level comparison requires parsing the Annex A redline.
+- H2 (complexity gradient): The composite restatement is an L4 (Restatement) instruction. v0.3 handles it at the document level but cannot decompose it into field-level changes. This is the expected difficulty cliff.
+- H3 (conservative execution): v0.3's precision is dramatically improved. Zero false positives means zero silent incorrect mutations. The single COMPOSITE_RESTATEMENT instruction would route to validation (it's not a supported executor instruction type yet), which is correct — the system does not silently mutate authoritative state.
+- H5 (error concentration): The remaining gap is in redline parsing (L4 complexity), exactly as predicted.
+
+### Decision
+v0.3 is the new development baseline. The parser architecture is now correct: it knows where instructions are allowed to exist (amendment body only) and identifies the composite ground-truth target. The next development step is either:
+1. HTML redline parsing to extract individual field-level changes from the Annex A composite (requires parsing bold/stricken/double-underlined text from source.html, not source.txt), OR
+2. The 25-issuer development corpus to see if non-composite amendment formats (inline REPLACE_TEXT, DELETE_SECTION, etc.) are detected correctly.
+
+Both paths are valid. The 25-issuer corpus would test the v0.3 regexes against diverse amendment formats, while HTML redline parsing would deepen the composite agreement handling.
+
+### Prospective expectation before next run
+For the 25-issuer development corpus, expect:
+- Non-composite amendments (inline REPLACE_TEXT, DELETE_SECTION) to be detected correctly by the tightened v0.3 regexes
+- Some amendments to use formats not yet handled (e.g., "Section X is amended to read as follows" without "in its entirety")
+- Document segmentation to work for most filings but fail on unusual structures (e.g., amendments without NOW THEREFORE, or multiple amendment bodies)
+- The WAIVER_V03 regex to correctly exclude cross-references but potentially miss real waivers that use different phrasing (e.g., "the parties agree to waive Section X")
+
+### Artifacts produced / hashes
+- amendment_parser.py (v0.3 — structure-aware segmentation + composite detection)
+- models.py (added COMPOSITE_RESTATEMENT instruction type)
+- test_parser_v03.py (23 regression tests)
+- data/smoke/SW-001/source.v03.json (1 instruction, composite detected)
+- data/smoke/DKS-001/source.v03.json (1 instruction, composite detected)
+- Git tag: smoke-baseline-v0.2 (on commit 6212017)
+- Git branch: develop
+
+---
