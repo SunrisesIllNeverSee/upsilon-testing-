@@ -541,3 +541,85 @@ For the 25-issuer development corpus, expect:
 - Git branch: develop
 
 ---
+
+## Entry 007 — Architecture fix: CompositeTarget is not an InstructionType
+
+**Timestamp:** 2026-08-30T03:10:00Z
+**Researcher:** Deric McHenry (via Devin CLI)
+**Study phase:** Development
+**Case / corpus:** N/A (architecture correction)
+**Git commit:** (pre-commit, on develop branch)
+**Protocol hash:** 3bb202333ec97eb728a7542358de43afff2703a62bd0539650121f8cd5ecc911
+
+### Objective
+Fix an architecture violation introduced in v0.3.0: `COMPOSITE_RESTATEMENT` was added to the `InstructionType` enum, which conflates the composite ground-truth document with an amendment instruction. This would contaminate instruction precision/recall metrics by counting "we found the composite" as "we found an amendment instruction."
+
+### Inputs
+- v0.3.0 code: `models.py` with `COMPOSITE_RESTATEMENT` in `InstructionType`, `amendment_parser.py` with `COMPOSITE_RESTATEMENT_RX` in instruction extraction specs
+- User correction: "The composite agreement is ground truth, not an amendment instruction"
+
+### Exact procedure / commands
+```bash
+# 1. Remove COMPOSITE_RESTATEMENT from InstructionType enum
+# 2. Add CompositeTarget Pydantic model to models.py
+# 3. Remove COMPOSITE_RESTATEMENT_RX from instruction extraction specs
+# 4. Update detect_composite() to return CompositeTarget-shaped dict
+# 5. Rename composite_ground_truth → composite_target in parse_v03() result
+# 6. Update tests: replace TestCompositeRestatement with TestCompositeTargetIsNotInstruction
+# 7. Run full test suite
+pytest -v
+# 8. Re-run smoke cases
+python amendment_parser.py data/smoke/SW-001/source.txt --out data/smoke/SW-001/source.v03.json
+python amendment_parser.py data/smoke/DKS-001/source.txt --out data/smoke/DKS-001/source.v03.json
+```
+
+### Observations
+- `COMPOSITE_RESTATEMENT` removed from `InstructionType` enum.
+- `CompositeTarget` Pydantic model added to `models.py` with fields: `annex`, `start_offset`, `end_offset`, `source_format` (default: `"html_redline"`).
+- `COMPOSITE_RESTATEMENT_RX` and `COMPOSITE_NAMED_RX` removed from instruction extraction specs. The composite detection is handled solely by `detect_composite()`.
+- `detect_composite()` now returns a `CompositeTarget`-shaped dict (no `present` boolean — the object is either present or None).
+- `parse_v03()` result key renamed from `composite_ground_truth` to `composite_target`.
+- 3 new architecture-separation tests added in `TestCompositeTargetIsNotInstruction`.
+- 2 new smoke-case architecture tests: `test_no_composite_in_instructions` for both cases.
+
+### Raw results
+```
+SW-001: 0 instructions, composite_target = {annex: "A", start_offset: 28142, end_offset: 682532, source_format: "html_redline"}
+DKS-001: 0 instructions, composite_target = {annex: "A", start_offset: 15196, end_offset: 522795, source_format: "html_redline"}
+Full test suite: 45 passed in 0.18s
+```
+
+### Interpretation
+The architecture is now clean:
+
+```
+AMENDMENT BODY → AmendmentInstruction[]
+ANNEX A / COMPOSITE → CompositeTarget (ground truth)
+```
+
+The composite agreement is detected as a `CompositeTarget` — a ground-truth document with location and format metadata. It cannot be confused with an amendment instruction because it is not in the `InstructionType` enum and does not appear in the `instructions` list.
+
+This means:
+- Instruction precision/recall metrics will count only actual amendment instructions (REPLACE_VALUE, WAIVE_TEMPORARILY, etc.), not composite detections.
+- The composite target is available as ground truth for downstream comparison.
+- The 0 instruction count for both smoke cases is correct — these are pure composite-format filings where the actual field-level changes are embedded in the Annex A HTML redline, not in inline amendment instructions.
+
+### Decision
+Architecture fix is complete. The v0.3.1 baseline is ready for the 25-issuer development corpus.
+
+### Prospective expectation before next run
+For the 25-issuer development corpus, expect:
+- Non-composite amendments to produce actual instructions (REPLACE_TEXT, DELETE_SECTION, WAIVE_TEMPORARILY, etc.)
+- Composite-format amendments to produce 0 instructions but a non-None CompositeTarget
+- Some filings to have both inline instructions AND a composite target
+- The instruction count will be a meaningful precision/recall metric, not contaminated by composite detections
+
+### Artifacts produced / hashes
+- models.py (removed COMPOSITE_RESTATEMENT, added CompositeTarget)
+- amendment_parser.py (removed COMPOSITE_RESTATEMENT_RX from instruction specs, updated detect_composite)
+- test_parser_v03.py (replaced TestCompositeRestatement with TestCompositeTargetIsNotInstruction, updated smoke tests)
+- CHANGELOG.md (v0.3.1 entry)
+- data/smoke/SW-001/source.v03.json (0 instructions, composite_target present)
+- data/smoke/DKS-001/source.v03.json (0 instructions, composite_target present)
+
+---

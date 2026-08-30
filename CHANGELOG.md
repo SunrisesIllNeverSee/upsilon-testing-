@@ -3,6 +3,49 @@
 All notable changes to the Upsilon Financial Commitment Integrity system are
 documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.1] — 2026-08-30
+
+### Fixed
+- **Removed `COMPOSITE_RESTATEMENT` from `InstructionType` enum**. The
+  composite agreement is ground truth, not an amendment instruction. Having
+  it as an `InstructionType` would contaminate instruction precision/recall
+  metrics by counting "we found the composite" as "we found an amendment
+  instruction."
+- **Added `CompositeTarget` Pydantic model** to `models.py`. This is a
+  ground-truth document object with `annex`, `start_offset`, `end_offset`,
+  and `source_format` fields. It lives outside the instruction pipeline:
+  ```
+  AMENDMENT BODY → AmendmentInstruction[]
+  ANNEX A / COMPOSITE → CompositeTarget (ground truth)
+  ```
+- **Removed `COMPOSITE_RESTATEMENT_RX` and `COMPOSITE_NAMED_RX`** from
+  instruction extraction specs. The composite detection is handled solely
+  by `detect_composite()`, which returns a `CompositeTarget`-shaped dict.
+- **Renamed `composite_ground_truth` key to `composite_target`** in
+  `parse_v03()` result for consistency with the model name.
+- **Removed `present` field** from composite detection result. The
+  `CompositeTarget` is either present (non-None) or absent (None) — no
+  boolean flag needed.
+
+### Added
+- **3 architecture-separation tests** in `TestCompositeTargetIsNotInstruction`:
+  - `test_composite_not_in_instructions`: no instruction has type
+    `COMPOSITE_RESTATEMENT`
+  - `test_composite_target_is_separate_object`: composite target is a
+    separate dict with `annex`, `start_offset`, `end_offset`,
+    `source_format`
+  - `test_no_instruction_type_enum_has_composite`: the `InstructionType`
+    enum does not contain `COMPOSITE_RESTATEMENT`
+- **2 smoke-case architecture tests**: `test_no_composite_in_instructions`
+  for both SW-001 and DKS-001.
+
+### Results
+- SW-001: 0 instructions (was 1 with COMPOSITE_RESTATEMENT), composite
+  target detected as separate object
+- DKS-001: 0 instructions (was 1 with COMPOSITE_RESTATEMENT), composite
+  target detected as separate object
+- Full test suite: 45 passed (was 41)
+
 ## [0.3.0] — 2026-08-30
 
 ### Added
@@ -14,12 +57,9 @@ documented in this file. The format is based on [Keep a Changelog](https://keepa
   Annex A composite/conformed agreements as document-level objects with
   annex letter and offset range. This is a validation target, not an
   amendment instruction.
-- **`COMPOSITE_RESTATEMENT` instruction type** in `models.py`: represents
-  the "Composite Credit Agreement" format where the entire credit agreement
-  is amended via an Annex A redline.
 - **`parse_v03()` function**: structure-aware parser that extracts
   instructions only from the amendment body segment, returns segments,
-  composite ground truth, and instructions in a single result dict.
+  composite target, and instructions in a single result dict.
 - **23 regression tests** (`test_parser_v03.py`) encoding the v0.2 smoke-test
   failure modes: Annex A exclusion, waiver false positives, span bounding,
   composite detection, and real smoke-case regression.

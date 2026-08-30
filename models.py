@@ -21,8 +21,22 @@ class InstructionType(str, Enum):
     REINSTATE = "REINSTATE"
     RESTATE_SECTION = "RESTATE_SECTION"
     RENUMBER_REFERENCE = "RENUMBER_REFERENCE"
-    COMPOSITE_RESTATEMENT = "COMPOSITE_RESTATEMENT"
     UNRESOLVED = "UNRESOLVED"
+
+
+class CompositeTarget(BaseModel):
+    """Ground-truth composite/conformed agreement attached to a filing.
+
+    This is NOT an amendment instruction. It is the authoritative
+    post-amendment state of the credit agreement, expressed as a redline
+    (bold/stricken/double-underlined) composite document. The parser
+    detects its presence and location; downstream comparison uses it as
+    ground truth, never as a mutation to apply.
+    """
+    annex: str
+    start_offset: int
+    end_offset: int
+    source_format: str = "html_redline"
 
 
 class CommitmentState(BaseModel):

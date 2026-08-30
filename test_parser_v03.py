@@ -148,20 +148,20 @@ class TestCompositeDetection:
         seg = segment_document(FULL_FILING_WITH_ANNEX_A)
         comp = detect_composite(FULL_FILING_WITH_ANNEX_A, seg)
         assert comp is not None
-        assert comp["present"] is True
         assert comp["annex"] == "A"
         assert comp["start_offset"] > 0
         assert comp["end_offset"] > comp["start_offset"]
+        assert comp["source_format"] == "html_redline"
 
     def test_filing_without_annex_not_detected(self):
         seg = segment_document(FULL_FILING_NO_ANNEX)
         comp = detect_composite(FULL_FILING_NO_ANNEX, seg)
-        assert comp is None or comp["present"] is False
+        assert comp is None
 
     def test_composite_offset_within_composite_segment(self):
         seg = segment_document(FULL_FILING_WITH_ANNEX_A)
         comp = detect_composite(FULL_FILING_WITH_ANNEX_A, seg)
-        if comp and comp["present"]:
+        if comp:
             assert comp["start_offset"] >= seg["composite_agreement"]["start"]
 
 
@@ -240,16 +240,38 @@ class TestAnnexAExclusion:
 
 
 # ---------------------------------------------------------------------------
-# Composite restatement detection test
+# Composite target is NOT an instruction (architecture separation test)
 # ---------------------------------------------------------------------------
 
-class TestCompositeRestatement:
-    def test_composite_restatement_detected(self):
-        """The 'Composite Credit Agreement' instruction should be detected
-        as a COMPOSITE_RESTATEMENT, not a generic RESTATE_SECTION."""
+class TestCompositeTargetIsNotInstruction:
+    def test_composite_not_in_instructions(self):
+        """The composite agreement must NOT appear as an amendment
+        instruction. It is a ground-truth document, not a mutation."""
         result = parse_v03(FULL_FILING_WITH_ANNEX_A)
-        composites = [i for i in result["instructions"] if i["instruction_type"] == "COMPOSITE_RESTATEMENT"]
-        assert len(composites) >= 1
+        for inst in result["instructions"]:
+            assert inst["instruction_type"] != "COMPOSITE_RESTATEMENT", (
+                "COMPOSITE_RESTATEMENT must not be an InstructionType — "
+                "the composite is ground truth, not an instruction"
+            )
+
+    def test_composite_target_is_separate_object(self):
+        """The composite target should be a separate object in the result,
+        not mixed into the instructions list."""
+        result = parse_v03(FULL_FILING_WITH_ANNEX_A)
+        assert result["composite_target"] is not None
+        assert result["composite_target"]["annex"] == "A"
+        assert "start_offset" in result["composite_target"]
+        assert "end_offset" in result["composite_target"]
+        assert "source_format" in result["composite_target"]
+
+    def test_no_instruction_type_enum_has_composite(self):
+        """The InstructionType enum must not contain COMPOSITE_RESTATEMENT."""
+        from models import InstructionType
+        members = [m.value for m in InstructionType]
+        assert "COMPOSITE_RESTATEMENT" not in members, (
+            "COMPOSITE_RESTATEMENT must not be in InstructionType — "
+            "it would contaminate instruction precision/recall metrics"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -281,21 +303,36 @@ class TestSmokeCasesV03:
         )
 
     @pytest.mark.parametrize("case_id", ["SW-001", "DKS-001"])
-    def test_composite_ground_truth_detected(self, case_id):
-        """Both smoke cases should have composite ground truth detected."""
+    def test_composite_target_detected(self, case_id):
+        """Both smoke cases should have a composite target detected as a
+        ground-truth document (not as an instruction)."""
         path = SMOKE_DIR / case_id / "source.txt"
         if not path.exists():
             pytest.skip(f"Smoke case {case_id} not downloaded")
         text = path.read_text(encoding="utf-8", errors="ignore")
         result = parse_v03(text)
-        assert result["composite_ground_truth"]["present"] is True
-        assert result["composite_ground_truth"]["annex"] == "A"
+        assert result["composite_target"] is not None
+        assert result["composite_target"]["annex"] == "A"
+        assert result["composite_target"]["source_format"] == "html_redline"
+
+    @pytest.mark.parametrize("case_id", ["SW-001", "DKS-001"])
+    def test_no_composite_in_instructions(self, case_id):
+        """The composite must NOT appear as an instruction in the instructions
+        list. It is ground truth only."""
+        path = SMOKE_DIR / case_id / "source.txt"
+        if not path.exists():
+            pytest.skip(f"Smoke case {case_id} not downloaded")
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        result = parse_v03(text)
+        for inst in result["instructions"]:
+            assert inst["instruction_type"] != "COMPOSITE_RESTATEMENT"
 
     @pytest.mark.parametrize("case_id", ["SW-001", "DKS-001"])
     def test_instruction_count_dramatically_reduced(self, case_id):
         """v0.2 produced 12 (SW-001) and 9 (DKS-001) instructions, mostly
         false positives. v0.3 should produce far fewer, all from the
-        amendment body."""
+        amendment body. With COMPOSITE_RESTATEMENT removed from instructions,
+        the count may be 0 for pure composite-format filings."""
         path = SMOKE_DIR / case_id / "source.txt"
         if not path.exists():
             pytest.skip(f"Smoke case {case_id} not downloaded")

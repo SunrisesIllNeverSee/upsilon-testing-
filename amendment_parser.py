@@ -8,16 +8,21 @@ Key changes from v0.2:
   COMPOSITE_AGREEMENT, and OTHER segments before instruction extraction.
 - Instructions are extracted ONLY from the amendment body, eliminating
   false positives from the composite agreement body.
-- Composite ground-truth detection records Annex A as a document-level
-  object, not an amendment instruction.
+- Composite ground-truth detection records Annex A as a CompositeTarget
+  (a ground-truth document), NOT as an amendment instruction. This
+  prevents metrics from accidentally counting "we found the composite"
+  as "we found an amendment instruction."
 - Waiver regex requires imperative amendment language ("is hereby waived")
   and excludes cross-reference contexts ("waived in accordance with").
 - Restatement spans are bounded to a 500-char context window.
-- New COMPOSITE_RESTATEMENT instruction type for the Annex A format.
+
+Architecture:
+    AMENDMENT BODY → AmendmentInstruction[]
+    ANNEX A / COMPOSITE → CompositeTarget (ground truth)
 
 The v0.2 `parse()` function is preserved for backward compatibility and
 regression comparison. The new `parse_v03()` function returns a richer
-result with segments, composite ground truth, and instructions.
+result with segments, composite target, and instructions.
 """
 from __future__ import annotations
 import argparse, json, re
@@ -206,11 +211,16 @@ def detect_composite(text: str, segments: dict) -> dict | None:
     """Detect whether the filing contains a composite/conformed agreement
     as a ground-truth target.
 
-    Returns a dict with:
-        present: True
+    This is NOT an amendment instruction. The composite agreement is the
+    authoritative post-amendment state of the credit agreement. The parser
+    detects its presence and location; downstream comparison uses it as
+    ground truth.
+
+    Returns a CompositeTarget-shaped dict with:
         annex: "A" (or other letter)
         start_offset: start of the composite agreement
         end_offset: end of the composite agreement
+        source_format: "html_redline"
     or None if no composite is found.
     """
     comp = segments.get("composite_agreement")
@@ -233,10 +243,10 @@ def detect_composite(text: str, segments: dict) -> dict | None:
     annex = annex_match.group(1).upper() if annex_match else "A"
 
     return {
-        "present": True,
         "annex": annex,
         "start_offset": comp["start"],
         "end_offset": comp["end"],
+        "source_format": "html_redline",
     }
 
 
@@ -260,8 +270,6 @@ def _extract_instructions(text: str, body_start: int, body_end: int) -> list[dic
 
     hits = []
     specs = [
-        ("COMPOSITE_RESTATEMENT", COMPOSITE_RESTATEMENT_RX),
-        ("COMPOSITE_RESTATEMENT", COMPOSITE_NAMED_RX),
         ("REPLACE_TEXT", REPLACE_V03),
         ("DELETE_COMMITMENT", DELETE_V03),
         ("RESTATE_SECTION", RESTATE_V03),
@@ -287,25 +295,11 @@ def _extract_instructions(text: str, body_start: int, body_end: int) -> list[dic
                 "source_text": nearby_v03(text, abs_start, abs_end),
                 "old_value": m.groupdict().get("old"),
                 "new_value": m.groupdict().get("new"),
-                "annex": m.groupdict().get("annex"),
                 "parser": "deterministic_baseline_v0.3",
                 "confidence": 1.0,
             }
             hits.append(row)
     hits.sort(key=lambda x: x["source_start"])
-
-    # Deduplicate COMPOSITE_RESTATEMENT matches: if multiple regexes match
-    # the same annex, keep only the first (lowest source_start).
-    seen_composite_annexes: set[str] = set()
-    deduped: list[dict] = []
-    for h in hits:
-        if h["instruction_type"] == "COMPOSITE_RESTATEMENT":
-            annex = h.get("annex") or "A"
-            if annex in seen_composite_annexes:
-                continue
-            seen_composite_annexes.add(annex)
-        deduped.append(h)
-    hits = deduped
 
     for i, h in enumerate(hits, 1):
         h["instruction_order"] = i
@@ -332,7 +326,7 @@ def parse_v03(text: str) -> dict:
     return {
         "instructions": instructions,
         "segments": segments,
-        "composite_ground_truth": composite,
+        "composite_target": composite,
         "parser": "deterministic_baseline_v0.3",
     }
 
@@ -404,11 +398,11 @@ def main():
         result = parse_v03(text)
         out = Path(args.out) if args.out else Path(args.text_file).with_suffix(".instructions.json")
         out.write_text(json.dumps(result, indent=2), encoding="utf-8")
-        comp = result["composite_ground_truth"]
+        comp = result["composite_target"]
         print(json.dumps({
             "instructions": len(result["instructions"]),
             "parser": "v0.3",
-            "composite_ground_truth": comp["present"] if comp else False,
+            "composite_target": comp if comp else None,
             "segments": {
                 k: v if v else None
                 for k, v in result["segments"].items()
