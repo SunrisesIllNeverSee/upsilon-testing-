@@ -1,0 +1,15 @@
+{
+  "frozen_at_utc": "2026-08-30T02:20:24.321008+00:00",
+  "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "git_commit": "466f7b0088fad939bd5e532c4aecf5de73e639d7",
+  "git_status": "?? upsilon_financial_integrity.egg-info/",
+  "files": {
+    "research/PREREGISTRATION.md": "3bb202333ec97eb728a7542358de43afff2703a62bd0539650121f8cd5ecc911",
+    "research/SMOKE_TEST_PROTOCOL.md": "7a3f00c38df9dc2c9418f8ff1dd4b309b139f8aca4a3fa4fc4d0a08be2fe9c9e",
+    "research/ANNOTATION_GUIDE.md": "b94d879515e8f885742ee1fbda723e4007c6c9be73fcfc4291aecda4666f36b0",
+    "research/RESULTS_TEMPLATE.md": "69e28e0ef25a38d9621d5340bfa13dd344f11d6d668c02e6729abfa676a4c785",
+    "research/REPRODUCIBILITY_CHECKLIST.md": "46081463ad76f8d5e42e07efea3a866a2476ecd5b337e800705031c363500ad2",
+    "smoke_cases.csv": "ffacb0ae83dbeedba4b857ac95a384d1ee10b08287efe977e8127a6158f971bf"
+  }
+}
