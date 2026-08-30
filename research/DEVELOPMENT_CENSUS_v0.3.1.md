@@ -1,7 +1,10 @@
-# Development Corpus Census — v0.3.1 Baseline
+# Parser-Development Sample Census — v0.3.1 Baseline
 
 **Parser:** v0.3.1 (tag: dev-baseline-v0.3.1)
-**Corpus:** 25 development issuers (DEV-001 through DEV-025)
+**Sample:** 25-document parser-development sample (DEV-001 through DEV-025)
+**Note:** This is one document per issuer, NOT the 25-issuer agreement-chain
+corpus (original + multiple amendments per issuer) that the reconstruction
+study ultimately requires.
 **Date:** 2026-08-30
 
 ## Table 1 — Corpus structure
@@ -21,11 +24,13 @@
 
 | Format | Precision | Recall | Unresolved | Docs |
 |--------|-----------|--------|------------|------|
-| Inline | 1.000 | 0.138 | 0 | 25 |
+| Inline | 1.000 | 0.138 | 0 | 20 |
 | Composite | N/A | N/A | 0 | 0 |
 | Restated | N/A | N/A | 0 | 0 |
 | Referential | N/A | N/A | 0 | 0 |
-| **Total** | **1.000** | **0.138** | **0** | **25** |
+| Waiver | N/A | N/A | 0 | 1 |
+| Mixed | N/A | N/A | 0 | 4 |
+| **All amendment documents** | **1.000** | **0.138** | **0** | **25** |
 
 ## Detail: False negative patterns
 

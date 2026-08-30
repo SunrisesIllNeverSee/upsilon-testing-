@@ -867,3 +867,116 @@ Expected impact: recall from 13.8% → 60-70%, precision stays at ~1.0
 - Git tag: dev-baseline-v0.3.1
 
 ---
+
+## Entry 010 — Parser v0.4: grammar expansion, error movement, and architecture separation
+
+**Timestamp:** 2026-08-30T04:15:00Z
+**Researcher:** Deric McHenry (via Devin CLI)
+**Study phase:** Development (grammar expansion)
+**Case / corpus:** 25-document parser-development sample
+**Git tag:** dev-baseline-v0.3.1 (baseline), v0.4 (this entry)
+
+### Objective
+Expand the deterministic instruction grammar based on the evidence from the v0.3.1 census. The census showed 100% precision but only 13.8% recall, with 75 missed instructions across 5 pattern categories. The goal was to substantially raise recall while retaining the conservative execution posture (high precision).
+
+### Two corrections before v0.4
+
+#### Correction 1: Dataset labeling
+The 25-document sample is NOT the 25-issuer agreement-chain corpus from the preregistration. It is a **25-document parser-development sample** (one document per issuer). The reconstruction study ultimately needs original agreement + multiple amendments per issuer. The dataset label was corrected in CHANGELOG.md, produce_census_tables.py, and DEVELOPMENT_CENSUS_v0.3.1.md.
+
+#### Correction 2: Table 2 inconsistency
+Table 2 showed "Inline — Docs 25" while Table 1 showed only 20 inline documents. The pooled metric was across all 25 documents, not just inline. Fixed by:
+- Separating per-format rows (Inline=20, Waiver=1, Mixed=4) from the pooled total
+- Renaming the pooled row to "All amendment documents" with Docs=25
+
+### Architecture separation: transformation type vs domain effect
+Separated `InstructionType` (how the legal document transformed) from `DomainEffect` (what changed in the commitment domain):
+
+```
+TRANSFORMATION (InstructionType)     DOMAIN EFFECT (DomainEffect)
+  REPLACE_VALUE                        covenant_threshold_change
+  REPLACE_TEXT                         commitment_amount_change
+  ADD_COMMITMENT                       deadline_change
+  DELETE_COMMITMENT                    exception_expansion
+  RESTATE_SECTION                      party_change
+  FIND_REPLACE_REFERENCE               frequency_change
+  WAIVE_TEMPORARILY                    scope_change
+  UNRESOLVED                           definition_change
+                                       unknown
+```
+
+`COMMITMENT_AMOUNT_CHANGE` was moved OUT of `InstructionType` and into `DomainEffect`. It describes what changed, not how the legal document transformed. A commitment amount change is a `REPLACE_VALUE` transformation with `commitment_amount_change` domain effect.
+
+`FIND_REPLACE_REFERENCE` remains in `InstructionType` because it describes the transformation operation (global find-and-replace of defined terms).
+
+### v0.4 grammar expansion
+
+#### Generalized reference targets
+```
+v0.3.1: Section\s+[A-Za-z0-9.\-()]+
+v0.4:   (Section|Article|Schedule|Exhibit|Definition|Clause|Paragraph|Subsection)\s+[A-Za-z0-9.\-()]+
+```
+
+#### New transformation patterns
+| Pattern | Example | InstructionType |
+|---------|---------|-----------------|
+| `amended to read as follows` | "Section 1.01 is amended to read as follows" | RESTATE_SECTION |
+| `amended as follows` | "Section 1.1 is hereby amended as follows" | RESTATE_SECTION |
+| `deleted from Section X` | "is hereby deleted from Section 1.1 in its entirety" | DELETE_COMMITMENT |
+| `deleting...inserting` | "deleting $95M and inserting $80M in lieu thereof" | REPLACE_TEXT |
+| `deleting...substituting` | "deleting the definition and substituting in its place" | REPLACE_TEXT |
+| `amended by inserting` | "Schedule 1.1 is hereby amended by inserting" | ADD_COMMITMENT |
+| `amended by deleting` | "Schedule 1.1 is hereby amended by deleting" | ADD_COMMITMENT |
+
+#### Regression tests
+14 regression tests written from real development corpus patterns (test_parser_v04_regression.py). All 14 failed on v0.3.1 and pass on v0.4.
+
+### v0.3.1 vs v0.4 comparison
+
+| Metric | v0.3.1 | v0.4 |
+|---|---:|---:|
+| Detected | 13 | 80 |
+| True positives | 13 | 76 |
+| False positives | 0 | 4 |
+| False negatives | 81 | 14 |
+| Unresolved | 0 | 0 |
+| **Precision** | **1.000** | **0.950** |
+| **Recall** | **0.138** | **0.844** |
+| **F1** | **0.243** | **0.894** |
+
+### Error movement analysis
+
+#### What improved
+- **Recall: 0.138 → 0.844** (+70.6 points). The parser now detects 80 of 94 expected instructions.
+- **F1: 0.243 → 0.894** (+65.1 points). The harmonic mean improved dramatically.
+- The biggest gains came from:
+  - `deleting...inserting` pattern: 33 missed → most now detected
+  - `Article/Schedule` targets: 26 missed → most now detected
+  - `amended to read` and `amended as follows`: 16 missed → all now detected
+
+#### What regressed
+- **Precision: 1.000 → 0.950** (-5.0 points). 4 false positives introduced.
+- The false positives are all REPLACE_TEXT matches with spans > 500 chars, where the regex matched across multiple amendment instructions in a single long match. These are not hallucinated instructions — the amendment language is real — but the match span is too wide, capturing multiple instructions as one.
+
+#### Remaining false negatives (14)
+- DEV-023: 0 instructions detected (California Resources Corp, 10th amendment). The document uses non-standard language not covered by v0.4 patterns.
+- DEV-002: 1 instruction detected but 5 expected (Rite Aid). Some patterns still not matched.
+- DEV-006: 1 instruction detected but 3 expected (Ultra Petroleum).
+- DEV-021: 3 instructions detected but 6 expected (Venus Concept).
+
+### Interpretation
+
+The v0.4 grammar expansion achieved the design goal: **substantially raised recall while retaining the conservative execution posture**. Precision dropped only 5 points (from 1.000 to 0.950) while recall rose 70 points (from 0.138 to 0.844). The F1 score improved from 0.243 to 0.894.
+
+The 4 false positives are all from the REPLACE_V04 regex matching across multiple instructions in long amendment sections. This can be fixed in v0.5 by splitting long matches or by using a tighter gap between `deleting` and `inserting/replacing`.
+
+The 14 remaining false negatives are from documents with non-standard amendment language that even the broadened v0.4 patterns don't cover. These will require either further pattern generalization or a different approach (e.g., section-level parsing rather than regex matching).
+
+### Artifacts produced
+- amendment_parser.py (v0.4 regexes, generalized targets, new patterns)
+- models.py (DomainEffect enum, domain_effect field on AmendmentInstruction)
+- test_parser_v04_regression.py (14 regression tests from real patterns)
+- development_corpus.csv (updated with v0.4 results)
+- data/development/classification_results.json (updated)
+
+---

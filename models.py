@@ -6,6 +6,12 @@ from pydantic import BaseModel, Field
 
 
 class InstructionType(str, Enum):
+    """How the legal document transformed (the operation, not the domain effect).
+
+    Separated from DomainEffect: a single transformation (e.g., REPLACE_VALUE)
+    can produce different domain effects (e.g., commitment_amount_change,
+    covenant_threshold_change) depending on which field changed.
+    """
     REPLACE_VALUE = "REPLACE_VALUE"
     REPLACE_TEXT = "REPLACE_TEXT"
     ADD_COMMITMENT = "ADD_COMMITMENT"
@@ -21,20 +27,40 @@ class InstructionType(str, Enum):
     REINSTATE = "REINSTATE"
     RESTATE_SECTION = "RESTATE_SECTION"
     RENUMBER_REFERENCE = "RENUMBER_REFERENCE"
-    # --- Error taxonomy extensions (observed in smoke cases, not yet implemented) ---
-    # FIND_REPLACE_REFERENCE: the SW-001 pattern — repeated defined-term
-    # substitution propagated across multiple sections (e.g., "find 'Term Loan
-    # A' and replace with 'Term Loan B' throughout"). Distinct from
-    # REPLACE_TEXT because it is a global find-and-replace directive, not a
-    # single-section text swap.
+    # FIND_REPLACE_REFERENCE: global defined-term substitution propagated
+    # across multiple sections (e.g., "find 'Term Loan A' and replace with
+    # 'Term Loan B' throughout"). Distinct from REPLACE_TEXT because it is
+    # a global find-and-replace directive, not a single-section text swap.
+    # Observed in SW-001 smoke case; not yet implemented in parser.
     FIND_REPLACE_REFERENCE = "FIND_REPLACE_REFERENCE"
-    # COMMITMENT_AMOUNT_CHANGE: the DKS-001 pattern — a commitment increase or
-    # decrease expressed as a scalar amount change (e.g., "increase the
-    # Revolving Credit Commitments from $250M to $300M"). May later normalize
-    # into the underlying commitment object rather than remaining a permanent
-    # instruction category.
-    COMMITMENT_AMOUNT_CHANGE = "COMMITMENT_AMOUNT_CHANGE"
     UNRESOLVED = "UNRESOLVED"
+
+
+class DomainEffect(str, Enum):
+    """What changed in the commitment domain (the semantic effect, not the
+    legal-document operation).
+
+    Separated from InstructionType because a single transformation
+    (REPLACE_VALUE) can produce different domain effects depending on
+    which field changed. For example:
+
+        InstructionType.REPLACE_VALUE
+        target: lender_commitment.amount
+        domain_effect: COMMITMENT_AMOUNT_CHANGE
+
+    This separation lets us track the legal transformation mechanism and
+    the business-semantic effect independently.
+    """
+    COVENANT_THRESHOLD_CHANGE = "covenant_threshold_change"
+    COMMITMENT_AMOUNT_CHANGE = "commitment_amount_change"
+    DEADLINE_CHANGE = "deadline_change"
+    EXCEPTION_EXPANSION = "exception_expansion"
+    EXCEPTION_REMOVAL = "exception_removal"
+    PARTY_CHANGE = "party_change"
+    FREQUENCY_CHANGE = "frequency_change"
+    SCOPE_CHANGE = "scope_change"
+    DEFINITION_CHANGE = "definition_change"
+    UNKNOWN = "unknown"
 
 
 class CompositeTarget(BaseModel):
@@ -91,6 +117,10 @@ class AmendmentInstruction(BaseModel):
     effective_end: Optional[datetime] = None
     source_text: Optional[str] = None
     confidence: float = Field(default=1.0, ge=0, le=1)
+    # Domain effect: what changed in the commitment domain (separate from
+    # the legal-document transformation operation). Populated by downstream
+    # semantic analysis, not by the parser directly.
+    domain_effect: Optional[DomainEffect] = None
 
 
 class ExecutionResult(BaseModel):

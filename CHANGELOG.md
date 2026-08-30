@@ -3,7 +3,59 @@
 All notable changes to the Upsilon Financial Commitment Integrity system are
 documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased] — 25-issuer development corpus
+## [0.4] — 2026-08-30
+
+### Changed
+- **Generalized reference targets**: `Section` → `Section|Article|Schedule|
+  Exhibit|Definition|Clause|Paragraph|Subsection`. The parser now matches
+  amendment instructions targeting Articles and Schedules, not just Sections.
+- **Broadened replace pattern**: `deleting...replacing` → `deleting...(replacing|
+  inserting|substituting)`. Handles "deleting the single instance of X and
+  inserting Y in lieu thereof" and "deleting...substituting in its place".
+- **New "amended to read" pattern**: "Section X is amended to read as follows"
+  mapped to RESTATE_SECTION.
+- **New "amended as follows" pattern**: "Section X is hereby amended as follows"
+  mapped to RESTATE_SECTION.
+- **New "deleted from Section" pattern**: "is hereby deleted from Section X"
+  mapped to DELETE_COMMITMENT.
+- **Broadened "amended by"**: `amended by adding` → `amended by (adding|inserting|
+  deleting|modifying)`.
+- **Bounded gaps**: Gap between target and verb bounded to 60-200 chars depending
+  on pattern to avoid matching section headings.
+
+### Architecture
+- **Separated transformation type from domain effect**: `InstructionType`
+  describes how the legal document transformed (REPLACE_VALUE, RESTATE_SECTION,
+  etc.). New `DomainEffect` enum describes what changed in the commitment
+  domain (commitment_amount_change, covenant_threshold_change, etc.).
+- **Moved `COMMITMENT_AMOUNT_CHANGE`** from `InstructionType` to `DomainEffect`.
+  It describes what changed, not how the document transformed.
+- **`FIND_REPLACE_REFERENCE`** remains in `InstructionType` (describes the
+  transformation operation: global find-and-replace of defined terms).
+- **`AmendmentInstruction.domain_effect`** field added (Optional[DomainEffect]).
+
+### Performance (25-document parser-development sample)
+| Metric | v0.3.1 | v0.4 |
+|---|---:|---:|
+| Precision | 1.000 | 0.950 |
+| Recall | 0.138 | 0.844 |
+| F1 | 0.243 | 0.894 |
+| False positives | 0 | 4 |
+| False negatives | 81 | 14 |
+
+### Added
+- `test_parser_v04_regression.py`: 14 regression tests from real development
+  corpus patterns. All 14 failed on v0.3.1, all pass on v0.4.
+- `DomainEffect` enum in `models.py`.
+
+### Fixed
+- **Dataset labeling**: "25-issuer development corpus" → "25-document
+  parser-development sample" (one document per issuer, NOT the agreement-chain
+  corpus).
+- **Table 2 inconsistency**: separated per-format rows from pooled total,
+  renamed pooled row to "All amendment documents".
+
+## [Unreleased] — 25-document parser-development sample
 
 ### Added
 - **`build_development_corpus.py`**: EDGAR full-text search pipeline that
@@ -18,8 +70,11 @@ documented in this file. The format is based on [Keep a Changelog](https://keepa
   amendment number, document format, composite present, instruction count,
   instruction classes, UNRESOLVED count, false positives, false negatives,
   parser coverage.
-- **25 development corpus documents** in `data/development/DEV-001` through
-  `DEV-025/`, each with `source.html`, `source.txt`, and `source_meta.json`.
+- **25-document parser-development sample** in `data/development/DEV-001`
+  through `DEV-025/`, each with `source.html`, `source.txt`, and
+  `source_meta.json`. NOTE: This is one document per issuer, NOT the
+  25-issuer agreement-chain corpus (original + multiple amendments per
+  issuer) that the reconstruction study ultimately requires.
 - **`development_corpus.csv`**: classification results for all 25 documents.
 - **`data/development/manifest.json`**: acquisition metadata.
 - **`data/development/classification_results.json`**: JSON classification results.

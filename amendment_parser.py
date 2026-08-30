@@ -1,27 +1,35 @@
-"""Upsilon amendment parser — v0.3
+"""Upsilon amendment parser — v0.4
 
-v0.3 adds structure-aware document segmentation, composite ground-truth
-detection, bounded instruction extraction, and tightened waiver regexes.
+v0.4 broadens the instruction grammar based on the 25-document
+parser-development sample census (v0.3.1 baseline).
 
-Key changes from v0.2:
+Key changes from v0.3:
+- Generalized reference targets: Section, Article, Schedule, Exhibit,
+  Definition, clause, paragraph, subsection (not just Section).
+- Broadened replace pattern: deleting...replacing, deleting...inserting,
+  deleting...substituting (not just deleting...replacing).
+- New "amended to read" pattern: "Section X is amended to read as follows".
+- New "amended as follows" pattern: "Section X is hereby amended as follows".
+- New "deleted from Section" pattern: "is hereby deleted from Section X".
+- Broadened "amended by": adding, deleting, inserting, modifying (not just adding).
+
+v0.3 changes (preserved):
 - Document segmentation divides a filing into AMENDMENT_BODY, SIGNATURES,
   COMPOSITE_AGREEMENT, and OTHER segments before instruction extraction.
 - Instructions are extracted ONLY from the amendment body, eliminating
   false positives from the composite agreement body.
 - Composite ground-truth detection records Annex A as a CompositeTarget
-  (a ground-truth document), NOT as an amendment instruction. This
-  prevents metrics from accidentally counting "we found the composite"
-  as "we found an amendment instruction."
+  (a ground-truth document), NOT as an amendment instruction.
 - Waiver regex requires imperative amendment language ("is hereby waived")
   and excludes cross-reference contexts ("waived in accordance with").
-- Restatement spans are bounded to a 500-char context window.
+- Restatement spans are bounded to a 200-char context window.
 
 Architecture:
     AMENDMENT BODY → AmendmentInstruction[]
     ANNEX A / COMPOSITE → CompositeTarget (ground truth)
 
 The v0.2 `parse()` function is preserved for backward compatibility and
-regression comparison. The new `parse_v03()` function returns a richer
+regression comparison. The `parse_v03()` function returns a richer
 result with segments, composite target, and instructions.
 """
 from __future__ import annotations
@@ -60,7 +68,7 @@ ADD = re.compile(
 )
 
 # ---------------------------------------------------------------------------
-# v0.3 regexes — tightened and bounded
+# v0.3 regexes — tightened and bounded (preserved for backward compat)
 # ---------------------------------------------------------------------------
 
 # Bounded replace: limit the gap between section and delete/replace to 200 chars
@@ -86,8 +94,6 @@ RESTATE_V03 = re.compile(
 )
 
 # Tightened waiver: require imperative amendment language.
-# Must match "is hereby waived" or "is waived" as an instruction, NOT
-# "waived in accordance with" or "has been waived" (cross-reference / notice).
 WAIVER_V03 = re.compile(
     r'(?:compliance\s+with\s+|the\s+requirement\s+(?:contained\s+in\s+|of\s+))?'
     r'(?P<section>Section\s+[A-Za-z0-9.\-()]+)\s*'
@@ -99,6 +105,102 @@ WAIVER_V03 = re.compile(
 ADD_V03 = re.compile(
     r'(?P<section>Section\s+[A-Za-z0-9.\-()]+)[^\n]{0,200}?'
     r'(?:is hereby )?amended\s+by\s+adding',
+    re.I | re.S,
+)
+
+# ---------------------------------------------------------------------------
+# v0.4 regexes — generalized targets + broadened transformations
+# ---------------------------------------------------------------------------
+
+# Generalized reference target: matches Section, Article, Schedule, Exhibit,
+# Definition, clause, paragraph, subsection (not just Section).
+# Captures the full reference (e.g., "Section 1.01", "Article I",
+# "Schedule 1.1", "Section 2.4(e)").
+_TARGET = (
+    r'(?P<section>'
+    r'(?:Section|Article|Schedule|Exhibit|Definition|Clause|Paragraph|Subsection)'
+    r'\s+[A-Za-z0-9.\-()]+'
+    r')'
+)
+
+# v0.4 REPLACE: broadened to handle deleting...inserting, deleting...substituting,
+# and deleting...in lieu thereof (not just deleting...replacing).
+# Also handles "deleting the single instance of X and inserting Y in lieu thereof".
+# Gap between target and deleting is bounded to 200 chars.
+# Gap between deleting and inserting/replacing is bounded to 500 chars
+# (some definitions are long).
+REPLACE_V04 = re.compile(
+    _TARGET + r'.{0,200}?'
+    r'(?:deleting|delete)\s+'
+    r'(?:the\s+(?:single\s+instance\s+of\s+)?(?:definition\s+(?:of\s+)?[\u201c"])?[\u201c"]?)?'
+    r'(?P<old>[^\u201c"]{1,200})[\u201d"]?'
+    r'.{0,500}?'
+    r'(?:replacing\s+(?:it|the same|each)?\s*(?:with|by)|'
+    r'replace(?:d)?\s+with|'
+    r'inserting\s+(?:the\s+following(?:\s+new)?\s+)?|'
+    r'substituting\s+in\s+its\s+place\s+(?:the\s+following(?:\s+new)?\s+)?)'
+    r'[\u201c"]?(?P<new>[^\u201c"]{1,200})[\u201d"]?',
+    re.I | re.S,
+)
+
+# v0.4 RESTATE: same as v0.3 but with generalized target
+RESTATE_V04 = re.compile(
+    _TARGET + r'.{0,200}?'
+    r'(?:is hereby )?amended\s+and\s+restated\s+in\s+its\s+entirety',
+    re.I | re.S,
+)
+
+# v0.4 DELETE: same as v0.3 but with generalized target
+DELETE_V04 = re.compile(
+    _TARGET + r'.{0,200}?'
+    r'(?:is hereby )?(?:deleted|removed)\s+in\s+its\s+entirety',
+    re.I | re.S,
+)
+
+# v0.4 ADD: broadened to handle "amended by adding", "amended by inserting",
+# "amended by deleting", "amended by modifying".
+# The gap between target and verb is bounded to 60 chars to avoid matching
+# section headings that are far from the actual amendment instruction.
+# The target may be followed by "of the Credit Agreement" or similar.
+ADD_V04 = re.compile(
+    _TARGET + r'(?:\s+of\s+the\s+(?:Credit|Note\s+Purchase|Loan)\s+Agreement)?'
+    r'.{0,60}?'
+    r'(?:is hereby )?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+'
+    r'(?:adding|inserting|deleting|modifying)',
+    re.I | re.S,
+)
+
+# v0.4 WAIVER: same as v0.3 but with generalized target
+WAIVER_V04 = re.compile(
+    r'(?:compliance\s+with\s+|the\s+requirement\s+(?:contained\s+in\s+|of\s+))?'
+    + _TARGET + r'\s*'
+    r'(?:is\s+hereby\s+waived|is\s+waived)',
+    re.I,
+)
+
+# v0.4 AMENDED_TO_READ: "Section X is amended to read as follows"
+# This is a restatement pattern — the section is being replaced entirely.
+AMENDED_TO_READ_V04 = re.compile(
+    _TARGET + r'.{0,200}?'
+    r'(?:is\s+(?:hereby\s+)?amended\s+to\s+read\s+as\s+follows)',
+    re.I | re.S,
+)
+
+# v0.4 AMENDED_AS_FOLLOWS: "Section X is hereby amended as follows"
+# This is a container pattern — it signals that amendment instructions follow,
+# typically in lettered subsections (a), (b), (c)...
+AMENDED_AS_FOLLOWS_V04 = re.compile(
+    _TARGET + r'.{0,200}?'
+    r'(?:is\s+(?:hereby\s+)?amended\s+as\s+follows)',
+    re.I | re.S,
+)
+
+# v0.4 DELETED_FROM_SECTION: "is hereby deleted from Section X in its entirety"
+# This is a delete pattern where the target follows the verb.
+DELETED_FROM_V04 = re.compile(
+    r'is\s+hereby\s+deleted\s+from\s+'
+    + _TARGET
+    + r'(?:\s+in\s+its\s+entirety)?',
     re.I | re.S,
 )
 
@@ -264,17 +366,24 @@ def nearby_v03(text: str, start: int, end: int, radius: int = MAX_CONTEXT) -> st
 
 
 def _extract_instructions(text: str, body_start: int, body_end: int) -> list[dict]:
-    """Extract instructions from the amendment body only, using v0.3
-    tightened regexes."""
+    """Extract instructions from the amendment body only, using v0.4
+    broadened regexes with generalized targets."""
     body_text = text[body_start:body_end]
 
     hits = []
+    # v0.4 specs: use broadened regexes with generalized targets.
+    # AMENDED_TO_READ and AMENDED_AS_FOLLOWS are mapped to RESTATE_SECTION
+    # since they signal section-level restatement.
+    # DELETED_FROM is mapped to DELETE_COMMITMENT.
     specs = [
-        ("REPLACE_TEXT", REPLACE_V03),
-        ("DELETE_COMMITMENT", DELETE_V03),
-        ("RESTATE_SECTION", RESTATE_V03),
-        ("WAIVE_TEMPORARILY", WAIVER_V03),
-        ("ADD_COMMITMENT", ADD_V03),
+        ("REPLACE_TEXT", REPLACE_V04),
+        ("DELETE_COMMITMENT", DELETE_V04),
+        ("RESTATE_SECTION", RESTATE_V04),
+        ("WAIVE_TEMPORARILY", WAIVER_V04),
+        ("ADD_COMMITMENT", ADD_V04),
+        ("RESTATE_SECTION", AMENDED_TO_READ_V04),
+        ("RESTATE_SECTION", AMENDED_AS_FOLLOWS_V04),
+        ("DELETE_COMMITMENT", DELETED_FROM_V04),
     ]
     seen = set()
     for typ, rx in specs:
@@ -295,7 +404,7 @@ def _extract_instructions(text: str, body_start: int, body_end: int) -> list[dic
                 "source_text": nearby_v03(text, abs_start, abs_end),
                 "old_value": m.groupdict().get("old"),
                 "new_value": m.groupdict().get("new"),
-                "parser": "deterministic_baseline_v0.3",
+                "parser": "deterministic_baseline_v0.4",
                 "confidence": 1.0,
             }
             hits.append(row)
@@ -327,7 +436,7 @@ def parse_v03(text: str) -> dict:
         "instructions": instructions,
         "segments": segments,
         "composite_target": composite,
-        "parser": "deterministic_baseline_v0.3",
+        "parser": "deterministic_baseline_v0.4",
     }
 
 

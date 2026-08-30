@@ -1,5 +1,5 @@
 """Produce Table 1 (Corpus structure) and Table 2 (v0.3 performance by format)
-from the 25-issuer development corpus classification.
+from the 25-document parser-development sample.
 
 Table 1 — Corpus structure:
   Format | Documents | %
@@ -15,6 +15,10 @@ Where:
   FP = false positives (detected instructions that are NOT real)
   FN = false negatives (real amendment instructions not detected)
   UNRESOLVED = instructions classified as UNRESOLVED by the parser
+
+NOTE: This is a 25-document parser-development sample (one document per
+issuer), NOT the 25-issuer agreement-chain corpus that the reconstruction
+study ultimately requires.
 """
 from __future__ import annotations
 import csv, re
@@ -33,7 +37,9 @@ FORMAT_NAMES = {
 }
 
 # Table 2 format groups (user's requested format names)
-TABLE2_FORMATS = ["Inline", "Composite", "Restated", "Referential"]
+# Per-format rows show stats for documents of that specific format.
+# The pooled "All amendment documents" row shows stats across all 25.
+TABLE2_FORMATS = ["Inline", "Composite", "Restated", "Referential", "Waiver", "Mixed"]
 
 # Map our A-G formats to Table 2 format groups
 FORMAT_TO_TABLE2 = {
@@ -42,8 +48,8 @@ FORMAT_TO_TABLE2 = {
     "C": "Restated",
     "D": "Composite",  # redline is a composite variant
     "E": "Referential",
-    "F": "Inline",     # waiver is a subtype of inline
-    "G": "Inline",     # mixed amendments are still inline-like
+    "F": "Waiver",
+    "G": "Mixed",
 }
 
 
@@ -101,8 +107,11 @@ def main():
     print(f"{'Total':<25} {total_docs:>10} {100.0:>7.1f}%")
 
     # ── Table 2: v0.3 performance by format ──
-    # Compute TP, FP, FN, UNRESOLVED per format group
+    # Compute TP, FP, FN, UNRESOLVED per format group AND pooled total.
+    # Per-format rows show stats for documents of that format only.
+    # The pooled "All amendment documents" row shows stats across all 25.
     format_stats = {}  # table2_format → {tp, fp, fn, unresolved, docs}
+    pooled = {"tp": 0, "fp": 0, "fn": 0, "unresolved": 0, "docs": 0}
 
     for r in results:
         case_id = r["case_id"]
@@ -115,6 +124,7 @@ def main():
             }
         stats = format_stats[table2_fmt]
         stats["docs"] += 1
+        pooled["docs"] += 1
 
         # Load the document and parse
         text = Path(f"data/development/{case_id}/source.txt").read_text()
@@ -137,18 +147,28 @@ def main():
         # TP = detected (all are real)
         # FP = 0 (no false positives in v0.3 for this corpus)
         # FN = expected - detected
-        stats["tp"] += detected
-        stats["fp"] += 0  # v0.3 segmentation eliminated false positives
-        stats["fn"] += max(0, expected - detected)
+        tp = detected
+        fp = 0
+        fn = max(0, expected - detected)
+
+        stats["tp"] += tp
+        stats["fp"] += fp
+        stats["fn"] += fn
         stats["unresolved"] += unresolved
+
+        pooled["tp"] += tp
+        pooled["fp"] += fp
+        pooled["fn"] += fn
+        pooled["unresolved"] += unresolved
 
     print()
     print("=" * 60)
     print("Table 2 — v0.3 performance by format")
     print("=" * 60)
-    print(f"{'Format':<15} {'Precision':>10} {'Recall':>10} {'Unresolved':>12} {'Docs':>6}")
+    print(f"{'Format':<30} {'Precision':>10} {'Recall':>10} {'Unresolved':>12} {'Docs':>6}")
     print("-" * 60)
 
+    # Per-format rows (only for formats with documents)
     for fmt in TABLE2_FORMATS:
         stats = format_stats.get(fmt, {"tp": 0, "fp": 0, "fn": 0, "unresolved": 0, "docs": 0})
         tp = stats["tp"]
@@ -157,25 +177,29 @@ def main():
         unresolved = stats["unresolved"]
         docs = stats["docs"]
 
-        precision = tp / (tp + fp) if (tp + fp) > 0 else None
-        recall = tp / (tp + fn) if (tp + fn) > 0 else None
+        if docs == 0:
+            precision = None
+            recall = None
+        else:
+            precision = tp / (tp + fp) if (tp + fp) > 0 else None
+            recall = tp / (tp + fn) if (tp + fn) > 0 else None
 
         prec_str = f"{precision:.3f}" if precision is not None else "N/A"
         rec_str = f"{recall:.3f}" if recall is not None else "N/A"
 
-        print(f"{fmt:<15} {prec_str:>10} {rec_str:>10} {unresolved:>12} {docs:>6}")
+        print(f"{fmt:<30} {prec_str:>10} {rec_str:>10} {unresolved:>12} {docs:>6}")
     print("-" * 60)
 
-    # Totals
-    total_tp = sum(s["tp"] for s in format_stats.values())
-    total_fp = sum(s["fp"] for s in format_stats.values())
-    total_fn = sum(s["fn"] for s in format_stats.values())
-    total_unr = sum(s["unresolved"] for s in format_stats.values())
+    # Pooled total across ALL amendment documents (all 25)
+    total_tp = pooled["tp"]
+    total_fp = pooled["fp"]
+    total_fn = pooled["fn"]
+    total_unr = pooled["unresolved"]
     total_prec = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else None
     total_rec = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else None
     prec_str = f"{total_prec:.3f}" if total_prec is not None else "N/A"
     rec_str = f"{total_rec:.3f}" if total_rec is not None else "N/A"
-    print(f"{'Total':<15} {prec_str:>10} {rec_str:>10} {total_unr:>12} {total_docs:>6}")
+    print(f"{'All amendment documents':<30} {prec_str:>10} {rec_str:>10} {total_unr:>12} {total_docs:>6}")
 
     # Additional detail
     print()
@@ -256,9 +280,12 @@ def main():
     # Write tables to a markdown file
     out = Path("research/DEVELOPMENT_CENSUS_v0.3.1.md")
     with open(out, "w") as f:
-        f.write("# Development Corpus Census — v0.3.1 Baseline\n\n")
+        f.write("# Parser-Development Sample Census — v0.3.1 Baseline\n\n")
         f.write(f"**Parser:** v0.3.1 (tag: dev-baseline-v0.3.1)\n")
-        f.write(f"**Corpus:** 25 development issuers (DEV-001 through DEV-025)\n")
+        f.write(f"**Sample:** 25-document parser-development sample (DEV-001 through DEV-025)\n")
+        f.write(f"**Note:** This is one document per issuer, NOT the 25-issuer agreement-chain\n")
+        f.write(f"corpus (original + multiple amendments per issuer) that the reconstruction\n")
+        f.write(f"study ultimately requires.\n")
         f.write(f"**Date:** 2026-08-30\n\n")
 
         f.write("## Table 1 — Corpus structure\n\n")
@@ -278,8 +305,12 @@ def main():
             stats = format_stats.get(fmt, {"tp": 0, "fp": 0, "fn": 0, "unresolved": 0, "docs": 0})
             tp, fp, fn = stats["tp"], stats["fp"], stats["fn"]
             unresolved, docs = stats["unresolved"], stats["docs"]
-            precision = tp / (tp + fp) if (tp + fp) > 0 else None
-            recall = tp / (tp + fn) if (tp + fn) > 0 else None
+            if docs == 0:
+                precision = None
+                recall = None
+            else:
+                precision = tp / (tp + fp) if (tp + fp) > 0 else None
+                recall = tp / (tp + fn) if (tp + fn) > 0 else None
             prec_str = f"{precision:.3f}" if precision is not None else "N/A"
             rec_str = f"{recall:.3f}" if recall is not None else "N/A"
             f.write(f"| {fmt} | {prec_str} | {rec_str} | {unresolved} | {docs} |\n")
@@ -287,7 +318,7 @@ def main():
         total_rec = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else None
         prec_str = f"{total_prec:.3f}" if total_prec is not None else "N/A"
         rec_str = f"{total_rec:.3f}" if total_rec is not None else "N/A"
-        f.write(f"| **Total** | **{prec_str}** | **{rec_str}** | **{total_unr}** | **{total_docs}** |\n\n")
+        f.write(f"| **All amendment documents** | **{prec_str}** | **{rec_str}** | **{total_unr}** | **{total_docs}** |\n\n")
 
         f.write("## Detail: False negative patterns\n\n")
         f.write(f"| Pattern | Expected | Detected | Missed |\n")
