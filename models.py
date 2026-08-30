@@ -21,6 +21,19 @@ class InstructionType(str, Enum):
     REINSTATE = "REINSTATE"
     RESTATE_SECTION = "RESTATE_SECTION"
     RENUMBER_REFERENCE = "RENUMBER_REFERENCE"
+    # --- Error taxonomy extensions (observed in smoke cases, not yet implemented) ---
+    # FIND_REPLACE_REFERENCE: the SW-001 pattern — repeated defined-term
+    # substitution propagated across multiple sections (e.g., "find 'Term Loan
+    # A' and replace with 'Term Loan B' throughout"). Distinct from
+    # REPLACE_TEXT because it is a global find-and-replace directive, not a
+    # single-section text swap.
+    FIND_REPLACE_REFERENCE = "FIND_REPLACE_REFERENCE"
+    # COMMITMENT_AMOUNT_CHANGE: the DKS-001 pattern — a commitment increase or
+    # decrease expressed as a scalar amount change (e.g., "increase the
+    # Revolving Credit Commitments from $250M to $300M"). May later normalize
+    # into the underlying commitment object rather than remaining a permanent
+    # instruction category.
+    COMMITMENT_AMOUNT_CHANGE = "COMMITMENT_AMOUNT_CHANGE"
     UNRESOLVED = "UNRESOLVED"
 
 

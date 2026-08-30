@@ -747,3 +747,123 @@ After broadening the regexes to handle the patterns observed in this corpus, exp
 - research/run_records/20260830T033000Z_dev_corpus_acquisition.json (provenance)
 
 ---
+
+## Entry 009 — Development census: Table 1 + Table 2, architecture separation, error taxonomy extensions
+
+**Timestamp:** 2026-08-30T03:45:00Z
+**Researcher:** Deric McHenry (via Devin CLI)
+**Study phase:** Development (baseline measurement)
+**Case / corpus:** 25-issuer development corpus
+**Git commit:** (pre-commit, on develop branch)
+**Git tag:** dev-baseline-v0.3.1 (on commit 35528c6)
+**Protocol hash:** 3bb202333ec97eb728a7542358de43afff2703a62bd0539650121f8cd5ecc911
+
+### Objective
+Complete the development phase 1 milestone: freeze v0.3.1 as development baseline, produce the format census (Table 1) and parser performance baseline (Table 2), add the two newly discovered error taxonomy classes, and document the architecture separation between prediction and validation paths.
+
+### Actions completed
+
+#### 1. Frozen v0.3.1 as development baseline
+Created git tag `dev-baseline-v0.3.1` on commit 35528c6. This is the parser version that was run unchanged across the 25-issuer development corpus. No parser tuning was performed during the first pass.
+
+#### 2. Architecture separation: prediction path vs validation path
+The architecture is now explicitly separated to avoid circular validation:
+
+```
+                 ┌→ Amendment Instruction Parser
+SOURCE DOCUMENT ─┤
+                 └→ Composite Ground-Truth Extractor
+```
+
+Then:
+```
+Prior authoritative state
+        +
+parsed amendment instructions
+        ↓
+Upsilon reconstructed state
+        ↓
+COMPARE
+        ↓
+independently extracted composite state
+```
+
+This separation ensures that the prediction path (amendment instructions → reconstructed state) and the validation path (composite ground truth) are independent. If the same parser produced both the prediction and the "ground truth," reviewers would correctly attack circular validation.
+
+#### 3. Error taxonomy extensions
+Added two new instruction types to `InstructionType` enum (not yet implemented in the parser):
+
+- **`FIND_REPLACE_REFERENCE`**: the SW-001 pattern — repeated defined-term substitution propagated across multiple sections (e.g., "find 'Term Loan A' and replace with 'Term Loan B' throughout"). Distinct from REPLACE_TEXT because it is a global find-and-replace directive, not a single-section text swap.
+
+- **`COMMITMENT_AMOUNT_CHANGE`**: the DKS-001 pattern — a commitment increase or decrease expressed as a scalar amount change (e.g., "increase the Revolving Credit Commitments from $250M to $300M"). May later normalize into the underlying commitment object rather than remaining a permanent instruction category.
+
+#### 4. Census tables produced
+
+### Table 1 — Corpus structure
+
+| Format | Documents | % |
+|--------|----------|---|
+| Inline amendment | 20 | 80.0% |
+| Composite | 0 | 0.0% |
+| Amended/restated | 0 | 0.0% |
+| Redline | 0 | 0.0% |
+| Referential | 0 | 0.0% |
+| Waiver | 1 | 4.0% |
+| Mixed | 4 | 16.0% |
+| **Total** | **25** | **100.0%** |
+
+### Table 2 — v0.3 performance by format
+
+| Format | Precision | Recall | Unresolved | Docs |
+|--------|-----------|--------|------------|------|
+| Inline | 1.000 | 0.138 | 0 | 25 |
+| Composite | N/A | N/A | 0 | 0 |
+| Restated | N/A | N/A | 0 | 0 |
+| Referential | N/A | N/A | 0 | 0 |
+| **Total** | **1.000** | **0.138** | **0** | **25** |
+
+### False negative pattern breakdown
+
+| Pattern | Expected | Detected | Missed |
+|---------|----------|----------|--------|
+| amended_by | 32 | 6 | 26 |
+| amended_to | 9 | 0 | 9 |
+| amended_as_follows | 7 | 0 | 7 |
+| deleting_inserting | 33 | 0 | 33 |
+| is_hereby_waived | 0 | 0 | 0 |
+| restated_entirety | 10 | 6 | 4 |
+| deleted_from_section | 1 | 0 | 1 |
+
+### Interpretation
+
+#### Precision = 1.000, Recall = 0.138
+The v0.3.1 parser has perfect precision (zero false positives) but very low recall (13.8%). This is actually a good starting position — the parser doesn't hallucinate instructions, it just misses most real ones. The fix is to broaden regexes, not tighten them.
+
+#### The three biggest coverage gaps
+1. **`deleting...inserting` (33 missed)**: The parser matches `deleting...replacing` but not `deleting...inserting`. This is the single biggest gap — 33 of 80 missed instructions.
+2. **`amended by` (26 missed)**: The parser matches `Section X ... amended by adding` but not `Schedule X ... amended by inserting` or `Article X ... amended by deleting`. The reference target is too narrow (only `Section`, not `Article`/`Schedule`/`Exhibit`).
+3. **`amended to` (9 missed) + `amended as follows` (7 missed)**: These are common amendment phrasings that the parser doesn't match at all.
+
+#### Population prevalence confirms the decision
+- Composite format (B/D): 0% of the development corpus
+- Inline amendments (A): 80% of the development corpus
+- **Decision confirmed: do NOT build the HTML redline engine yet. Expand deterministic instruction grammar first.**
+
+### Evidence-driven next step
+Based on the census evidence, the next parser capability (v0.4) should be:
+1. Broaden reference targets: `Section` → `Section|Article|Schedule|Exhibit`
+2. Broaden replace pattern: `deleting...replacing` → `deleting...(replacing|inserting)`
+3. Add `amended as follows` pattern
+4. Add `amended to read` pattern
+5. Do NOT add LLM extraction yet
+6. Do NOT build HTML redline engine yet
+
+Expected impact: recall from 13.8% → 60-70%, precision stays at ~1.0
+
+### Artifacts produced
+- research/DEVELOPMENT_CENSUS_v0.3.1.md (Table 1 + Table 2 + false negative breakdown)
+- produce_census_tables.py (script that generates the tables)
+- models.py (added FIND_REPLACE_REFERENCE and COMMITMENT_AMOUNT_CHANGE to InstructionType)
+- Git tag: dev-baseline-v0.3.1
+
+---
