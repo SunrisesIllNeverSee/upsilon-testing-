@@ -53,47 +53,113 @@ def load_gold_annotations() -> dict:
     return json.loads(GOLD_PATH.read_text())
 
 
+def _span_overlap(s1: tuple[int, int], s2: tuple[int, int]) -> float:
+    """Compute IoU (intersection over union) between two spans.
+    Returns 0.0 if no overlap."""
+    start = max(s1[0], s2[0])
+    end = min(s1[1], s2[1])
+    intersection = max(0, end - start)
+    union = (s1[1] - s1[0]) + (s2[1] - s2[0]) - intersection
+    if union <= 0:
+        return 0.0
+    return intersection / union
+
+
+def _span_intersects(s1: tuple[int, int], s2: tuple[int, int]) -> bool:
+    """Check if two spans intersect (any overlap)."""
+    return s1[0] < s2[1] and s2[0] < s1[1]
+
+
 def match_instructions_to_gold(
     detected: list[dict], gold: list[dict]
-) -> tuple[int, int, int]:
-    """Match detected instructions to gold annotations.
+) -> tuple[int, int, int, dict]:
+    """Match detected instructions to gold annotations using span overlap +
+    instruction type. Falls back to key-based matching for gold annotations
+    without source spans.
 
-    Returns (tp, fp, fn) where:
+    Returns (tp, fp, fn, semantic_details) where:
       tp = true positives (detected instructions that match a gold annotation)
       fp = false positives (detected instructions that don't match any gold annotation)
       fn = false negatives (gold annotations not matched by any detected instruction)
+      semantic_details = dict with per-match semantic scoring:
+        old_value_match, new_value_match, span_iou, gold_id
 
-    Matching is by (normalized target_ref, instruction_type). Each gold annotation
-    can be matched at most once, and each detected instruction can match at most
-    one gold annotation.
+    Matching priority:
+      1. Span overlap + instruction_type match (IoU > 0 or intersection)
+      2. Fallback: (normalized target_ref, instruction_type) for gold without spans
+
+    Each gold annotation can be matched at most once, and each detected
+    instruction can match at most one gold annotation.
     """
     # Build gold list with match flags
     gold_remaining = []
     for g in gold:
+        g_span = g.get("source_span")
         gold_remaining.append({
+            "id": g.get("id", ""),
             "ref": _normalize_ref(g["target_ref"]),
             "type": g["instruction_type"],
+            "span": tuple(g_span) if g_span else None,
+            "old_value": g.get("old_value"),
+            "new_value": g.get("new_value"),
             "matched": False,
         })
 
     tp = 0
     fp = 0
+    semantic_details = []
+
     for inst in detected:
         ref = _normalize_ref(inst.get("target_section_ref"))
         typ = inst["instruction_type"]
+        inst_span = (inst.get("source_start", 0), inst.get("source_end", 0))
+
         # Try to find an unmatched gold annotation
-        matched = False
+        # Priority 1: span overlap + type match
+        best_match = None
+        best_iou = 0.0
         for g in gold_remaining:
-            if not g["matched"] and g["ref"] == ref and g["type"] == typ:
-                g["matched"] = True
-                tp += 1
-                matched = True
-                break
-        if not matched:
+            if g["matched"] or g["type"] != typ:
+                continue
+            if g["span"] and _span_intersects(inst_span, g["span"]):
+                iou = _span_overlap(inst_span, g["span"])
+                if iou > best_iou:
+                    best_iou = iou
+                    best_match = g
+
+        # Priority 2: key-based fallback (for gold without spans)
+        if best_match is None:
+            for g in gold_remaining:
+                if not g["matched"] and g["ref"] == ref and g["type"] == typ and g["span"] is None:
+                    best_match = g
+                    best_iou = 0.0
+                    break
+
+        if best_match:
+            best_match["matched"] = True
+            tp += 1
+            # Semantic scoring
+            detail = {
+                "gold_id": best_match["id"],
+                "instruction_type": typ,
+                "span_iou": round(best_iou, 3),
+                "old_value_match": None,
+                "new_value_match": None,
+            }
+            det_old = inst.get("old_value")
+            det_new = inst.get("new_value")
+            g_old = best_match["old_value"]
+            g_new = best_match["new_value"]
+            if g_old is not None or det_old is not None:
+                detail["old_value_match"] = (det_old == g_old)
+            if g_new is not None or det_new is not None:
+                detail["new_value_match"] = (det_new == g_new)
+            semantic_details.append(detail)
+        else:
             fp += 1
 
     fn = sum(1 for g in gold_remaining if not g["matched"])
-    return tp, fp, fn
+    return tp, fp, fn, semantic_details
 
 
 def compute_metrics(tp: int, fp: int, fn: int) -> tuple[float, float, float]:
@@ -280,13 +346,13 @@ def main():
         gold = gold_entry.get("expected", [])
 
         # Compute metrics for v0.3 (baseline)
-        v03_tp, v03_fp, v03_fn = match_instructions_to_gold(
+        v03_tp, v03_fp, v03_fn, v03_sem = match_instructions_to_gold(
             v03_result["instructions"], gold
         )
         v03_prec, v03_rec, v03_f1 = compute_metrics(v03_tp, v03_fp, v03_fn)
 
-        # Compute metrics for v0.4
-        v04_tp, v04_fp, v04_fn = match_instructions_to_gold(
+        # Compute metrics for v0.4.1
+        v04_tp, v04_fp, v04_fn, v04_sem = match_instructions_to_gold(
             v04_result["instructions"], gold
         )
         v04_prec, v04_rec, v04_f1 = compute_metrics(v04_tp, v04_fp, v04_fn)
@@ -324,6 +390,7 @@ def main():
             "v04_f1": round(v04_f1, 3),
             "v04_instruction_classes": ";".join(v04_classes) if v04_classes else "",
             "v04_unresolved_count": v04_unresolved,
+            "v04_semantic_details": v04_sem,
             "v02_instruction_count": len(v02_result),
             "text_chars": doc["text_chars"],
             "exhibit_type": doc["exhibit_type"],
@@ -350,7 +417,9 @@ def main():
     with open(OUTPUT_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(results)
+        # Exclude non-CSV fields (v04_semantic_details is a list of dicts)
+        csv_rows = [{k: v for k, v in row.items() if k in fieldnames} for row in results]
+        writer.writerows(csv_rows)
 
     # Write JSON
     json_output = {
@@ -359,7 +428,7 @@ def main():
         "dataset_description": "25-document parser-development sample (not the eventual 25-issuer agreement-chain corpus)",
         "gold_annotation_source": str(GOLD_PATH),
         "metric_type": "instruction_detection",
-        "metric_note": "Precision/recall/F1 measure instruction DETECTION only (matched by normalized target_ref + instruction_type). They do not verify extracted old_value, new_value, amount, exception, or actual semantic mutation correctness. Full reconstruction accuracy is a separate measurement.",
+        "metric_note": "Precision/recall/F1 measure instruction DETECTION only. Matching uses span overlap + instruction_type (with key-based fallback for gold without spans). Does not verify extracted old_value, new_value, amount, exception, or actual semantic mutation correctness. Full reconstruction accuracy is a separate measurement.",
         "results": results,
     }
     OUTPUT_JSON.write_text(json.dumps(json_output, indent=2), encoding="utf-8")
@@ -383,9 +452,9 @@ def main():
     print("POOLED INSTRUCTION-DETECTION METRICS (All amendment documents)")
     print("=" * 70)
     print("  NOTE: These are instruction-DETECTION metrics, not full reconstruction")
-    print("  accuracy. Matching is by (normalized target_ref, instruction_type) only.")
-    print("  It does not verify extracted old_value, new_value, amount, exception,")
-    print("  or actual semantic mutation correctness.")
+    print("  accuracy. Matching uses span overlap + instruction_type (with key-based")
+    print("  fallback for gold without spans). Does not verify extracted old_value,")
+    print("  new_value, amount, exception, or actual semantic mutation correctness.")
     # Pool TP/FP/FN across all documents
     v03_tp_total = sum(r["v03_tp"] for r in results)
     v03_fp_total = sum(r["v03_fp"] for r in results)

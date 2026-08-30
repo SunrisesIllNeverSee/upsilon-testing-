@@ -138,9 +138,23 @@ class AmendmentInstruction(BaseModel):
     domain_effect: Optional[DomainEffect] = None
 
 
+class ExecutionStatus(str, Enum):
+    """Status of an amendment execution.
+
+    COMPLETE — all instructions applied successfully, no unresolved.
+    PARTIAL — some instructions applied, some unresolved. The resulting
+        state is provisional and must not be promoted to authoritative.
+    UNRESOLVED — no instructions applied (all failed). No state change.
+    """
+    COMPLETE = "COMPLETE"
+    PARTIAL = "PARTIAL"
+    UNRESOLVED = "UNRESOLVED"
+
+
 class ExecutionResult(BaseModel):
     state: dict[str, CommitmentState]
     applied: list[AmendmentInstruction] = Field(default_factory=list)
     unresolved: list[AmendmentInstruction] = Field(default_factory=list)
     events: list[dict[str, Any]] = Field(default_factory=list)
     reference_events: list[dict[str, Any]] = Field(default_factory=list)
+    status: ExecutionStatus = Field(default=ExecutionStatus.COMPLETE)

@@ -181,8 +181,11 @@ DELETE_V04 = re.compile(
     re.I | re.S,
 )
 
-# v0.4 ADD: "amended by adding" or "amended by inserting" or "amended by modifying".
-# "amended by deleting" is handled by DELETE_BY_V04 (maps to DELETE_COMMITMENT).
+# v0.4 ADD: "amended by adding" or "amended by inserting".
+# Emits generic ADD (not ADD_COMMITMENT). Commitment-level resolution
+# (ADD → ADD_COMMITMENT) happens downstream, not in the parser.
+# "amended by modifying" is handled by MODIFIED_BY_V04 (emits UNRESOLVED).
+# "amended by deleting" is handled by DELETE_BY_V04 (emits DELETE).
 # Requires "of the Credit Agreement" (or similar) after the target to ensure
 # the target is a Credit Agreement section, not the amendment's own section heading.
 # Allows optional "[...]" or "(...)" descriptions after the section number.
@@ -193,12 +196,12 @@ ADD_V04 = re.compile(
     r'.{0,60}?'
     r'(?:is hereby )?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+'
     r'(?:\(\w+\)\s+)*'
-    r'(?:adding|inserting|modifying)',
+    r'(?:adding|inserting)',
     re.I | re.S,
 )
 
-# v0.4 DELETE_BY: "amended by deleting" — maps to DELETE_COMMITMENT, not ADD.
-# Same structure as ADD_V04 but only matches "deleting".
+# v0.4 DELETE_BY: "amended by deleting" — emits generic DELETE.
+# Commitment-level resolution (DELETE → DELETE_COMMITMENT) happens downstream.
 DELETE_BY_V04 = re.compile(
     _TARGET + r'(?:\s*\[[^\]]*\])?(?:\s*\([^)]*\))?'
     r'\s+of\s+the\s+(?:Credit|Note\s+Purchase|Loan)\s+Agreement'
@@ -206,6 +209,19 @@ DELETE_BY_V04 = re.compile(
     r'(?:is hereby )?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+'
     r'(?:\(\w+\)\s+)*'
     r'deleting',
+    re.I | re.S,
+)
+
+# v0.4 MODIFIED_BY: "amended by modifying" — emits UNRESOLVED.
+# "modifying" is too ambiguous to classify as ADD or DELETE; the parser
+# marks it UNRESOLVED for downstream validation.
+MODIFIED_BY_V04 = re.compile(
+    _TARGET + r'(?:\s*\[[^\]]*\])?(?:\s*\([^)]*\))?'
+    r'\s+of\s+the\s+(?:Credit|Note\s+Purchase|Loan)\s+Agreement'
+    r'.{0,60}?'
+    r'(?:is hereby )?(?:further\s+)?(?:modified\s+and\s+)?amended\s+by\s+'
+    r'(?:\(\w+\)\s+)*'
+    r'modifying',
     re.I | re.S,
 )
 
@@ -461,22 +477,23 @@ def _extract_instructions_v04(text: str, body_start: int, body_end: int) -> list
     body_text = text[body_start:body_end]
 
     raw_hits = []
-    # v0.4 specs: use broadened regexes with generalized targets.
+    # v0.4.1 specs: parser emits generic transformation types.
+    # ADD/DELETE are generic legal operations. ADD_COMMITMENT/DELETE_COMMITMENT
+    # are only assigned after commitment-level resolution (downstream).
+    # "amended by modifying" → UNRESOLVED (too ambiguous to classify).
     # AMENDED_TO_READ is mapped to RESTATE_SECTION (section is replaced entirely).
     # AMENDED_AS_FOLLOWS is a STRUCTURAL/CONTAINER MARKER — it does NOT emit an
-    # instruction. Child operations beneath it are detected by the other regexes
-    # (ADD_V04, DELETE_BY_V04, REPLACE_V04, DELETED_FROM_V04, AMENDED_TO_READ_V04).
-    # DELETED_FROM is mapped to DELETE_COMMITMENT.
-    # DELETE_BY ("amended by deleting") is mapped to DELETE_COMMITMENT.
+    # instruction. Child operations beneath it are detected by the other regexes.
     specs = [
         ("REPLACE_TEXT", REPLACE_V04),
-        ("DELETE_COMMITMENT", DELETE_V04),
+        ("DELETE", DELETE_V04),
         ("RESTATE_SECTION", RESTATE_V04),
         ("WAIVE_TEMPORARILY", WAIVER_V04),
-        ("ADD_COMMITMENT", ADD_V04),
-        ("DELETE_COMMITMENT", DELETE_BY_V04),
+        ("ADD", ADD_V04),
+        ("DELETE", DELETE_BY_V04),
+        ("UNRESOLVED", MODIFIED_BY_V04),
         ("RESTATE_SECTION", AMENDED_TO_READ_V04),
-        ("DELETE_COMMITMENT", DELETED_FROM_V04),
+        ("DELETE", DELETED_FROM_V04),
     ]
     for typ, rx in specs:
         for m in rx.finditer(body_text):
@@ -491,8 +508,10 @@ def _extract_instructions_v04(text: str, body_start: int, body_end: int) -> list
                 "source_text": nearby_v03(text, abs_start, abs_end),
                 "old_value": m.groupdict().get("old"),
                 "new_value": m.groupdict().get("new"),
-                "parser": "deterministic_baseline_v0.4",
-                "confidence": 1.0,
+                "parser": "deterministic_baseline_v0.4.1",
+                # No confidence assigned to raw deterministic hits.
+                # Confidence is set by downstream semantic validation,
+                # not by the regex match itself.
                 "_span": (abs_start, abs_end),
             }
             raw_hits.append(row)
@@ -504,13 +523,14 @@ def _extract_instructions_v04(text: str, body_start: int, body_end: int) -> list
     # inserting/replacing part).
     # Priority: REPLACE_TEXT > ADD_COMMITMENT/DELETE_COMMITMENT > RESTATE_SECTION
     # This ensures that "amended by deleting...inserting" is classified as
-    # REPLACE_TEXT (which captures old/new values), not DELETE_COMMITMENT.
+    # REPLACE_TEXT (which captures old/new values), not DELETE.
     type_priority = {
         "REPLACE_TEXT": 0,
-        "ADD_COMMITMENT": 1,
-        "DELETE_COMMITMENT": 1,
+        "ADD": 1,
+        "DELETE": 1,
         "RESTATE_SECTION": 2,
         "WAIVE_TEMPORARILY": 2,
+        "UNRESOLVED": 3,
     }
     raw_hits.sort(key=lambda x: (
         x["source_start"],
@@ -566,18 +586,20 @@ def parse_v03(text: str) -> dict:
 
 
 def parse_v04(text: str) -> dict:
-    """Parse a filing with v0.4 broadened grammar (generalized targets,
-    new patterns, deduplication).
+    """Parse a filing with v0.4.1 broadened grammar (generic ADD/DELETE,
+    generalized targets, new patterns, deduplication).
 
-    Uses v0.4 regexes (Section|Article|Schedule|Exhibit targets, broadened
-    transformations, overlap deduplication).
+    Uses v0.4.1 regexes (Section|Article|Schedule|Exhibit targets, broadened
+    transformations, overlap deduplication). Emits generic ADD/DELETE instead
+    of ADD_COMMITMENT/DELETE_COMMITMENT. Commitment-level resolution happens
+    downstream. "amended by modifying" emits UNRESOLVED.
 
     Returns:
         {
             "instructions": [...],
             "segments": {...},
             "composite_target": {...} | None,
-            "parser": "deterministic_baseline_v0.4",
+            "parser": "deterministic_baseline_v0.4.1",
         }
     """
     segments = segment_document(text)
@@ -590,7 +612,7 @@ def parse_v04(text: str) -> dict:
         "instructions": instructions,
         "segments": segments,
         "composite_target": composite,
-        "parser": "deterministic_baseline_v0.4",
+        "parser": "deterministic_baseline_v0.4.1",
     }
 
 

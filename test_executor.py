@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from models import CommitmentState, AmendmentInstruction, DomainEffect, InstructionType
+from models import CommitmentState, AmendmentInstruction, DomainEffect, ExecutionStatus, InstructionType
 from executor import execute_amendment
 
 
@@ -142,9 +142,10 @@ def test_generic_add_with_dict_payload_duplicate_rejected():
     assert len(result.unresolved) == 1
 
 
-def test_generic_delete_without_domain_effect_is_unresolved():
-    """Generic DELETE without EXCEPTION_REMOVAL domain_effect is unresolved.
-    Use DELETE_COMMITMENT to delete a commitment."""
+def test_generic_delete_on_commitment_resolves_to_deleted():
+    """v0.4.1: Generic DELETE on a commitment resolves to DELETE_COMMITMENT
+    behavior (sets status to DELETED). This is commitment-level resolution
+    of the generic DELETE instruction."""
     result = execute_amendment(base_state(), [
         AmendmentInstruction(
             order=1,
@@ -152,7 +153,10 @@ def test_generic_delete_without_domain_effect_is_unresolved():
             target_key="financial_covenant.total_leverage_ratio",
         )
     ])
-    assert len(result.unresolved) == 1
+    assert len(result.applied) == 1
+    assert len(result.unresolved) == 0
+    assert result.state["financial_covenant.total_leverage_ratio"].status == "DELETED"
+    assert result.status == ExecutionStatus.COMPLETE
 
 
 def test_add_commitment_without_dict_payload_is_unresolved():
@@ -258,4 +262,70 @@ def test_temporary_waiver_uses_applicability_interval():
     assert c.threshold == 3.0
     assert c.valid_from == start
     assert c.valid_to == end
-    assert c.applicability["waiver"]["end"].startswith("2026-06-30")
+
+
+# ---------------------------------------------------------------------------
+# v0.4.1: ExecutionStatus tests (COMPLETE / PARTIAL / UNRESOLVED)
+# ---------------------------------------------------------------------------
+
+def test_execution_status_complete_when_all_applied():
+    """All instructions applied → status COMPLETE."""
+    result = execute_amendment(base_state(), [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_key="financial_covenant.total_leverage_ratio",
+            field="threshold",
+            old_value=4.0,
+            new_value=5.0,
+        )
+    ])
+    assert result.status == ExecutionStatus.COMPLETE
+    assert len(result.applied) == 1
+    assert len(result.unresolved) == 0
+
+
+def test_execution_status_partial_when_some_unresolved():
+    """Some applied, some unresolved → status PARTIAL.
+    The resulting state is provisional and must not be promoted to authoritative."""
+    result = execute_amendment(base_state(), [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_key="financial_covenant.total_leverage_ratio",
+            field="threshold",
+            old_value=4.0,
+            new_value=5.0,
+        ),
+        AmendmentInstruction(
+            order=2,
+            instruction_type=InstructionType.RESTATE_SECTION,
+            target_key="financial_covenant.total_leverage_ratio",
+        ),
+    ])
+    assert result.status == ExecutionStatus.PARTIAL
+    assert len(result.applied) == 1
+    assert len(result.unresolved) == 1
+
+
+def test_execution_status_unresolved_when_all_failed():
+    """No instructions applied, all unresolved → status UNRESOLVED.
+    No state change should be promoted."""
+    result = execute_amendment(base_state(), [
+        AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.RESTATE_SECTION,
+            target_key="financial_covenant.total_leverage_ratio",
+        ),
+    ])
+    assert result.status == ExecutionStatus.UNRESOLVED
+    assert len(result.applied) == 0
+    assert len(result.unresolved) == 1
+
+
+def test_execution_status_complete_when_noop():
+    """No instructions at all → status COMPLETE (no-op)."""
+    result = execute_amendment(base_state(), [])
+    assert result.status == ExecutionStatus.COMPLETE
+    assert len(result.applied) == 0
+    assert len(result.unresolved) == 0

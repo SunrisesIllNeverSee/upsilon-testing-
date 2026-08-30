@@ -77,7 +77,7 @@ def _compute_parser_metrics(results, gold_data, parser_fn, parser_label):
         result = parser_fn(text)
         gold = gold_data.get(case_id, {"expected": []}).get("expected", [])
 
-        tp, fp, fn = match_instructions_to_gold(result["instructions"], gold)
+        tp, fp, fn, _sem = match_instructions_to_gold(result["instructions"], gold)
         unresolved = sum(1 for i in result["instructions"] if i["instruction_type"] == "UNRESOLVED")
         detected = len(result["instructions"])
 
@@ -111,10 +111,11 @@ def _write_report(path, title, parser_label, tag, results, format_counts, total_
         f.write(f"**Gold annotations:** data/development/gold_annotations.json ({gold_total} total)\n")
         f.write(f"**Methodology:** TP/FP/FN computed from explicit gold annotations.\n")
         f.write(f"Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).\n")
-        f.write(f"**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,\n")
-        f.write(f"instruction_type) only. These metrics do NOT verify extracted old_value,\n")
-        f.write(f"new_value, amount, exception, or actual semantic mutation correctness.\n")
-        f.write(f"Full reconstruction accuracy is a separate measurement.\n\n")
+        f.write(f"**Metric type:** Instruction DETECTION. Matching uses span overlap +\n")
+        f.write(f"instruction_type (with key-based fallback for gold without spans). Does\n")
+        f.write(f"NOT verify extracted old_value, new_value, amount, exception, or actual\n")
+        f.write(f"semantic mutation correctness. Full reconstruction accuracy is a separate\n")
+        f.write(f"measurement.\n\n")
 
         # Table 1
         f.write("## Table 1 — Corpus structure\n\n")
@@ -258,9 +259,10 @@ def main():
         f.write(f"**Note:** This is one document per issuer, NOT the 25-issuer agreement-chain\n")
         f.write(f"corpus that the reconstruction study ultimately requires.\n")
         f.write(f"**Gold annotations:** {gold_total} total\n")
-        f.write(f"**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,\n")
-        f.write(f"instruction_type) only. Does NOT verify extracted old_value, new_value, amount,\n")
-        f.write(f"exception, or actual semantic mutation correctness.\n\n")
+        f.write(f"**Metric type:** Instruction DETECTION. Matching uses span overlap +\n")
+        f.write(f"instruction_type (with key-based fallback for gold without spans). Does NOT\n")
+        f.write(f"verify extracted old_value, new_value, amount, exception, or actual semantic\n")
+        f.write(f"mutation correctness.\n\n")
 
         f.write("## Pooled instruction-detection metrics comparison\n\n")
         f.write("| Metric | v0.3.1 | v0.4 |\n")

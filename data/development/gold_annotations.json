@@ -1,94 +1,318 @@
 {
   "_description": "Gold annotations for the 25-document parser-development sample. Each annotation is a reviewed, non-overlapping amendment instruction. These are used as ground truth for precision/recall/F1 computation. An instruction is identified by (target_ref, instruction_type). target_ref is normalized (whitespace-collapsed, lowercased) for matching.",
-  "_methodology": "Each document was manually reviewed to identify all amendment instructions in the amendment body. Instructions are non-overlapping: one legal operation = one annotation. Container phrases like 'amended as follows' are NOT annotated separately when they contain sub-instructions; only the actual operations (add/delete/restate/replace) are annotated. Cross-references and amendment section headings are NOT annotated.",
+  "_methodology": "Each document was manually reviewed to identify all amendment instructions in the amendment body. Instructions are non-overlapping: one legal operation = one annotation. Container phrases like 'amended as follows' are NOT annotated separately when they contain sub-instructions; only the actual operations (add/delete/restate/replace) are annotated. Cross-references and amendment section headings are NOT annotated. Each annotation has a unique id and source_span [start, end] pointing to the instruction text in the source document. Matching uses annotation IDs and span overlap, not just (target_ref, instruction_type) keys. Each annotation has a unique id and source_span [start, end] pointing to the instruction text in the source document. Matching uses annotation IDs and span overlap, not just (target_ref, instruction_type) keys.",
   "DEV-001": {
     "notes": "Not a credit agreement amendment — partnership exchange agreement. ARTICLE II match is a false positive.",
     "expected": []
   },
   "DEV-002": {
     "expected": [
-      {"target_ref": "Section 4.02", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-002-001",
+        "target_ref": "Section 4.02",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          5635,
+          5722
+        ]
+      }
     ]
   },
   "DEV-003": {
     "notes": "Section 3 of the Fifth Amendment is not a Credit Agreement section. Schedule 1.1(B) is a real restatement. Section 9.2.1 is also amended and restated but the parser misses it.",
     "expected": [
-      {"target_ref": "Schedule 1.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 9.2.1", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-003-001",
+        "target_ref": "Schedule 1.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          24692,
+          24763
+        ]
+      },
+      {
+        "id": "DEV-003-002",
+        "target_ref": "Section 9.2.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          14721,
+          14849
+        ]
+      }
     ]
   },
   "DEV-004": {
     "notes": "Section 1.1 is amended in its entirety as follows (restatement pattern not captured by parser).",
     "expected": [
-      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-004-001",
+        "target_ref": "Section 1.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          1772,
+          1852
+        ]
+      }
     ]
   },
   "DEV-005": {
     "notes": "Composite credit agreement with restatement. Body has 'amended and restated' references.",
     "expected": [
-      {"target_ref": "Section 2.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 5.1", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-005-001",
+        "target_ref": "Section 2.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          3462,
+          3482
+        ]
+      },
+      {
+        "id": "DEV-005-002",
+        "target_ref": "Section 5.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          6490,
+          6510
+        ]
+      }
     ]
   },
   "DEV-006": {
     "expected": [
-      {"target_ref": "Section 8.12", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-006-001",
+        "target_ref": "Section 8.12",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          6304,
+          6350
+        ]
+      }
     ]
   },
   "DEV-007": {
     "notes": "Section 1.1 'amended as follows' is a container, not annotated. Children: (a) delete definition, (b) add definitions.",
     "expected": [
-      {"target_ref": "Section 1.1", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.1", "instruction_type": "ADD_COMMITMENT"}
+      {
+        "id": "DEV-007-001",
+        "target_ref": "Section 1.1",
+        "instruction_type": "DELETE",
+        "source_span": [
+          2094,
+          2128
+        ]
+      },
+      {
+        "id": "DEV-007-002",
+        "target_ref": "Section 1.1",
+        "instruction_type": "ADD",
+        "source_span": [
+          2214,
+          2245
+        ]
+      }
     ]
   },
   "DEV-008": {
     "notes": "Section 1.01 amended by deleting and inserting definitions. Parser detects 1 REPLACE_TEXT.",
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "REPLACE_TEXT"}
+      {
+        "id": "DEV-008-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          3357,
+          3411
+        ]
+      }
     ]
   },
   "DEV-009": {
     "expected": [
-      {"target_ref": "Section 1.4", "instruction_type": "ADD_COMMITMENT"}
+      {
+        "id": "DEV-009-001",
+        "target_ref": "Section 1.4",
+        "instruction_type": "ADD",
+        "source_span": [
+          2136,
+          2208
+        ]
+      }
     ]
   },
   "DEV-010": {
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Section 7.12(b)", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Exhibit D", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-010-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "ADD",
+        "source_span": [
+          2005,
+          2085
+        ]
+      },
+      {
+        "id": "DEV-010-002",
+        "target_ref": "Section 7.12(b)",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          3703,
+          3773
+        ]
+      },
+      {
+        "id": "DEV-010-003",
+        "target_ref": "Exhibit D",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          4356,
+          4420
+        ]
+      }
     ]
   },
   "DEV-011": {
     "notes": "Multiple section amendments. Parser detects 9 but some are cross-reference FPs. Real instructions: Section 1.1 (add), Section 2.5 (replace), Section 2.6 (delete+replace), Section 2.14 (replace), Section 10.1 (replace), Section 11.6 (replace), Section 11.7 (replace), Exhibit B (replace).",
     "expected": [
-      {"target_ref": "Section 1.1", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Section 2.5", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 2.6", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 2.6", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 2.14", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 10.1", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 11.6", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 11.7", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Exhibit B", "instruction_type": "REPLACE_TEXT"}
+      {
+        "id": "DEV-011-001",
+        "target_ref": "Section 1.1",
+        "instruction_type": "ADD",
+        "source_span": [
+          9738,
+          9822
+        ]
+      },
+      {
+        "id": "DEV-011-002",
+        "target_ref": "Section 2.5",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          21722,
+          21885
+        ]
+      },
+      {
+        "id": "DEV-011-003",
+        "target_ref": "Section 2.6",
+        "instruction_type": "DELETE",
+        "source_span": [
+          23060,
+          23138
+        ]
+      },
+      {
+        "id": "DEV-011-004",
+        "target_ref": "Section 2.6",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          20530,
+          20541
+        ]
+      },
+      {
+        "id": "DEV-011-005",
+        "target_ref": "Section 2.14",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          24972,
+          25117
+        ]
+      },
+      {
+        "id": "DEV-011-006",
+        "target_ref": "Section 10.1",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          29068,
+          29204
+        ]
+      },
+      {
+        "id": "DEV-011-007",
+        "target_ref": "Section 11.6",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          32457,
+          32469
+        ]
+      },
+      {
+        "id": "DEV-011-008",
+        "target_ref": "Section 11.7",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          34288,
+          34300
+        ]
+      },
+      {
+        "id": "DEV-011-009",
+        "target_ref": "Exhibit B",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          38248,
+          38257
+        ]
+      }
     ]
   },
   "DEV-012": {
     "expected": [
-      {"target_ref": "Section 6.01(a)", "instruction_type": "ADD_COMMITMENT"}
+      {
+        "id": "DEV-012-001",
+        "target_ref": "Section 6.01(a)",
+        "instruction_type": "ADD",
+        "source_span": [
+          2967,
+          3034
+        ]
+      }
     ]
   },
   "DEV-013": {
     "expected": [
-      {"target_ref": "Article I", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Article XII", "instruction_type": "ADD_COMMITMENT"}
+      {
+        "id": "DEV-013-001",
+        "target_ref": "Article I",
+        "instruction_type": "ADD",
+        "source_span": [
+          8704,
+          8765
+        ]
+      },
+      {
+        "id": "DEV-013-002",
+        "target_ref": "Article XII",
+        "instruction_type": "ADD",
+        "source_span": [
+          12678,
+          12741
+        ]
+      }
     ]
   },
   "DEV-014": {
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Section 13.01", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-014-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "ADD",
+        "source_span": [
+          3072,
+          3143
+        ]
+      },
+      {
+        "id": "DEV-014-002",
+        "target_ref": "Section 13.01",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          1360,
+          1552
+        ]
+      }
     ]
   },
   "DEV-015": {
@@ -98,42 +322,218 @@
   "DEV-016": {
     "notes": "Composite credit agreement. Body is very large (217K chars). Has 'amended and restated' references.",
     "expected": [
-      {"target_ref": "Section 2.7", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-016-001",
+        "target_ref": "Section 2.7",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          8516,
+          8536
+        ]
+      }
     ]
   },
   "DEV-017": {
     "notes": "19 'By deleting in its entirety' instructions targeting definitions in Section 1.01 and specific sections. Parser detects 0 due to pattern format mismatch.",
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Section 1.01", "instruction_type": "DELETE_COMMITMENT"}
+      {
+        "id": "DEV-017-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          7271,
+          7340
+        ]
+      },
+      {
+        "id": "DEV-017-002",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          9091,
+          9160
+        ]
+      },
+      {
+        "id": "DEV-017-003",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          10571,
+          10640
+        ]
+      },
+      {
+        "id": "DEV-017-004",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          8070,
+          8154
+        ]
+      },
+      {
+        "id": "DEV-017-005",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          10613,
+          10705
+        ]
+      },
+      {
+        "id": "DEV-017-006",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          9679,
+          9773
+        ]
+      },
+      {
+        "id": "DEV-017-007",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          9133,
+          9237
+        ]
+      },
+      {
+        "id": "DEV-017-008",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          9425,
+          9530
+        ]
+      },
+      {
+        "id": "DEV-017-009",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          6136,
+          6245
+        ]
+      },
+      {
+        "id": "DEV-017-010",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          6582,
+          6694
+        ]
+      },
+      {
+        "id": "DEV-017-011",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          5825,
+          5961
+        ]
+      },
+      {
+        "id": "DEV-017-012",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          5451,
+          5594
+        ]
+      },
+      {
+        "id": "DEV-017-013",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          10394,
+          10705
+        ]
+      },
+      {
+        "id": "DEV-017-014",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          5255,
+          5267
+        ]
+      },
+      {
+        "id": "DEV-017-015",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          5582,
+          5594
+        ]
+      },
+      {
+        "id": "DEV-017-016",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          5949,
+          5961
+        ]
+      },
+      {
+        "id": "DEV-017-017",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          6233,
+          6245
+        ]
+      },
+      {
+        "id": "DEV-017-018",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          6682,
+          6694
+        ]
+      },
+      {
+        "id": "DEV-017-019",
+        "target_ref": "Section 1.01",
+        "instruction_type": "DELETE",
+        "source_span": [
+          8142,
+          8154
+        ]
+      }
     ]
   },
   "DEV-018": {
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"}
+      {
+        "id": "DEV-018-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "ADD",
+        "source_span": [
+          4077,
+          4141
+        ]
+      }
     ]
   },
   "DEV-019": {
     "notes": "Section 1.01 amended by replacing a date. 'amended by replacing X with Y' pattern not captured by parser.",
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "REPLACE_TEXT"}
+      {
+        "id": "DEV-019-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          1666,
+          1678
+        ]
+      }
     ]
   },
   "DEV-020": {
@@ -142,52 +542,268 @@
   },
   "DEV-021": {
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Section 2.06", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 7.02", "instruction_type": "REPLACE_TEXT"}
+      {
+        "id": "DEV-021-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "ADD",
+        "source_span": [
+          2808,
+          2872
+        ]
+      },
+      {
+        "id": "DEV-021-002",
+        "target_ref": "Section 2.06",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          3833,
+          3900
+        ]
+      },
+      {
+        "id": "DEV-021-003",
+        "target_ref": "Section 7.02",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          6860,
+          6995
+        ]
+      }
     ]
   },
   "DEV-022": {
     "notes": "Multiple definitions in Section 1.01 amended and restated. Section 7.01 amended and restated. Section 2.01 amended.",
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 2.01", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 7.01", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-022-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          4340,
+          4416
+        ]
+      },
+      {
+        "id": "DEV-022-002",
+        "target_ref": "Section 1.01",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          7540,
+          7616
+        ]
+      },
+      {
+        "id": "DEV-022-003",
+        "target_ref": "Section 2.01",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          8563,
+          8638
+        ]
+      },
+      {
+        "id": "DEV-022-004",
+        "target_ref": "Section 7.01",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          9197,
+          9264
+        ]
+      }
     ]
   },
   "DEV-023": {
     "notes": "Multiple definitions amended by amending and restating. 'amended by amending and restating' pattern not captured by parser.",
     "expected": [
-      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.1", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 2.17(b)", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-023-001",
+        "target_ref": "Section 1.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          3069,
+          3157
+        ]
+      },
+      {
+        "id": "DEV-023-002",
+        "target_ref": "Section 1.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          4151,
+          4171
+        ]
+      },
+      {
+        "id": "DEV-023-003",
+        "target_ref": "Section 1.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          3124,
+          3157
+        ]
+      },
+      {
+        "id": "DEV-023-004",
+        "target_ref": "Section 1.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          3391,
+          3424
+        ]
+      },
+      {
+        "id": "DEV-023-005",
+        "target_ref": "Section 1.1",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          3854,
+          3887
+        ]
+      },
+      {
+        "id": "DEV-023-006",
+        "target_ref": "Section 2.17(b)",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          4550,
+          4609
+        ]
+      }
     ]
   },
   "DEV-024": {
     "notes": "Multiple definitions in Section 1.01 amended to read as follows. Section 7.06 'amended as follows' is a container, not annotated; child (ii) adds a proviso to Section 7.06(e). Section 7.12(b) amended to read.",
     "expected": [
-      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 1.01", "instruction_type": "RESTATE_SECTION"},
-      {"target_ref": "Section 7.06(e)", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Section 7.12(b)", "instruction_type": "RESTATE_SECTION"}
+      {
+        "id": "DEV-024-001",
+        "target_ref": "Section 1.01",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          1562,
+          1628
+        ]
+      },
+      {
+        "id": "DEV-024-002",
+        "target_ref": "Section 1.01",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          2053,
+          2119
+        ]
+      },
+      {
+        "id": "DEV-024-003",
+        "target_ref": "Section 1.01",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          2671,
+          2737
+        ]
+      },
+      {
+        "id": "DEV-024-004",
+        "target_ref": "Section 7.06(e)",
+        "instruction_type": "ADD",
+        "source_span": [
+          6735,
+          6750
+        ]
+      },
+      {
+        "id": "DEV-024-005",
+        "target_ref": "Section 7.12(b)",
+        "instruction_type": "RESTATE_SECTION",
+        "source_span": [
+          7222,
+          7291
+        ]
+      }
     ]
   },
   "DEV-025": {
     "expected": [
-      {"target_ref": "Schedule 1.1", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Schedule 1.1", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Schedule 1.1", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Schedule 1.1", "instruction_type": "DELETE_COMMITMENT"},
-      {"target_ref": "Schedule 1.1", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Schedule 1.1", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 2.4(e)", "instruction_type": "ADD_COMMITMENT"},
-      {"target_ref": "Section 2.12(d)", "instruction_type": "REPLACE_TEXT"},
-      {"target_ref": "Section 6", "instruction_type": "ADD_COMMITMENT"}
+      {
+        "id": "DEV-025-001",
+        "target_ref": "Schedule 1.1",
+        "instruction_type": "ADD",
+        "source_span": [
+          3742,
+          3809
+        ]
+      },
+      {
+        "id": "DEV-025-002",
+        "target_ref": "Schedule 1.1",
+        "instruction_type": "DELETE",
+        "source_span": [
+          12558,
+          12624
+        ]
+      },
+      {
+        "id": "DEV-025-003",
+        "target_ref": "Schedule 1.1",
+        "instruction_type": "DELETE",
+        "source_span": [
+          13627,
+          13693
+        ]
+      },
+      {
+        "id": "DEV-025-004",
+        "target_ref": "Schedule 1.1",
+        "instruction_type": "DELETE",
+        "source_span": [
+          16185,
+          16251
+        ]
+      },
+      {
+        "id": "DEV-025-005",
+        "target_ref": "Schedule 1.1",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          16243,
+          16446
+        ]
+      },
+      {
+        "id": "DEV-025-006",
+        "target_ref": "Schedule 1.1",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          13685,
+          13896
+        ]
+      },
+      {
+        "id": "DEV-025-007",
+        "target_ref": "Section 2.4(e)",
+        "instruction_type": "ADD",
+        "source_span": [
+          18647,
+          18713
+        ]
+      },
+      {
+        "id": "DEV-025-008",
+        "target_ref": "Section 2.12(d)",
+        "instruction_type": "REPLACE_TEXT",
+        "source_span": [
+          19801,
+          19905
+        ]
+      },
+      {
+        "id": "DEV-025-009",
+        "target_ref": "Section 6",
+        "instruction_type": "ADD",
+        "source_span": [
+          24760,
+          24808
+        ]
+      }
     ]
   }
 }

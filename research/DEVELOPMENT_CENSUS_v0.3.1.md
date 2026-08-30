@@ -8,10 +8,11 @@ study ultimately requires.
 **Gold annotations:** data/development/gold_annotations.json (77 total)
 **Methodology:** TP/FP/FN computed from explicit gold annotations.
 Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2PR / (P + R).
-**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,
-instruction_type) only. These metrics do NOT verify extracted old_value,
-new_value, amount, exception, or actual semantic mutation correctness.
-Full reconstruction accuracy is a separate measurement.
+**Metric type:** Instruction DETECTION. Matching uses span overlap +
+instruction_type (with key-based fallback for gold without spans). Does
+NOT verify extracted old_value, new_value, amount, exception, or actual
+semantic mutation correctness. Full reconstruction accuracy is a separate
+measurement.
 
 ## Table 1 — Corpus structure
 
@@ -30,13 +31,13 @@ Full reconstruction accuracy is a separate measurement.
 
 | Format | Precision | Recall | F1 | Unresolved | Docs |
 |--------|-----------|--------|----|------------|------|
-| Inline | 0.846 | 0.151 | 0.256 | 0 | 20 |
+| Inline | 0.538 | 0.096 | 0.163 | 0 | 20 |
 | Composite | N/A | N/A | N/A | 0 | 0 |
 | Restated | N/A | N/A | N/A | 0 | 0 |
 | Referential | N/A | N/A | N/A | 0 | 0 |
 | Waiver | 1.000 | 1.000 | 1.000 | 0 | 1 |
 | Mixed | 1.000 | 0.000 | 0.000 | 0 | 4 |
-| **All amendment documents** | **0.846** | **0.143** | **0.244** | **0** | **25** |
+| **All amendment documents** | **0.538** | **0.091** | **0.156** | **0** | **25** |
 
 ## Pooled summary
 
@@ -44,11 +45,11 @@ Full reconstruction accuracy is a separate measurement.
 |--------|-------|
 | Gold annotations | 77 |
 | Detected | 13 |
-| True positives | 11 |
-| False positives | 2 |
-| False negatives | 66 |
-| Precision | 0.846 |
-| Recall | 0.143 |
-| F1 | 0.244 |
+| True positives | 7 |
+| False positives | 6 |
+| False negatives | 70 |
+| Precision | 0.538 |
+| Recall | 0.091 |
+| F1 | 0.156 |
 | Unresolved | 0 |
 

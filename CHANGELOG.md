@@ -3,6 +3,64 @@
 All notable changes to the Upsilon Financial Commitment Integrity system are
 documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.1] — 2026-08-30
+
+### Changed
+- **Generic ADD/DELETE instruction types**: Parser now emits generic `ADD` and
+  `DELETE` instead of `ADD_COMMITMENT` and `DELETE_COMMITMENT`. Commitment-level
+  resolution (ADD → ADD_COMMITMENT, DELETE → DELETE_COMMITMENT) happens
+  downstream in the executor, not in the parser. This separates the legal
+  transformation operation from the domain-level commitment effect.
+- **"amended by modifying" emits UNRESOLVED**: The parser cannot classify
+  "modifying" as ADD or DELETE, so it emits `UNRESOLVED` for downstream
+  validation.
+- **Gold annotations updated to generic types**: All gold annotations now use
+  `ADD`/`DELETE` instead of `ADD_COMMITMENT`/`DELETE_COMMITMENT`.
+- **Gold annotations have IDs and source spans**: Each annotation has a unique
+  `id` (e.g., `DEV-007-001`) and a `source_span` `[start, end]` pointing to
+  the instruction text in the source document.
+- **Span-based matching**: `match_instructions_to_gold` now uses span overlap
+  + instruction_type for matching, with key-based fallback for gold without
+  spans. This is more precise than key-only matching.
+- **Semantic scoring**: Each match includes `span_iou`, `old_value_match`, and
+  `new_value_match` fields in the classification results.
+- **No confidence on raw hits**: Parser no longer sets `confidence=1.0` on raw
+  deterministic regex hits. Confidence should be set by downstream semantic
+  validation, not by the regex match itself.
+- **ExecutionStatus enum**: `ExecutionResult` now has a `status` field:
+  `COMPLETE` (all applied), `PARTIAL` (some applied, some unresolved),
+  `UNRESOLVED` (all failed). PARTIAL/UNRESOLVED executions must not be
+  promoted to authoritative state.
+- **Parser label**: `deterministic_baseline_v0.4.1`.
+
+### Instruction-detection performance (25-document parser-development sample, gold annotations, span-based matching)
+| Metric | v0.3.1 | v0.4.1 |
+|---|---:|---:|
+| Gold annotations | 77 | 77 |
+| Detected | 13 | 44 |
+| True positives | 7 | 41 |
+| False positives | 6 | 3 |
+| False negatives | 70 | 36 |
+| Precision | 0.538 | 0.932 |
+| Recall | 0.091 | 0.532 |
+| F1 | 0.156 | 0.678 |
+| Unresolved | 0 | 0 |
+
+Note: v0.3.1 baseline metrics dropped because gold annotations now use generic
+ADD/DELETE types while v0.3.1 still emits ADD_COMMITMENT/DELETE_COMMITMENT.
+The v0.3.1 parser is frozen as the historical baseline.
+
+### Added
+- test_semantic_regression.py: 21 exact semantic regression tests covering
+  generic ADD/DELETE emission, source spans, old/new value extraction,
+  no-confidence verification, gold annotation structure, span-based matching,
+  and execution status.
+- ExecutionStatus tests in test_executor.py (COMPLETE/PARTIAL/UNRESOLVED).
+- MODIFIED_BY_V04 regex for "amended by modifying" → UNRESOLVED.
+
+### Held-out protocol
+Not altered. Development corpus changes only. No held-out files created or modified.
+
 ## [0.4] — 2026-08-30
 
 ### Changed

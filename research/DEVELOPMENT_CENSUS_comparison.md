@@ -4,9 +4,10 @@
 **Note:** This is one document per issuer, NOT the 25-issuer agreement-chain
 corpus that the reconstruction study ultimately requires.
 **Gold annotations:** 77 total
-**Metric type:** Instruction DETECTION. Matching is by (normalized target_ref,
-instruction_type) only. Does NOT verify extracted old_value, new_value, amount,
-exception, or actual semantic mutation correctness.
+**Metric type:** Instruction DETECTION. Matching uses span overlap +
+instruction_type (with key-based fallback for gold without spans). Does NOT
+verify extracted old_value, new_value, amount, exception, or actual semantic
+mutation correctness.
 
 ## Pooled instruction-detection metrics comparison
 
@@ -14,18 +15,18 @@ exception, or actual semantic mutation correctness.
 |--------|--------|------|
 | Gold annotations | 77 | 77 |
 | Detected | 13 | 44 |
-| True positives | 11 | 36 |
-| False positives | 2 | 8 |
-| False negatives | 66 | 41 |
-| Precision | 0.846 | 0.818 |
-| Recall | 0.143 | 0.468 |
-| F1 | 0.244 | 0.595 |
+| True positives | 7 | 41 |
+| False positives | 6 | 3 |
+| False negatives | 70 | 36 |
+| Precision | 0.538 | 0.932 |
+| Recall | 0.091 | 0.532 |
+| F1 | 0.156 | 0.678 |
 | Unresolved | 0 | 0 |
 
 ## Key findings
 
-- Recall improved from 0.143 to 0.468 (+0.325)
-- Precision changed from 0.846 to 0.818 (-0.028)
-- F1 improved from 0.244 to 0.595
-- False positives: 2 → 8
-- False negatives: 66 → 41
+- Recall improved from 0.091 to 0.532 (+0.442)
+- Precision changed from 0.538 to 0.932 (+0.393)
+- F1 improved from 0.156 to 0.678
+- False positives: 6 → 3
+- False negatives: 70 → 36

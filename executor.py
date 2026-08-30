@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from typing import Dict
-from models import AmendmentInstruction, CommitmentState, DomainEffect, ExecutionResult, InstructionType
+from models import AmendmentInstruction, CommitmentState, DomainEffect, ExecutionResult, ExecutionStatus, InstructionType
 
 
 class UnresolvedInstruction(Exception):
@@ -139,14 +139,19 @@ def apply_instruction(
         raise UnresolvedInstruction("ADD requires new_value (dict for commitment or value for exception with domain_effect)")
 
     if t == InstructionType.DELETE:
-        # DELETE with EXCEPTION_REMOVAL domain effect → remove from exceptions list.
-        # DELETE without a domain_effect on a commitment is not supported here;
-        # use DELETE_COMMITMENT for that.
+        # DELETE is the generic legal operation. Commitment-level resolution:
+        # - DELETE with EXCEPTION_REMOVAL domain_effect → remove from exceptions
+        # - DELETE with target_key pointing to a commitment → delete the commitment
+        #   (resolves to DELETE_COMMITMENT behavior)
+        # - Otherwise → UNRESOLVED
         if ins.domain_effect == DomainEffect.EXCEPTION_REMOVAL:
             old = deepcopy(c.exceptions)
             c.exceptions = [x for x in c.exceptions if x != ins.old_value]
             return {"action": "remove_exception", "target": ins.target_key, "old": old, "new": deepcopy(c.exceptions)}, None
-        raise UnresolvedInstruction("DELETE requires domain_effect=EXCEPTION_REMOVAL (use DELETE_COMMITMENT to delete a commitment)")
+        # Generic DELETE on a commitment → resolve to DELETE_COMMITMENT behavior
+        old = c.status
+        c.status = "DELETED"
+        return {"action": "status", "target": ins.target_key, "old": old, "new": "DELETED"}, None
 
     if t == InstructionType.RESTATE_SECTION:
         raise UnresolvedInstruction(
@@ -187,10 +192,22 @@ def execute_amendment(
                 "reason": str(exc),
             })
 
+    # Determine execution status: COMPLETE, PARTIAL, or UNRESOLVED.
+    # PARTIAL/UNRESOLVED executions must not be promoted to authoritative state.
+    if not applied and not unresolved:
+        status = ExecutionStatus.COMPLETE  # no-op
+    elif not applied and unresolved:
+        status = ExecutionStatus.UNRESOLVED
+    elif applied and unresolved:
+        status = ExecutionStatus.PARTIAL
+    else:
+        status = ExecutionStatus.COMPLETE
+
     return ExecutionResult(
         state=work,
         applied=applied,
         unresolved=unresolved,
         events=events,
         reference_events=reference_events,
+        status=status,
     )

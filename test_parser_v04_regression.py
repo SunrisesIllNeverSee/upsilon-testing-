@@ -374,7 +374,7 @@ class TestArticleAmendedByAdding:
         refs = [i.get("target_section_ref") or "" for i in result["instructions"]]
         assert any("Article" in r for r in refs), f"No Article target; refs={refs}"
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "ADD_COMMITMENT" in types
+        assert "ADD" in types
 
     def test_article_xii_amended_by_adding(self):
         result = parse_v04(BODY_ARTICLE_XII_AMENDED_BY_ADDING)
@@ -382,7 +382,7 @@ class TestArticleAmendedByAdding:
         refs = [i.get("target_section_ref") or "" for i in result["instructions"]]
         assert any("Article" in r for r in refs)
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "ADD_COMMITMENT" in types
+        assert "ADD" in types
 
 
 class TestScheduleAmendedByInserting:
@@ -393,14 +393,14 @@ class TestScheduleAmendedByInserting:
         assert len(result["instructions"]) >= 1
         inst = result["instructions"][0]
         assert "Schedule" in (inst.get("target_section_ref") or "")
-        assert inst["instruction_type"] == "ADD_COMMITMENT"
+        assert inst["instruction_type"] == "ADD"
 
     def test_schedule_amended_by_deleting(self):
         result = parse_v04(BODY_SCHEDULE_AMENDED_BY_DELETING)
         assert len(result["instructions"]) >= 1
         inst = result["instructions"][0]
         assert "Schedule" in (inst.get("target_section_ref") or "")
-        assert inst["instruction_type"] == "DELETE_COMMITMENT"
+        assert inst["instruction_type"] == "DELETE"
 
 
 class TestAmendedToRead:
@@ -443,7 +443,7 @@ class TestAmendedAsFollows:
         DELETE_COMMITMENT."""
         result = parse_v04(BODY_AMENDED_AS_FOLLOWS)
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "DELETE_COMMITMENT" in types, (
+        assert "DELETE" in types, (
             "Child DELETE operation beneath container should be detected"
         )
 
@@ -528,13 +528,13 @@ class TestDeletedFromSection:
         result = parse_v04(BODY_DELETED_FROM_SECTION)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "DELETE_COMMITMENT" in types
+        assert "DELETE" in types
 
     def test_deleted_from_schedule(self):
         result = parse_v04(BODY_DELETED_FROM_SCHEDULE)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "DELETE_COMMITMENT" in types
+        assert "DELETE" in types
 
 
 class TestSectionAmendedByAddingClause:
@@ -544,7 +544,7 @@ class TestSectionAmendedByAddingClause:
         result = parse_v04(BODY_SECTION_AMENDED_BY_ADDING_CLAUSE)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "ADD_COMMITMENT" in types
+        assert "ADD" in types
 
 
 class TestAmendedByInserting:
@@ -554,7 +554,7 @@ class TestAmendedByInserting:
         result = parse_v04(BODY_AMENDED_BY_INSERTING)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "ADD_COMMITMENT" in types
+        assert "ADD" in types
 
 
 class TestShallBeAmendedByAdding:
@@ -564,17 +564,21 @@ class TestShallBeAmendedByAdding:
         result = parse_v04(BODY_SHALL_BE_AMENDED_BY_ADDING)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "ADD_COMMITMENT" in types
+        assert "ADD" in types
 
 
 class TestAmendedByModifying:
-    """Section X ... is hereby amended by modifying."""
+    """Section X ... is hereby amended by modifying.
+
+    v0.4.1: "amended by modifying" emits UNRESOLVED (too ambiguous to
+    classify as ADD or DELETE).
+    """
 
     def test_amended_by_modifying(self):
         result = parse_v04(BODY_AMENDED_BY_MODIFYING)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "ADD_COMMITMENT" in types
+        assert "UNRESOLVED" in types
 
 
 class TestAmendedAndRestated:
@@ -633,7 +637,7 @@ adding the following new definition:
         result = parse_v04(body)
         assert len(result["instructions"]) >= 1
         types = [i["instruction_type"] for i in result["instructions"]]
-        assert "ADD_COMMITMENT" in types
+        assert "ADD" in types
 
     def test_replace_text_still_detected(self):
         body = """
