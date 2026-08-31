@@ -14,27 +14,28 @@ Tests cover:
 """
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
 
 from commitment_extractor import (
-    ExtractionResult,
-    ValidationItem,
     _classify_covenant,
     _extract_clauses_from_section,
+    _extract_deadline,
     _extract_dollar_amount,
+    _extract_effective_date,
+    _extract_exceptions,
+    _extract_facility_commitments,
+    _extract_party,
+    _extract_rate,
     _extract_step_down_schedule,
     _extract_threshold_percent,
     _extract_threshold_ratio,
     _find_covenant_sections,
     extract_commitments,
-    extract_commitments_from_file,
 )
-from s0_extractor import extract_s0_state, extract_s0_state_for_chain
-from gt_extractor import extract_ground_truth, extract_ground_truth_for_chain
-
+from gt_extractor import extract_ground_truth
+from s0_extractor import extract_s0_state
 
 # ---------------------------------------------------------------------------
 # Section detection
@@ -480,3 +481,360 @@ class TestNoGuessing:
         assert "threshold extraction failed" in result.validation_queue[0].reason
         # No commitment with a guessed threshold
         assert "financial_covenant.leverage_ratio" not in result.commitments
+
+
+# ---------------------------------------------------------------------------
+# Facility amount extraction — million/billion suffix handling
+# ---------------------------------------------------------------------------
+
+
+class TestFacilityAmountExtraction:
+    """Tests for the facility commitment amount extraction, covering the
+    million/billion suffix multiplier bug fix.
+
+    Before the fix, the regex consumed the "million"/"billion" suffix as
+    part of the match, so the suffix check looked past it and the
+    multiplier was never applied. These tests verify the multiplier is
+    now correctly applied for abbreviated dollar formats.
+    """
+
+    def test_full_dollar_format(self):
+        """$150,000,000 should extract as 150000000 (no multiplier)."""
+        text = "Term Loan in the amount of $150,000,000."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.threshold == 150000000.0
+
+    def test_million_suffix(self):
+        """$150 million should extract as 150000000 (1M multiplier)."""
+        text = "Term Loan in the amount of $150 million."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.threshold == 150000000.0
+
+    def test_billion_suffix(self):
+        """$1.5 billion should extract as 1500000000 (1.5 * 1B)."""
+        text = "Term Loan in the amount of $1.5 billion."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.threshold == 1500000000.0
+
+    def test_decimal_million_suffix(self):
+        """$1.5 million should extract as 1500000 (1.5 * 1M)."""
+        text = "Term Loan in the amount of $1.5 million."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.threshold == 1500000.0
+
+    def test_revolving_facility_million(self):
+        """Revolving Facility with million suffix."""
+        text = "Revolving Facility of $50 million."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.canonical_key == "facility.revolving_facility"
+        assert c.threshold == 50000000.0
+
+    def test_no_suffix_no_multiplier(self):
+        """Bare dollar amount without million/billion should not be
+        multiplied."""
+        text = "Term Loan in the amount of $200,000,000."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.threshold == 200000000.0
+
+    def test_million_and_billion_not_confused(self):
+        """Ensure 'million' check doesn't accidentally match 'billion'."""
+        text = "Term Loan in the amount of $2 billion."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        # Should be 2 * 1_000_000_000 = 2_000_000_000, NOT 2 * 1_000_000
+        assert c.threshold == 2000000000.0
+
+
+# ---------------------------------------------------------------------------
+# Party extraction
+# ---------------------------------------------------------------------------
+
+
+class TestPartyExtraction:
+    """Tests for extracting the obligated party from covenant clause text.
+
+    Before the fix, all financial covenants hardcoded party=["borrower"]
+    regardless of the actual clause text. Real EDGAR filings use varying
+    party language: "Loan Parties", "Credit Parties", "Borrower",
+    "Obligors", "each Loan Party", etc.
+    """
+
+    def test_loan_parties(self):
+        assert _extract_party("The Loan Parties shall not permit the ratio") == ["loan_parties"]
+
+    def test_borrower(self):
+        assert _extract_party("The Borrower will not permit its ratio of Debt") == ["borrower"]
+
+    def test_credit_parties(self):
+        assert _extract_party("The Credit Parties shall maintain compliance") == ["loan_parties"]
+
+    def test_each_loan_party(self):
+        assert _extract_party("Each Loan Party shall not permit the ratio") == ["each_loan_party"]
+
+    def test_each_credit_party(self):
+        assert _extract_party("Each Credit Party shall maintain compliance") == ["each_loan_party"]
+
+    def test_obligors(self):
+        assert _extract_party("The Obligors shall maintain the ratio") == ["obligors"]
+
+    def test_obligor_singular(self):
+        assert _extract_party("The Obligor shall maintain the ratio") == ["obligors"]
+
+    def test_no_loan_party_negative(self):
+        """'No Loan Party will' should map to loan_parties."""
+        assert _extract_party("No Loan Party will engage in such business") == ["loan_parties"]
+
+    def test_default_borrower_when_no_party_found(self):
+        """When no party language is found, default to ['borrower']."""
+        assert _extract_party("shall maintain compliance with all covenants") == ["borrower"]
+
+    def test_party_extracted_in_full_extraction(self):
+        """End-to-end: extract_commitments should populate the party field
+        from the clause text, not hardcode it."""
+        text = (
+            "7.10 Certain Financial Covenants.    "
+            "(a) Total Funded Debt to EBITDA Ratio.  The Loan Parties shall not permit "
+            "the ratio to exceed 4.50 to 1.00.  "
+            "7.11 Next. End."
+        )
+        result = extract_commitments(text, source_label="TEST")
+        c = result.commitments["financial_covenant.leverage_ratio"]
+        assert c.party == ["loan_parties"]
+
+    def test_party_borrower_in_full_extraction(self):
+        """End-to-end: 'The Borrower' should produce party=['borrower']."""
+        text = (
+            "9.01 Financial Covenants.    "
+            "(a) Ratio of Debt to EBITDAX.  The Borrower will not, at any time, "
+            "permit its ratio of Debt as of such time to EBITDAX to be greater than 3.5 to 1.0.  "
+            "9.02 Next. End."
+        )
+        result = extract_commitments(text, source_label="TEST")
+        c = result.commitments["financial_covenant.leverage_ratio"]
+        assert c.party == ["borrower"]
+
+
+# ---------------------------------------------------------------------------
+# Missing field extraction: deadline, exceptions, effective date, rate
+# ---------------------------------------------------------------------------
+
+
+class TestMissingFieldExtraction:
+    """Tests for the fields that were not extracted in the original v0.1:
+    deadline/maturity, exceptions, effective date (valid_from), and rate.
+    """
+
+    # --- Exceptions ---
+
+    def test_extract_provided_that_exception(self):
+        text = (
+            "The Borrower shall not permit the ratio to exceed 4.50 to 1.00, "
+            "provided that the Borrower may exceed this limit during a permitted acquisition."
+        )
+        exceptions = _extract_exceptions(text)
+        assert len(exceptions) == 1
+        assert "provided that" in exceptions[0].lower()
+        assert "permitted acquisition" in exceptions[0].lower()
+
+    def test_extract_except_colon_exception(self):
+        text = "The Borrower shall not incur Debt except: (a) Debt under the Loan Documents."
+        exceptions = _extract_exceptions(text)
+        assert len(exceptions) == 1
+        assert "except" in exceptions[0].lower()
+
+    def test_no_exceptions_returns_empty(self):
+        text = "The Borrower shall not permit the ratio to exceed 4.50 to 1.00."
+        assert _extract_exceptions(text) == []
+
+    def test_exception_truncation(self):
+        """Long exception text should be truncated to 120 chars."""
+        long_exc = "provided that " + "x" * 200 + "."
+        exceptions = _extract_exceptions(long_exc)
+        assert len(exceptions) == 1
+        assert len(exceptions[0]) <= 120
+        assert exceptions[0].endswith("...")
+
+    def test_exceptions_extracted_in_full_extraction(self):
+        """End-to-end: exceptions should be populated in CommitmentState."""
+        text = (
+            "7.10 Certain Financial Covenants.    "
+            "(a) Total Funded Debt to EBITDA Ratio.  The Loan Parties shall not permit "
+            "the ratio to exceed 4.50 to 1.00, provided that the Borrower may exceed "
+            "this limit during a permitted acquisition.  "
+            "7.11 Next. End."
+        )
+        result = extract_commitments(text, source_label="TEST")
+        c = result.commitments["financial_covenant.leverage_ratio"]
+        assert len(c.exceptions) >= 1
+        assert "provided that" in c.exceptions[0].lower()
+
+    # --- Deadline / maturity ---
+
+    def test_extract_maturity_date(self):
+        text = "Term Loan with a Maturity Date of March 4, 2025."
+        assert _extract_deadline(text) == "2025-03-04"
+
+    def test_extract_stated_maturity(self):
+        text = "The facility shall mature on December 31, 2027."
+        assert _extract_deadline(text) == "2027-12-31"
+
+    def test_no_deadline_returns_none(self):
+        text = "The Borrower shall maintain the ratio at 4.50 to 1.00."
+        assert _extract_deadline(text) is None
+
+    def test_deadline_extracted_in_facility(self):
+        """End-to-end: facility commitments should extract maturity date."""
+        text = "Term Loan in the amount of $150,000,000 with a Maturity Date of March 4, 2025."
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.deadline == "2025-03-04"
+
+    # --- Effective date ---
+
+    def test_extract_effective_as_of(self):
+        text = "This covenant is effective as of January 15, 2024."
+        assert _extract_effective_date(text) == "2024-01-15"
+
+    def test_extract_commencing_on(self):
+        text = "The covenant commencing on June 30, 2023."
+        assert _extract_effective_date(text) == "2023-06-30"
+
+    def test_extract_dated_as_of(self):
+        text = "This Agreement dated as of March 4, 2022."
+        assert _extract_effective_date(text) == "2022-03-04"
+
+    def test_no_effective_date_returns_none(self):
+        text = "The Borrower shall maintain the ratio."
+        assert _extract_effective_date(text) is None
+
+    # --- Rate ---
+
+    def test_extract_rate_per_annum(self):
+        text = "The Term Loan shall bear interest at a rate per annum of 5.50%."
+        assert _extract_rate(text) == 5.50
+
+    def test_extract_interest_at_a_rate(self):
+        text = "bearing interest at a rate of 3.25% per annum."
+        assert _extract_rate(text) == 3.25
+
+    def test_no_rate_returns_none(self):
+        text = "The Borrower shall maintain the ratio at 4.50 to 1.00."
+        assert _extract_rate(text) is None
+
+    def test_rate_not_confused_with_threshold(self):
+        """A percentage threshold (e.g., Texas Ratio 25.00%) should NOT
+        be extracted as a rate — rate extraction requires explicit rate
+        language."""
+        text = "Permit the Texas Ratio to be greater than 25.00%."
+        assert _extract_rate(text) is None
+
+    def test_rate_not_confused_with_ratio(self):
+        """Ratio language 'rate of 4.50 to 1.00' (no %) must NOT be
+        extracted as a rate. The capture group requires a trailing %."""
+        text = "shall not permit the ratio of 4.50 to 1.00"
+        assert _extract_rate(text) is None
+
+    def test_extract_rate_of_bare_prefix(self):
+        """'rate of X.XX%' (no 'interest' prefix) must extract correctly.
+
+        Regression: the previous regex had 'rate\\s+of\\s+(?:\\d|...)?'
+        whose \\d branch greedily consumed the first digit of the rate,
+        leaving the capture group with only the decimal remainder
+        (e.g. 'rate of 5.50%' -> 0.50)."""
+        text = "rate of 5.50%"
+        assert _extract_rate(text) == 5.50
+
+    def test_extract_rate_of_with_per_annum(self):
+        """'rate of X.XX% per annum' must extract the full rate."""
+        text = "rate of 7.00% per annum"
+        assert _extract_rate(text) == 7.00
+
+    def test_extract_at_a_rate_of(self):
+        """'at a rate of X.XX%' (no 'interest' prefix) must extract
+        correctly. Same regression class as test_extract_rate_of_bare_prefix."""
+        text = "at a rate of 5.50%"
+        assert _extract_rate(text) == 5.50
+
+    def test_extract_rate_of_zero_not_swallowed(self):
+        """'rate of 7.00%' must return 7.00, NOT 0.00.
+
+        Regression: the previous broken regex produced 0.00 here, which
+        was indistinguishable from a legitimate 0% rate and from
+        'not found' (None). This is the most dangerous failure mode of
+        the old regex because it silently corrupts data without raising
+        any signal."""
+        text = "rate of 7.00%"
+        result = _extract_rate(text)
+        assert result == 7.00
+        assert result is not None  # must not be silently dropped
+
+    def test_rate_extracted_in_facility(self):
+        """End-to-end: facility commitments should extract interest rate."""
+        text = (
+            "Term Loan in the amount of $150,000,000 bearing interest "
+            "at a rate of 5.50% per annum."
+        )
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        assert c.rate == 5.50
+
+    def test_effective_date_extracted_in_facility(self):
+        """End-to-end: facility commitments should extract effective date
+        into valid_from."""
+        text = (
+            "Term Loan in the amount of $150,000,000, dated as of "
+            "March 4, 2022, bearing interest at a rate of 5.50% per annum."
+        )
+        results = _extract_facility_commitments(text, "TEST")
+        assert len(results) == 1
+        c, _ = results[0]
+        # valid_from is Optional[datetime]; pydantic coerces "YYYY-MM-DD"
+        # to datetime(YYYY, MM, DD, 0, 0).
+        assert c.valid_from is not None
+        assert c.valid_from.year == 2022
+        assert c.valid_from.month == 3
+        assert c.valid_from.day == 4
+
+    def test_effective_date_extracted_in_covenant(self):
+        """End-to-end: financial covenants should extract effective date
+        into valid_from when present in clause text."""
+        text = (
+            "7.10 Certain Financial Covenants.    "
+            "(a) Total Funded Debt to EBITDA Ratio.  The Loan Parties shall not permit "
+            "the ratio to exceed 4.50 to 1.00, effective as of January 15, 2024.  "
+            "7.11 Next. End."
+        )
+        result = extract_commitments(text, source_label="TEST")
+        c = result.commitments["financial_covenant.leverage_ratio"]
+        assert c.valid_from is not None
+        assert c.valid_from.year == 2024
+        assert c.valid_from.month == 1
+        assert c.valid_from.day == 15
+
+    def test_no_effective_date_covenant_valid_from_none(self):
+        """End-to-end: when no effective date language is present,
+        valid_from should remain None."""
+        text = (
+            "7.10 Certain Financial Covenants.    "
+            "(a) Total Funded Debt to EBITDA Ratio.  The Loan Parties shall not permit "
+            "the ratio to exceed 4.50 to 1.00.  "
+            "7.11 Next. End."
+        )
+        result = extract_commitments(text, source_label="TEST")
+        c = result.commitments["financial_covenant.leverage_ratio"]
+        assert c.valid_from is None

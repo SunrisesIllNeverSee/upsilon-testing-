@@ -49,7 +49,6 @@ from typing import Any
 
 from models import CommitmentState
 
-
 # ---------------------------------------------------------------------------
 # Extraction result
 # ---------------------------------------------------------------------------
@@ -477,6 +476,174 @@ def _extract_frequency(text: str) -> str:
     return "quarterly"  # default for financial covenants
 
 
+# Party language patterns observed in real EDGAR credit agreements.
+# Order matters: more specific phrases first. Each entry maps a regex
+# (matched against the clause body) to a canonical party label. We match
+# the subject of the covenant verb ("shall not permit", "shall maintain",
+# "will not permit", etc.) so we capture the actual obligated party.
+#
+# Examples from real filings:
+#   "The Loan Parties shall not permit the Core Leverage Ratio..."
+#   "The Borrower will not permit its ratio of Debt..."
+#   "The Credit Parties shall maintain..."
+#   "Each Loan Party shall not permit..."
+_PARTY_PATTERNS: list[tuple[str, str]] = [
+    # "each Loan Party" / "each Credit Party" (singular, distributive)
+    (r"\beach\s+(Loan\s+Part(?:y|ies)|Credit\s+Part(?:y|ies))\b", "each_loan_party"),
+    # "the Loan Parties" / "the Credit Parties" (plural)
+    (r"\bthe\s+(Loan\s+Parties|Credit\s+Parties)\b", "loan_parties"),
+    # "the Borrower" (singular)
+    (r"\bthe\s+Borrower\b", "borrower"),
+    # "the Obligors" / "the Obligor"
+    (r"\bthe\s+Obligor(?:s)?\b", "obligors"),
+    # "No Loan Party will" / "No Loan Party shall" (negative subject)
+    (r"\bNo\s+(Loan\s+Part(?:y|ies)|Credit\s+Part(?:y|ies))\b", "loan_parties"),
+]
+
+
+def _extract_party(text: str) -> list[str]:
+    """Extract the obligated party from covenant clause text.
+
+    Returns a list of canonical party labels. Returns ["borrower"] as a
+    conservative default ONLY when no party language is found, since
+    financial covenants in credit agreements are virtually always
+    borrower/loan-party obligations and the default matches the v0.1
+    behavior. When party language IS found, the actual phrase is used.
+
+    Canonical labels:
+      - "borrower"      — "the Borrower"
+      - "loan_parties"  — "the Loan Parties" / "the Credit Parties"
+      - "each_loan_party" — "each Loan Party" / "each Credit Party"
+      - "obligors"      — "the Obligors" / "the Obligor"
+    """
+    for pattern, label in _PARTY_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            return [label]
+    return ["borrower"]  # conservative default for financial covenants
+
+
+# Exception patterns within covenant clauses. These capture carve-out
+# language ("provided that ...", "except ...") that modifies the
+# covenant's applicability. We extract a short summary string for each
+# exception found, not the full text. The match extends to the next
+# period (sentence boundary) or end of string.
+_EXCEPTION_RE = re.compile(
+    r"(provided\s+that[^.]{10,}?)(?:\.|$)"
+    r"|(except\s*:[^.]{10,}?)(?:\.|$)",
+    re.IGNORECASE,
+)
+
+
+def _extract_exceptions(text: str) -> list[str]:
+    """Extract exception/carve-out clauses from covenant text.
+
+    Looks for "provided that ..." and "except: ..." patterns that
+    modify the covenant's applicability. Returns a list of short
+    summary strings (truncated to 120 chars). Returns an empty list
+    if no exceptions are found.
+
+    Conservative: only extracts clearly delimited exception language.
+    Does NOT guess at implicit exceptions.
+    """
+    exceptions: list[str] = []
+    for m in _EXCEPTION_RE.finditer(text):
+        # Pick whichever group matched
+        raw = m.group(1) or m.group(2)
+        if raw is None:
+            continue
+        cleaned = re.sub(r"\s+", " ", raw).strip()
+        if len(cleaned) > 120:
+            cleaned = cleaned[:117] + "..."
+        exceptions.append(cleaned)
+    return exceptions
+
+
+# Maturity/deadline patterns. Financial covenants rarely have explicit
+# deadlines (they are ongoing), but facility commitments have maturity
+# dates. We extract the maturity date when present.
+_MATURITY_RE = re.compile(
+    r"(?:Maturity\s+Date|stated\s+maturity|final\s+maturity|shall\s+mature)"
+    r"[^.]{0,40}?"
+    r"((?:January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+\d{1,2},?\s+\d{4})",
+    re.IGNORECASE,
+)
+
+
+def _extract_deadline(text: str) -> str | None:
+    """Extract a maturity date or deadline from covenant/facility text.
+
+    Looks for "Maturity Date ... <Month DD, YYYY>" patterns. Returns
+    the date as YYYY-MM-DD, or None if not found.
+    """
+    m = _MATURITY_RE.search(text)
+    if not m:
+        return None
+    return _parse_date(m.group(1))
+
+
+# Effective date patterns. Covenants may state "effective as of <date>"
+# or "commencing on <date>". We extract this as valid_from.
+_EFFECTIVE_DATE_RE = re.compile(
+    r"(?:effective\s+as\s+of|commencing\s+on|effective\s+on|dated\s+as\s+of)"
+    r"\s+"
+    r"((?:January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+\d{1,2},?\s+\d{4})",
+    re.IGNORECASE,
+)
+
+
+def _extract_effective_date(text: str) -> str | None:
+    """Extract an effective date from covenant text.
+
+    Looks for "effective as of <Month DD, YYYY>" patterns. Returns
+    the date as YYYY-MM-DD, or None if not found.
+    """
+    m = _EFFECTIVE_DATE_RE.search(text)
+    if not m:
+        return None
+    return _parse_date(m.group(1))
+
+
+# Interest rate patterns for facility commitments. Looks for rate
+# language like "rate per annum of X.XX%" or "interest at a rate of
+# X.XX% per annum".
+#
+# Each alternative is a bare prefix (no digit consumption). The capture
+# group ([\d.]+)\s*% requires a trailing %, so ratio language like
+# "rate of 4.50 to 1.00" (no %) does NOT false-positive. Earlier versions
+# had "rate\s+of\s+(?:\d|[\d.]+\s*%)?" here, whose \d branch greedily
+# consumed the first digit of the rate and left the capture group with
+# only the decimal remainder (e.g. "rate of 5.50%" -> 0.50). Do not
+# reintroduce a digit-consuming prefix.
+_RATE_RE = re.compile(
+    r"(?:rate\s+per\s+annum|interest\s+at\s+a\s+rate|bearing\s+interest"
+    r"|rate\s+of|interest\s+rate\s+of)"
+    r"[^.]{0,30}?"
+    r"([\d.]+)\s*%",
+    re.IGNORECASE,
+)
+
+
+def _extract_rate(text: str) -> float | None:
+    """Extract an interest rate from facility/covenant text.
+
+    Looks for "rate per annum of X.XX%" patterns. Returns the rate
+    as a float (percentage points), or None if not found.
+
+    Conservative: only extracts rates that appear in explicit rate
+    language. Does NOT extract generic percentages (which are usually
+    thresholds, not rates).
+    """
+    m = _RATE_RE.search(text)
+    if not m:
+        return None
+    try:
+        return float(m.group(1))
+    except ValueError:
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Covenant classification — map clause names to canonical commitment keys
 # ---------------------------------------------------------------------------
@@ -569,7 +736,7 @@ def _rule_leverage_ratio_with_step_down(clause: ExtractedClause) -> CommitmentSt
         canonical_key=key,
         commitment_type="financial_covenant",
         status="ACTIVE",
-        party=["borrower"],
+        party=_extract_party(clause.text),
         action="maintain",
         subject=subject,
         operator="<=",
@@ -577,6 +744,9 @@ def _rule_leverage_ratio_with_step_down(clause: ExtractedClause) -> CommitmentSt
         unit=unit,
         frequency=_extract_frequency(clause.text),
         applicability=schedule,
+        exceptions=_extract_exceptions(clause.text),
+        deadline=_extract_deadline(clause.text),
+        valid_from=_extract_effective_date(clause.text),
     )
 
 
@@ -607,13 +777,16 @@ def _rule_simple_ratio_covenant(clause: ExtractedClause) -> CommitmentState | No
         canonical_key=key,
         commitment_type="financial_covenant",
         status="ACTIVE",
-        party=["borrower"],
+        party=_extract_party(clause.text),
         action="maintain",
         subject=subject,
         operator=operator,
         threshold=threshold,
         unit=unit,
         frequency=_extract_frequency(clause.text),
+        exceptions=_extract_exceptions(clause.text),
+        deadline=_extract_deadline(clause.text),
+        valid_from=_extract_effective_date(clause.text),
     )
 
 
@@ -641,13 +814,16 @@ def _rule_percentage_covenant(clause: ExtractedClause) -> CommitmentState | None
         canonical_key=key,
         commitment_type="financial_covenant",
         status="ACTIVE",
-        party=["borrower"],
+        party=_extract_party(clause.text),
         action="maintain",
         subject=subject,
         operator=operator,
         threshold=threshold,
         unit="percent",
         frequency=_extract_frequency(clause.text),
+        exceptions=_extract_exceptions(clause.text),
+        deadline=_extract_deadline(clause.text),
+        valid_from=_extract_effective_date(clause.text),
     )
 
 
@@ -667,13 +843,15 @@ _EXTRACTION_RULES: list = [
 
 
 # Facility commitment patterns: "Term Loan" / "Revolving Facility" / etc.
-# with a dollar amount.
+# with a dollar amount. The million/billion suffix is matched separately
+# (NOT consumed by the capture regex) so the multiplier can be applied
+# correctly. See _extract_facility_commitments for the suffix handling.
 _FACILITY_PATTERNS: list[tuple[str, str]] = [
-    (r"(?:Term\s+Loan|Term\s+Commitment).*?\$([\d,]+(?:\.\d+)?)\s*(?:million|billion)?",
+    (r"(?:Term\s+Loan|Term\s+Commitment).*?\$([\d,]+(?:\.\d+)?)",
      "facility.term_loan"),
-    (r"(?:Revolving\s+(?:Loan|Facility|Credit|Commitment)|Revolving\s+Facility).*?\$([\d,]+(?:\.\d+)?)\s*(?:million|billion)?",
+    (r"(?:Revolving\s+(?:Loan|Facility|Credit|Commitment)|Revolving\s+Facility).*?\$([\d,]+(?:\.\d+)?)",
      "facility.revolving_facility"),
-    (r"(?:Delayed\s+Draw\s+Term).*?\$([\d,]+(?:\.\d+)?)\s*(?:million|billion)?",
+    (r"(?:Delayed\s+Draw\s+Term).*?\$([\d,]+(?:\.\d+)?)",
      "facility.delayed_draw_term_loan"),
 ]
 
@@ -695,10 +873,17 @@ def _extract_facility_commitments(
     for pattern, key in _FACILITY_PATTERNS:
         for m in re.finditer(pattern, text, re.IGNORECASE):
             amount_str = m.group(1).replace(",", "")
-            amount = int(amount_str.split(".")[0])
+            # Parse as float so decimal abbreviated amounts (e.g. "$1.5
+            # billion", "$1.5 million") are scaled correctly. The threshold
+            # field is Optional[float], so a float value is accepted
+            # directly. Whole-dollar amounts parse to x.0 with no loss.
+            amount = float(amount_str)
 
-            # Check for "million" / "billion" multiplier
-            suffix = text[m.end():m.end() + 10].lower()
+            # Check for "million" / "billion" multiplier in the text
+            # immediately following the matched dollar amount. The suffix
+            # is NOT consumed by the capture regex, so m.end() points right
+            # after the digits.
+            suffix = text[m.end():m.end() + 12].lower()
             if "billion" in suffix:
                 amount *= 1_000_000_000
             elif "million" in suffix:
@@ -707,6 +892,14 @@ def _extract_facility_commitments(
             if key in seen_keys:
                 continue  # only take the first occurrence per facility type
             seen_keys.add(key)
+
+            # Extract a context window around the match for field
+            # extraction (deadline, rate, effective date). We use a
+            # 300-char window after the match since maturity/rate
+            # language typically follows the facility amount.
+            context_start = max(0, m.start() - 100)
+            context_end = min(len(text), m.end() + 300)
+            context = text[context_start:context_end]
 
             commitment = CommitmentState(
                 canonical_key=key,
@@ -717,6 +910,9 @@ def _extract_facility_commitments(
                 subject=key.split(".")[-1],
                 threshold=amount,
                 unit="usd",
+                deadline=_extract_deadline(context),
+                rate=_extract_rate(context),
+                valid_from=_extract_effective_date(context),
             )
 
             provenance = {
