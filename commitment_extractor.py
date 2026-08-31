@@ -140,6 +140,49 @@ _COVENANT_SECTION_RE = re.compile(
     re.IGNORECASE,
 )
 
+# V02-001: Non-standard covenant section headers. Some credit agreements
+# put financial covenants under headers that don't include the word
+# "Covenants" at all. The most common alternative is "Financial
+# Condition" (STUDY-008: "SECTION 4.9. FINANCIAL CONDITION"). We match
+# these separately and then apply content-based validation to confirm
+# the section actually contains covenant language (ratio thresholds,
+# maintain-language, etc.) before treating it as a covenant section.
+_NONSTANDARD_COVENANT_SECTION_RE = re.compile(
+    r"(?:(?:Section|SECTION|ARTICLE)\s+)?"
+    r"([\d.]+|[IVX]+)\s+"
+    r"(?:Certain\s+)?Financial\s+Condition",
+    re.IGNORECASE,
+)
+
+# V02-001: Broader covenant section patterns that include
+# "Affirmative Covenants" and "Negative Covenants" headers. These
+# sections often contain financial covenants as subsections (e.g.,
+# STUDY-031: "Section 5.01 Affirmative Covenants" with ratio covenants
+# as subsections (b) and (c)). Content-based validation is applied
+# downstream to confirm the section contains ratio/percent thresholds
+# or covenant verbs before treating it as a covenant section.
+_BROAD_COVENANT_SECTION_RE = re.compile(
+    r"(?:(?:Section|SECTION|ARTICLE)\s+)?"
+    r"([\d.]+|[IVX]+)\s+"
+    r"(?:Certain\s+)?(?:Affirmative|Negative)\s+Covenants",
+    re.IGNORECASE,
+)
+
+# Content-based detection: ratio thresholds ("X.XX to 1.00" or
+# "X.XX : 1.0"), percentage thresholds, and covenant verb language.
+# Used to confirm that a non-standard section header actually contains
+# covenant content before treating it as a covenant section.
+_RATIO_THRESHOLD_RE = re.compile(
+    r"[\d.]+\s*(?:to|:)\s*1\.0+", re.IGNORECASE,
+)
+_COVENANT_VERB_RE = re.compile(
+    r"shall\s+(?:not\s+)?(?:permit|maintain|have\s+and\s+maintain|be\s+"
+    r"(?:less|greater)\s+than|exceed)"
+    r"|may\s+not\s+(?:be\s+)?(?:less|greater)\s+than"
+    r"|will\s+not\s+permit",
+    re.IGNORECASE,
+)
+
 
 def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
     """Find financial covenant sections in the document.
@@ -150,40 +193,22 @@ def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
 
     We skip table-of-contents entries (which have page numbers or
     dot-leader patterns following the section title).
+
+    V02-001: In addition to "Financial Covenants" headers, we now detect:
+      - "Financial Condition" headers (STUDY-008 pattern)
+      - "Affirmative Covenants" / "Negative Covenants" headers when the
+        section content contains ratio thresholds or covenant verbs
+        (STUDY-031, STUDY-004 patterns)
+    Content-based validation is applied to non-standard headers to
+    avoid false positives from non-covenant sections.
     """
     sections: list[tuple[str, int, int]] = []
-    matches = list(_FINANCIAL_COVENANT_SECTION_RE.finditer(text))
-    if not matches:
-        matches = list(_COVENANT_SECTION_RE.finditer(text))
+    seen_starts: set[int] = set()
 
-    for m in matches:
-        # Skip TOC entries: they typically have dot leaders (3+ dots)
-        # within 20 chars after the match.
-        after = text[m.end():m.end() + 20]
-        if re.match(r"\s*\.{3,}", after):
-            continue
-        # Also skip if the match is in the first 10% of the document
-        # AND followed by dot leaders within 50 chars (common TOC pattern).
-        if m.start() < len(text) * 0.1:
-            after_more = text[m.end():m.end() + 50]
-            if re.search(r"\.{3,}", after_more):
-                continue
-
-        section_num = m.group(1)
-        section_ref = f"Section {section_num}"
-        start = m.start()
-
-        # Find the end: next section/article header after this one.
-        # Match both "Section 7.11" and bare "7.11" patterns, as well
-        # as "ARTICLE IX" patterns. The key is to find a new top-level
-        # section header that starts a different section.
-        remaining = text[m.end():]
-        # Pattern: optional "Section"/"SECTION"/"ARTICLE" prefix,
-        # followed by a number (e.g., "7.11") or roman numeral (e.g., "IX"),
-        # followed by a space and a capitalized word (the section title).
-        # We require the section number to differ from the current one.
+    # V02-002: Helper to find the end of a section (next section header).
+    def _find_section_end(text: str, match_end: int, section_num: str) -> int:
+        remaining = text[match_end:]
         current_num = section_num
-        next_section = None
         for sm in re.finditer(
             r"(?:(?:Section|SECTION|ARTICLE)\s+)?"
             r"(\d+(?:\.\d+)?|[IVX]+)\s+"
@@ -191,45 +216,125 @@ def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
             remaining,
         ):
             candidate_num = sm.group(1)
-            # Skip if it's the same section number (could be a
-            # cross-reference within the section).
             if candidate_num == current_num:
                 continue
-            # Skip single-digit numbers that are not prefixed with
-            # Section/SECTION/ARTICLE — these are almost certainly part
-            # of clause text (e.g., "Tier 1 Leverage Ratio") rather than
-            # section headers.
+            # V02-003: Skip numbered subsections of the current section
+            # (e.g., "10.1", "10.2" when current section is "10"). These
+            # are subsections OF the current section, not new sections.
+            if "." in candidate_num and candidate_num.split(".")[0] == current_num:
+                continue
             if not candidate_num.startswith(tuple("0123456789")) or \
                "." in candidate_num:
-                # Roman numeral or dotted number (e.g., "7.11") — more
-                # likely a real section reference.
                 pass
             elif len(candidate_num) == 1 and \
                  not re.match(r"(?:Section|SECTION|ARTICLE)\s+",
                               remaining[sm.start():sm.start()+20],
                               re.IGNORECASE):
-                # Single digit without Section/ARTICLE prefix — skip
-                # (likely part of clause text like "Tier 1 Leverage")
                 continue
-            # Check that this is at a section-header position: either
-            # prefixed with Section/SECTION/ARTICLE, or at the start of
-            # a line / after a period + whitespace.
             has_prefix = re.match(
                 r"(?:Section|SECTION|ARTICLE)\s+",
                 remaining[sm.start():sm.start()+20],
                 re.IGNORECASE,
             )
-            abs_pos = m.end() + sm.start()
+            abs_pos = match_end + sm.start()
             before = text[max(0, abs_pos - 5):abs_pos]
             at_line_start = re.search(r"(?:\n\s*|\.\s+)$", before)
             if has_prefix or at_line_start:
-                next_section = sm
-                break
-        if next_section:
-            end = m.end() + next_section.start()
-        else:
-            end = len(text)
+                return match_end + sm.start()
+        return len(text)
 
+    # V02-002: Helper to check if a match is a TOC entry.
+    def _is_toc_entry(m: re.Match, text: str) -> bool:
+        """Check if a section header match is a table-of-contents entry.
+
+        V02-002: In addition to dot-leader patterns, we now also detect
+        page numbers on separate lines (STUDY-021 pattern: the TOC has
+        "SECTION 10\\nFINANCIAL COVENANTS.\\n38" where "38" is a page
+        number on a separate line after the header).
+        """
+        after = text[m.end():m.end() + 20]
+        if re.match(r"\s*\.{3,}", after):
+            return True
+        # V02-002: Check for page number on a separate line within 10
+        # chars after the match. This catches TOC entries like:
+        #   "SECTION 10\nFINANCIAL COVENANTS.\n38"
+        # where "38" is a page number on its own line. The pattern
+        # allows an optional period (from the header ".") before the
+        # newline that precedes the page number.
+        after_10 = text[m.end():m.end() + 10]
+        if re.match(r"[\s.]*\n\s*\d{1,4}\s*\n", after_10):
+            return True
+        # Also skip if the match is in the first 10% of the document
+        # AND followed by dot leaders within 50 chars (common TOC pattern).
+        if m.start() < len(text) * 0.1:
+            after_more = text[m.end():m.end() + 50]
+            if re.search(r"\.{3,}", after_more):
+                return True
+            # V02-002: Also check for page number on separate line in
+            # the first 15% of the document (broader TOC detection).
+            after_15 = text[m.end():m.end() + 15]
+            if re.match(r"[\s.]*\n\s*\d{1,4}\s*\n", after_15):
+                return True
+        return False
+
+    # V02-002: Collect all matches for each section number so we can
+    # prefer the last (body) match over the first (TOC) match.
+    section_matches: dict[str, list[re.Match]] = {}
+
+    # Standard "Financial Covenants" headers
+    matches = list(_FINANCIAL_COVENANT_SECTION_RE.finditer(text))
+    if not matches:
+        matches = list(_COVENANT_SECTION_RE.finditer(text))
+
+    for m in matches:
+        if _is_toc_entry(m, text):
+            continue
+        section_num = m.group(1)
+        section_matches.setdefault(section_num, []).append(m)
+
+    # V02-001: Non-standard "Financial Condition" headers
+    for m in _NONSTANDARD_COVENANT_SECTION_RE.finditer(text):
+        if _is_toc_entry(m, text):
+            continue
+        section_num = m.group(1)
+        # Avoid duplicates with standard matches
+        if section_num in section_matches:
+            continue
+        section_matches.setdefault(section_num, []).append(m)
+
+    # V02-001: "Affirmative Covenants" / "Negative Covenants" headers
+    # with content-based validation
+    for m in _BROAD_COVENANT_SECTION_RE.finditer(text):
+        if _is_toc_entry(m, text):
+            continue
+        section_num = m.group(1)
+        # Avoid duplicates with standard matches
+        if section_num in section_matches:
+            continue
+        # Content-based validation: peek at the section content to
+        # confirm it contains ratio thresholds or covenant verbs before
+        # treating it as a covenant section. This avoids false positives
+        # from "Negative Covenants" sections that only contain operational
+        # restrictions (no financial thresholds).
+        peek_end = min(len(text), m.end() + 3000)
+        peek_text = text[m.end():peek_end]
+        has_ratio = bool(_RATIO_THRESHOLD_RE.search(peek_text))
+        has_verb = bool(_COVENANT_VERB_RE.search(peek_text))
+        if not (has_ratio or has_verb):
+            continue
+        section_matches.setdefault(section_num, []).append(m)
+
+    # V02-002: For each section number, prefer the LAST match (the
+    # actual section body) over earlier matches (TOC entries that
+    # survived the dot-leader/page-number checks).
+    for section_num, matches_list in section_matches.items():
+        m = matches_list[-1]
+        section_ref = f"Section {section_num}"
+        start = m.start()
+        if start in seen_starts:
+            continue
+        seen_starts.add(start)
+        end = _find_section_end(text, m.end(), section_num)
         sections.append((section_ref, start, end))
 
     return sections
@@ -258,6 +363,20 @@ _CLAUSE_RE = re.compile(
     re.DOTALL,
 )
 
+# V02-003: Numbered-subsection clause pattern. Some credit agreements
+# use numbered subsections (10.1, 10.2, 10.3) instead of lettered
+# subsections ((a), (b), (c)). Matches patterns like:
+#   10.1 Fixed Charge Coverage Ratio.  Beginning with...
+#   10.2 Senior Funded Debt to EBITDA Ratio.  Beginning with...
+#   10.3 Minimum Tangible Net Worth.  The sum of...
+_NUMBERED_CLAUSE_RE = re.compile(
+    r"(\d+\.\d+)\s+"
+    r"([A-Z][^.]{3,80}?)\s*\.\s+"  # clause name (capitalized, ends with period)
+    # clause body: until the NEXT numbered clause header or end of text
+    r"(.*?)(?=\d+\.\d+\s+[A-Z][^.]{3,80}?\s*\.\s|\Z)",
+    re.DOTALL,
+)
+
 
 def _extract_clauses_from_section(
     text: str,
@@ -268,7 +387,9 @@ def _extract_clauses_from_section(
     """Extract individual covenant clauses from a section.
 
     Looks for (a), (b), (c) subsection patterns within the section.
-    If no subsections are found, treats the entire section as one clause.
+    V02-003: Also looks for numbered subsections (10.1, 10.2, 10.3).
+    If no subsections are found, treats the entire section as one clause
+    if it contains covenant language.
     """
     section_text = text[start:end]
     clauses: list[ExtractedClause] = []
@@ -291,36 +412,129 @@ def _extract_clauses_from_section(
             end_offset=clause_end,
         ))
 
+    # V02-003: If no lettered subsections were found, try numbered
+    # subsections (10.1, 10.2, 10.3 format).
+    if not clauses:
+        # Extract the section number from the section_ref (e.g., "10"
+        # from "Section 10", "5.03" from "Section 5.03"). Numbered
+        # subsections (10.1, 10.2) are only valid for top-level sections
+        # (no dot in the section number). For sections like "5.03" that
+        # already have a dot, "5.04" is the NEXT section, not a subsection.
+        section_num = section_ref.replace("Section ", "").strip()
+        is_top_level = "." not in section_num
+        for m in _NUMBERED_CLAUSE_RE.finditer(section_text):
+            clause_num = m.group(1)
+            # Skip if this is the section header itself
+            if clause_num == section_num:
+                continue
+            # V02-003: Only treat numbered clauses as subsections if the
+            # section is top-level (e.g., "10") and the clause number
+            # starts with the section number + "." (e.g., "10.1").
+            # For dotted section numbers (e.g., "5.03"), numbered matches
+            # like "5.04" are the next section, not subsections.
+            if not is_top_level:
+                continue
+            if not clause_num.startswith(section_num + "."):
+                continue
+            clause_name = m.group(2).strip()
+            clause_body = m.group(3).strip()
+            clause_start = start + m.start()
+            clause_end = start + m.end()
+
+            # Clean up the clause body — remove excessive whitespace
+            clause_body = re.sub(r"\s+", " ", clause_body).strip()
+
+            clauses.append(ExtractedClause(
+                section_ref=f"{section_ref}({clause_num})",
+                clause_name=clause_name,
+                text=clause_body,
+                start_offset=clause_start,
+                end_offset=clause_end,
+            ))
+
     # If no subsection clauses were found, try treating the section
     # header itself as a clause (some sections have the covenant directly
     # after the section title without (a)/(b) subsections).
     if not clauses:
-        # Look for "shall not permit" or "will not permit" or "permit"
-        # within the section
+        # V02-004: Expanded covenant-language pattern to match additional
+        # verb forms observed in development chains:
+        #   "shall have and maintain" (STUDY-029)
+        #   "shall not be less than" / "shall not be greater than"
+        #   "may not be less than" / "may not be greater than"
+        #   "shall not permit" / "will not permit" (existing)
+        #   "shall maintain" (existing)
+        #   "may not exceed" / "shall not exceed"
         covenant_match = re.search(
-            r"(shall\s+not\s+permit|will\s+not\s+permit|shall\s+maintain|permit\s+(?:the|its))",
+            r"(shall\s+not\s+permit|will\s+not\s+permit"
+            r"|shall\s+have\s+and\s+maintain|shall\s+maintain"
+            r"|shall\s+(?:not\s+)?be\s+(?:less|greater)\s+than"
+            r"|may\s+not\s+(?:be\s+)?(?:less|greater)\s+than"
+            r"|shall\s+(?:not\s+)?exceed|may\s+not\s+exceed"
+            r"|permit\s+(?:the|its))",
             section_text,
             re.IGNORECASE,
         )
         if covenant_match:
-            # Extract the sentence containing the covenant language
+            # Extract the sentence containing the covenant language.
+            # V02-004: Skip periods that are part of decimal numbers
+            # (e.g., "2.50 to 1.00") when finding sentence boundaries.
+            # A period followed by a digit is a decimal point, not a
+            # sentence boundary.
             sent_start = section_text.rfind(".", 0, covenant_match.start())
+            # Walk backward past decimal-point periods
+            while sent_start != -1 and sent_start + 1 < len(section_text) \
+                    and section_text[sent_start + 1].isdigit():
+                sent_start = section_text.rfind(".", 0, sent_start)
             sent_start = sent_start + 1 if sent_start != -1 else 0
+            # Find sentence end, skipping decimal-point periods
             sent_end = section_text.find(".", covenant_match.end())
+            while sent_end != -1 and sent_end + 1 < len(section_text) \
+                    and section_text[sent_end + 1].isdigit():
+                sent_end = section_text.find(".", sent_end + 1)
             sent_end = sent_end + 1 if sent_end != -1 else len(section_text)
             clause_text = section_text[sent_start:sent_end].strip()
             clause_text = re.sub(r"\s+", " ", clause_text).strip()
 
             if len(clause_text) > 20:
+                # V02-003: Try to extract a covenant name from the
+                # clause text for sections with no subsections. This
+                # allows classification rules to match when the section
+                # header itself doesn't contain a covenant name (e.g.,
+                # "Section 5.03 Financial Covenants" with a single
+                # "Leverage Ratio" covenant in the body text).
+                clause_name = _extract_covenant_name_from_text(clause_text)
+                if clause_name is None:
+                    clause_name = section_ref
+
                 clauses.append(ExtractedClause(
                     section_ref=section_ref,
-                    clause_name=section_ref,
+                    clause_name=clause_name,
                     text=clause_text,
                     start_offset=start + sent_start,
                     end_offset=start + sent_end,
                 ))
 
     return clauses
+
+
+def _extract_covenant_name_from_text(text: str) -> str | None:
+    """Try to identify a covenant name from clause body text.
+
+    V02-003: For sections with no subsections (e.g., STUDY-029's
+    "Section 5.03 Financial Covenants" with a single Leverage Ratio
+    covenant), the fallback clause extraction uses the section_ref as
+    the clause name, which won't match any classification rule. This
+    function searches the clause text for known covenant name patterns
+    so the classification rules can match.
+
+    Returns the matched covenant name, or None if no known pattern is
+    found.
+    """
+    for pattern, _key, _subject, _unit in _COVENANT_NAME_MAP:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            return m.group(0)
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -404,11 +618,14 @@ def _extract_threshold_ratio(text: str) -> tuple[float | None, str | None]:
       "exceed" / "greater than" → "<=" (shall not exceed means <= threshold)
       "less than" / "be less than" → ">=" (shall not be less than means >= threshold)
 
+    V02-001: Also handles colon-separated ratio format "4.00 : 1.0"
+    (STUDY-031 pattern: "not more than 4.00 : 1.0").
+
     Returns (None, None) if no threshold is found.
     """
-    # Ratio pattern: "X.XX to 1.00" or "X.X to 1.0"
+    # Ratio pattern: "X.XX to 1.00" or "X.X to 1.0" or "X.XX : 1.0"
     ratio_match = re.search(
-        r"([\d.]+)\s+to\s+1\.0+",
+        r"([\d.]+)\s*(?:to|:)\s*1\.0+",
         text,
         re.IGNORECASE,
     )
@@ -419,7 +636,11 @@ def _extract_threshold_ratio(text: str) -> tuple[float | None, str | None]:
 
     # Determine operator from language
     text_lower = text.lower()
-    if "exceed" in text_lower or "greater than" in text_lower:
+    # V02-004: "less than or equal to X" means the ratio must be <= X
+    # (the borrower must keep the ratio at or below X). This is different
+    # from "shall not be less than X" which means the ratio must be >= X.
+    # Check "less than or equal" first (more specific) before "less than".
+    if "less than or equal" in text_lower or "exceed" in text_lower or "greater than" in text_lower or "more than" in text_lower:
         operator = "<="
     elif "less than" in text_lower or "be less than" in text_lower:
         operator = ">="
@@ -659,6 +880,13 @@ _COVENANT_NAME_MAP: list[tuple[str, str, str, str]] = [
      "financial_covenant.leverage_ratio", "debt_to_ebitdax", "ratio"),
     (r"Total Leverage Ratio|Total Leverage",
      "financial_covenant.leverage_ratio", "total_leverage_ratio", "ratio"),
+    # V02-001: Additional leverage ratio patterns from development chains
+    (r"Senior Funded Debt to EBITDA",
+     "financial_covenant.leverage_ratio", "senior_funded_debt_to_ebitda", "ratio"),
+    (r"Consolidated Leverage Ratio",
+     "financial_covenant.leverage_ratio", "consolidated_leverage_ratio", "ratio"),
+    (r"Long Term Debt to Long Term Capitalization",
+     "financial_covenant.leverage_ratio", "long_term_debt_to_capitalization", "ratio"),
     # Debt service / fixed charge coverage
     (r"Debt Service Coverage",
      "financial_covenant.debt_service_coverage", "debt_service_coverage_ratio", "ratio"),
@@ -666,6 +894,10 @@ _COVENANT_NAME_MAP: list[tuple[str, str, str, str]] = [
      "financial_covenant.fixed_charge_coverage", "fixed_charge_coverage_ratio", "ratio"),
     (r"Interest Coverage",
      "financial_covenant.interest_coverage", "interest_coverage_ratio", "ratio"),
+    # V02-001: EBIT to Interest Ratio (STUDY-008 pattern) — a form of
+    # interest coverage ratio.
+    (r"EBIT to Interest Ratio",
+     "financial_covenant.interest_coverage", "ebit_to_interest_ratio", "ratio"),
     # Current ratio
     (r"Current Ratio",
      "financial_covenant.current_ratio", "current_ratio", "ratio"),
@@ -681,6 +913,11 @@ _COVENANT_NAME_MAP: list[tuple[str, str, str, str]] = [
      "financial_covenant.texas_ratio", "texas_ratio", "percent"),
     (r"Return on Average Assets",
      "financial_covenant.return_on_average_assets", "return_on_average_assets_ratio", "percent"),
+    # V02-004: Generic "Leverage Ratio" (STUDY-029 pattern) — must come
+    # AFTER all specific leverage ratio patterns (including "Tier 1
+    # Leverage Ratio") so they match first.
+    (r"Leverage Ratio",
+     "financial_covenant.leverage_ratio", "leverage_ratio", "ratio"),
 ]
 
 
