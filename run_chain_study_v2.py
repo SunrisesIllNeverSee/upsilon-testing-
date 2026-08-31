@@ -25,25 +25,20 @@ Usage:
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from chain_reconstruction import AmendmentStep, IssuerChain
-from chain_study_chains import existing_study_chains, new_study_chains
+from chain_study_chains import existing_study_chains
 from commitment_extractor import ExtractionResult
 from gt_extractor import extract_ground_truth_for_chain
-from s0_extractor import extract_s0_state_for_chain
-from semantic_pipeline import (
-    SemanticPipelineResult,
-    run_semantic_pipeline,
-)
 
 # Reuse v1 infrastructure for failure classification and metrics
 from run_chain_study import (
-    AggregateMetrics,
     FAILURE_CATEGORIES,
+    AggregateMetrics,
     IssuerStudyResult,
     _compute_supported_field_agreement,
     _extract_cik,
@@ -51,6 +46,128 @@ from run_chain_study import (
     classify_failure,
     compute_aggregate_metrics,
 )
+from s0_extractor import extract_s0_state_for_chain
+from semantic_pipeline import (
+    SemanticPipelineResult,
+    run_semantic_pipeline,
+)
+
+# ---------------------------------------------------------------------------
+# v2 failure taxonomy — extraction-aware classification
+# ---------------------------------------------------------------------------
+#
+# The v1 taxonomy attributes all failures to the reconstruction pipeline.
+# In v2, a FINAL_STATE_MISMATCH could be caused by a bad GT extraction
+# (not a bad reconstruction), and a PARSER_NO_INSTRUCTIONS could be
+# caused by an empty S0 origin state (not an unsupported amendment
+# format). These new categories separate extractor failure from
+# reconstruction failure so the failure matrix is not misleading.
+#
+# Extraction status values:
+#   "ok"                  — extraction succeeded, no validation queue items
+#   "s0_incomplete"       — S0 extracted some commitments but has VQ items
+#   "gt_incomplete"       — GT extracted some commitments but has VQ items
+#   "s0_and_gt_incomplete"— both S0 and GT have VQ items
+#   "s0_failure"          — S0 document exists but 0 commitments extracted
+#   "gt_failure"          — CMP document exists but 0 commitments extracted
+#   "n/a"                 — existing/manual chains (no automated extraction)
+
+EXTRACTION_FAILURE_CATEGORIES = {
+    "S0_EXTRACTION_FAILURE": (
+        "S0 document exists but extractor returned 0 commitments. "
+        "Reconstruction had no origin state — any downstream result "
+        "is meaningless, not a reconstruction failure."
+    ),
+    "GT_EXTRACTION_FAILURE": (
+        "CMP document exists but GT extractor returned 0 commitments. "
+        "Cannot measure reconstruction accuracy — this is an extractor "
+        "limitation, not a reconstruction failure."
+    ),
+}
+
+
+def _compute_extraction_status(
+    s0_result: ExtractionResult,
+    gt_result: ExtractionResult | None,
+    is_manual: bool,
+) -> str:
+    """Compute the extraction status for a chain.
+
+    Returns one of: "ok", "s0_incomplete", "gt_incomplete",
+    "s0_and_gt_incomplete", "s0_failure", "gt_failure", "n/a".
+    """
+    if is_manual:
+        return "n/a"
+
+    s0_has_commitments = len(s0_result.commitments) > 0
+    s0_has_vq = len(s0_result.validation_queue) > 0
+    s0_has_text = s0_result.text_length > 0
+
+    gt_has_commitments = gt_result is not None and len(gt_result.commitments) > 0
+    gt_has_vq = gt_result is not None and len(gt_result.validation_queue) > 0
+    gt_has_text = gt_result is not None and gt_result.text_length > 0
+
+    # Total extraction failures take precedence
+    if s0_has_text and not s0_has_commitments:
+        return "s0_failure"
+    if gt_has_text and not gt_has_commitments:
+        return "gt_failure"
+
+    # Incomplete extractions (some commitments, but validation queue non-empty)
+    s0_incomplete = s0_has_commitments and s0_has_vq
+    gt_incomplete = gt_has_commitments and gt_has_vq
+
+    if s0_incomplete and gt_incomplete:
+        return "s0_and_gt_incomplete"
+    if s0_incomplete:
+        return "s0_incomplete"
+    if gt_incomplete:
+        return "gt_incomplete"
+
+    return "ok"
+
+
+def classify_failure_v2(
+    pipe_result: SemanticPipelineResult,
+    chain: IssuerChain,
+    has_ground_truth: bool,
+    s0_result: ExtractionResult,
+    gt_result: ExtractionResult | None,
+    extraction_status: str,
+) -> str:
+    """Classify failure for v2, distinguishing extractor from reconstruction failure.
+
+    Precedence:
+      1. S0_EXTRACTION_FAILURE — S0 document exists but 0 commitments
+         extracted. Reconstruction is meaningless regardless of pipeline
+         behavior.
+      2. GT_EXTRACTION_FAILURE — CMP document exists but 0 commitments
+         extracted. Cannot measure accuracy; this is NOT the same as
+         NO_GROUND_TRUTH (which means no CMP document at all).
+      3. v1 classify_failure — for all other cases, the v1 category
+         applies. If the v1 category is FINAL_STATE_MISMATCH and
+         extraction was incomplete, the mismatch could be extraction
+         error, not reconstruction error — but we keep the v1 category
+         and flag it via extraction_status so the report can distinguish.
+    """
+    # Total extraction failures take precedence over reconstruction
+    # categories. A PARSER_NO_INSTRUCTIONS with empty S0 is not a parser
+    # failure — it's an S0 extraction failure.
+    if extraction_status == "s0_failure":
+        return "S0_EXTRACTION_FAILURE"
+
+    # GT extraction failure: CMP exists but 0 commitments. This is
+    # distinct from NO_GROUND_TRUTH (no CMP document). The v1 classifier
+    # would return NO_GROUND_TRUTH or SYSTEM_INGESTION_PASS here, which
+    # misattributes the cause.
+    if extraction_status == "gt_failure":
+        return "GT_EXTRACTION_FAILURE"
+
+    # For all other cases, use the v1 classifier. If extraction was
+    # incomplete, the extraction_status field carries the caveat —
+    # the report uses it to flag FINAL_STATE_MISMATCH chains where
+    # the mismatch could be extraction error.
+    return classify_failure(pipe_result, chain, has_ground_truth)
 
 
 # ---------------------------------------------------------------------------
@@ -62,7 +179,9 @@ from run_chain_study import (
 class IssuerStudyResultV2(IssuerStudyResult):
     """Per-issuer capture for Development Chain Study v2.
 
-    Extends v1 with S0 and GT extraction metadata.
+    Extends v1 with S0 and GT extraction metadata, plus an
+    extraction_status field that distinguishes extractor failure
+    from reconstruction failure.
     """
 
     # S0 extraction metadata
@@ -81,6 +200,10 @@ class IssuerStudyResultV2(IssuerStudyResult):
     # v2-specific metrics
     s0_extraction_success: bool = False  # at least 1 commitment extracted
     gt_extraction_success: bool = False  # at least 1 commitment extracted
+
+    # Extraction-aware classification: distinguishes extractor failure
+    # from reconstruction failure. See _compute_extraction_status.
+    extraction_status: str = "n/a"  # "ok", "s0_incomplete", "gt_failure", etc.
 
 
 # ---------------------------------------------------------------------------
@@ -230,7 +353,8 @@ def build_v2_issuer_result(
     # Determine GT extraction source
     # Existing chains use hand-extracted ground truth (source_label="CMP-manual")
     # New chains use the v0.1 GT extractor (source_label="CMP")
-    if s0_result.source_label == "S0-manual":
+    is_manual = s0_result.source_label == "S0-manual"
+    if is_manual:
         # Existing chain — hand-extracted ground truth
         gt_source = "manual"
     elif gt_result is not None:
@@ -240,8 +364,22 @@ def build_v2_issuer_result(
     else:
         gt_source = "none"
 
+    # Compute extraction status (distinguishes extractor failure from
+    # reconstruction failure — see _compute_extraction_status).
+    extraction_status = _compute_extraction_status(
+        s0_result, gt_result, is_manual,
+    )
+
+    # Reclassify the failure category using the v2 extraction-aware
+    # classifier. The v1 base result used classify_failure which doesn't
+    # know about extraction; we override it here.
+    has_gt = chain.ground_truth_state is not None and len(chain.ground_truth_state) > 0
+    v2_category = classify_failure_v2(
+        pipe_result, chain, has_gt, s0_result, gt_result, extraction_status,
+    )
+
     return IssuerStudyResultV2(
-        **base.__dict__,
+        **{k: v for k, v in base.__dict__.items() if k != "failure_category"},
         s0_extraction_commitments=len(s0_result.commitments),
         s0_extraction_validation_queue=len(s0_result.validation_queue),
         s0_extraction_coverage=round(s0_result.extraction_coverage, 4),
@@ -253,6 +391,8 @@ def build_v2_issuer_result(
         gt_extraction_source=gt_source,
         s0_extraction_success=len(s0_result.commitments) > 0,
         gt_extraction_success=(gt_result is not None and len(gt_result.commitments) > 0),
+        extraction_status=extraction_status,
+        failure_category=v2_category,
     )
 
 
@@ -392,7 +532,6 @@ def compute_v2_aggregate_metrics(
     """Compute v2 aggregate metrics."""
     base = compute_aggregate_metrics(issuer_results, pipeline_results)
 
-    total = len(issuer_results)
     new_chains = [r for r in issuer_results if r.gt_extraction_source != "manual"]
 
     s0_success = sum(1 for r in new_chains if r.s0_extraction_success)
@@ -505,6 +644,7 @@ def render_v2_study_report(
         )
         lines.append(f"{r.chain_id}  {r.issuer_name[:40]:40s}")
         lines.append(f"  has ground truth:         {gt_label} (source: {r.gt_extraction_source})")
+        lines.append(f"  extraction status:        {r.extraction_status}")
         lines.append(f"  S0 extracted commitments: {r.s0_extraction_commitments} (coverage: {r.s0_extraction_coverage:.1%})")
         lines.append(f"  GT extracted commitments: {r.gt_extraction_commitments} (coverage: {r.gt_extraction_coverage:.1%})")
         lines.append(f"  parser-detected instr:    {r.parser_detected_instructions}")
@@ -573,15 +713,57 @@ def render_v2_study_report(
     # --- Failure taxonomy ---
     lines.append("## Failure Taxonomy")
     lines.append("")
+    lines.append("> Extractor failures (S0_EXTRACTION_FAILURE, GT_EXTRACTION_FAILURE)")
+    lines.append("> are distinct from reconstruction failures. A chain classified as")
+    lines.append("> an extractor failure did not reach the reconstruction measurement")
+    lines.append("> loop — the failure is in the extractor, not in Upsilon.")
+    lines.append("")
     lines.append("| Category | Count | Description |")
     lines.append("|---|---|---|")
     category_counts: dict[str, int] = {}
     for r in issuer_results:
         category_counts[r.failure_category] = category_counts.get(r.failure_category, 0) + 1
+    all_categories = {**FAILURE_CATEGORIES, **EXTRACTION_FAILURE_CATEGORIES}
     for cat, count in sorted(category_counts.items(), key=lambda x: -x[1]):
-        desc = FAILURE_CATEGORIES.get(cat, "")
+        desc = all_categories.get(cat, "")
         lines.append(f"| {cat} | {count} | {desc} |")
     lines.append("")
+
+    # --- Mismatch attribution ---
+    # For chains with final-state mismatches (whether classified as
+    # FINAL_STATE_MISMATCH or MULTIPLE_FAILURES), flag whether the
+    # mismatch could be extraction error (incomplete S0 or GT) rather
+    # than reconstruction error. This is the key distinction: a bad GT
+    # extraction should not look like a bad reconstruction.
+    mismatch_chains = [
+        r for r in issuer_results
+        if r.has_ground_truth
+        and r.final_state_exact_agreement is not None
+        and r.final_state_exact_agreement < 1.0
+    ]
+    if mismatch_chains:
+        lines.append("### Final-State Mismatch Attribution")
+        lines.append("")
+        lines.append("> Chains with final-state mismatches where extraction was")
+        lines.append("> incomplete could have extraction-error contribution, not just")
+        lines.append("> reconstruction error. The extraction_status column flags these.")
+        lines.append("")
+        lines.append("| Chain | Category | Extraction Status | S0 VQ | GT VQ | Note |")
+        lines.append("|---|---|---|---|---|---|")
+        for r in mismatch_chains:
+            note = ""
+            if r.extraction_status in ("s0_incomplete", "s0_and_gt_incomplete"):
+                note = "S0 incomplete — origin state may be missing commitments"
+            if r.extraction_status in ("gt_incomplete", "s0_and_gt_incomplete"):
+                note = "GT incomplete — ground truth may be missing commitments" if not note else "Both S0 and GT incomplete"
+            if not note:
+                note = "Extraction OK — mismatch is reconstruction error"
+            lines.append(
+                f"| {r.chain_id} | {r.failure_category} | {r.extraction_status} | "
+                f"{r.s0_extraction_validation_queue} | "
+                f"{r.gt_extraction_validation_queue} | {note} |"
+            )
+        lines.append("")
 
     # --- Extraction detail ---
     lines.append("## Extraction Detail")
@@ -625,15 +807,15 @@ def render_v2_study_report(
     lines.append("current architecture stop?")
     lines.append("```")
     lines.append("")
-    lines.append(f"- **Safety**: False authoritative promotion rate is")
+    lines.append("- **Safety**: False authoritative promotion rate is")
     lines.append(f"  {b.false_authoritative_promotion_rate:.1%} ({b.false_authoritative_promotion_count} violations).")
     lines.append("")
     lines.append(f"- **S0 extraction**: {metrics.chains_with_extracted_s0}/{len(issuer_results) - 3} new chains")
-    lines.append(f"  had at least 1 commitment extracted from S0. Average coverage:")
+    lines.append("  had at least 1 commitment extracted from S0. Average coverage:")
     lines.append(f"  {metrics.s0_extraction_coverage_avg:.1%}.")
     lines.append("")
     lines.append(f"- **GT extraction**: {metrics.chains_with_extracted_gt}/{metrics.chains_with_cmp_document}")
-    lines.append(f"  chains with CMP documents had at least 1 commitment extracted.")
+    lines.append("  chains with CMP documents had at least 1 commitment extracted.")
     lines.append(f"  Average coverage: {metrics.gt_extraction_coverage_avg:.1%}.")
     lines.append("")
     lines.append(f"- **Reconstruction accuracy**: {recon} for chains with ground truth.")
@@ -687,6 +869,7 @@ def main() -> int:
             f"mapped={pipe_result.total_mapped}  "
             f"unresolved={pipe_result.total_unresolved}  "
             f"incorrect={len(pipe_result.incorrect_mutations)}  "
+            f"ext={issuer_result.extraction_status}  "
             f"category={issuer_result.failure_category}"
         )
 
@@ -717,6 +900,7 @@ def main() -> int:
                 "cik": r.cik,
                 "has_ground_truth": r.has_ground_truth,
                 "gt_extraction_source": r.gt_extraction_source,
+                "extraction_status": r.extraction_status,
                 "s0_extraction_commitments": r.s0_extraction_commitments,
                 "s0_extraction_validation_queue": r.s0_extraction_validation_queue,
                 "s0_extraction_coverage": r.s0_extraction_coverage,
