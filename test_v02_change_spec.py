@@ -9,6 +9,10 @@ Tests cover:
   - Mapper changes (priority 3) have "DO NOT implement" notes
   - Change spec references the frozen commit/tag
   - Report rendering contains all changes
+  - Every change has a MUST FIX / SHOULD FIX / DEFER / REJECT classification
+  - Classification is consistent with priority and evidence
+  - Proposed v0.2 scope contains only MUST FIX + SHOULD FIX
+  - Scope is proposed (pending human review), not pre-locked
 """
 from __future__ import annotations
 
@@ -18,7 +22,13 @@ from pathlib import Path
 import pytest
 
 from build_failure_matrix import FAILURE_CAUSES
-from v02_change_spec import V02_CHANGES, render_change_spec
+from v02_change_spec import (
+    CLASSIFICATIONS,
+    PROPOSED_SCOPE_CLASSIFICATIONS,
+    V02_CHANGES,
+    proposed_v02_scope,
+    render_change_spec,
+)
 
 # ---------------------------------------------------------------------------
 # Change spec structure
@@ -35,7 +45,8 @@ class TestChangeSpecStructure:
             assert change["id"].startswith("V02-")
 
     def test_every_change_has_required_fields(self):
-        required = {"id", "title", "priority", "layer", "failure_causes",
+        required = {"id", "title", "priority", "layer", "classification",
+                    "classification_rationale", "failure_causes",
                     "affected_chains", "evidence", "change", "risk",
                     "regression_test", "touches"}
         for change in V02_CHANGES:
@@ -68,6 +79,101 @@ class TestChangeSpecStructure:
                 assert cause in FAILURE_CAUSES, (
                     f"Change {change['id']} references unknown cause: {cause}"
                 )
+
+
+# ---------------------------------------------------------------------------
+# Classification scheme (MUST FIX / SHOULD FIX / DEFER / REJECT)
+# ---------------------------------------------------------------------------
+
+
+class TestClassificationScheme:
+    def test_every_change_has_valid_classification(self):
+        """Every change must have a classification from the 4-value scheme."""
+        for change in V02_CHANGES:
+            assert change["classification"] in CLASSIFICATIONS, (
+                f"Change {change['id']} has invalid classification: "
+                f"{change['classification']}"
+            )
+
+    def test_every_change_has_non_empty_classification_rationale(self):
+        """Every change must have a non-empty classification rationale."""
+        for change in V02_CHANGES:
+            assert change.get("classification_rationale"), (
+                f"Change {change['id']} has empty classification_rationale"
+            )
+
+    def test_all_four_classifications_are_used(self):
+        """All four classification values must appear at least once."""
+        used = {c["classification"] for c in V02_CHANGES}
+        assert used == set(CLASSIFICATIONS.keys()), (
+            f"Missing classifications: {set(CLASSIFICATIONS.keys()) - used}"
+        )
+
+    def test_must_fix_changes_are_extraction_layer(self):
+        """MUST FIX changes must be extraction layer (the publication bottleneck)."""
+        for change in V02_CHANGES:
+            if change["classification"] == "MUST FIX":
+                assert change["layer"] == "extraction", (
+                    f"MUST FIX change {change['id']} is not extraction layer"
+                )
+
+    def test_must_fix_changes_affect_multiple_chains(self):
+        """MUST FIX changes should affect multiple chains (high evidence strength)."""
+        for change in V02_CHANGES:
+            if change["classification"] == "MUST FIX":
+                assert len(change["affected_chains"]) >= 2, (
+                    f"MUST FIX change {change['id']} affects only "
+                    f"{len(change['affected_chains'])} chain — should be SHOULD FIX"
+                )
+
+    def test_reject_changes_are_priority_3(self):
+        """REJECT changes should be priority 3 (mapper, lowest priority)."""
+        for change in V02_CHANGES:
+            if change["classification"] == "REJECT":
+                assert change["priority"] == 3, (
+                    f"REJECT change {change['id']} is priority "
+                    f"{change['priority']}, not 3"
+                )
+
+    def test_defer_changes_have_wait_rationale(self):
+        """DEFER changes must explain why they wait (not just 'lower priority')."""
+        wait_keywords = (
+            "wait", "defer", "until", "after", "reassess",
+            "re-acqui", "complexity", "architecture",
+        )
+        for change in V02_CHANGES:
+            if change["classification"] == "DEFER":
+                rationale = change["classification_rationale"].lower()
+                assert any(kw in rationale for kw in wait_keywords), (
+                    f"DEFER change {change['id']} rationale does not explain "
+                    f"why it waits: {change['classification_rationale']}"
+                )
+
+    def test_proposed_scope_excludes_defer_and_reject(self):
+        """Proposed v0.2 scope must exclude DEFER and REJECT changes."""
+        proposed = proposed_v02_scope()
+        for change in proposed:
+            assert change["classification"] in PROPOSED_SCOPE_CLASSIFICATIONS, (
+                f"Proposed scope includes {change['classification']} change {change['id']}"
+            )
+
+    def test_proposed_scope_is_not_empty(self):
+        """Proposed v0.2 scope must contain at least one change."""
+        proposed = proposed_v02_scope()
+        assert len(proposed) > 0, "Proposed v0.2 scope is empty"
+
+    def test_proposed_scope_is_subset_of_all_changes(self):
+        """Proposed scope must be a proper subset of all changes."""
+        proposed = proposed_v02_scope()
+        assert len(proposed) < len(V02_CHANGES), (
+            "Proposed scope equals all changes — nothing was cut"
+        )
+
+    def test_exactly_eleven_changes_exist(self):
+        """The v0.2 change spec must contain exactly 11 changes."""
+        assert len(V02_CHANGES) == 11, (
+            f"Expected 11 changes, got {len(V02_CHANGES)}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +271,32 @@ class TestReportRendering:
         report = render_change_spec()
         assert "Expected Impact" in report
 
+    def test_report_contains_classification_scheme(self):
+        report = render_change_spec()
+        assert "Classification Scheme" in report
+        assert "MUST FIX" in report
+        assert "SHOULD FIX" in report
+        assert "DEFER" in report
+        assert "REJECT" in report
+
+    def test_report_contains_proposed_scope(self):
+        report = render_change_spec()
+        assert "Proposed v0.2 Scope" in report
+        assert "MUST FIX + SHOULD FIX" in report
+        assert "pending review" in report.lower()
+
+    def test_report_contains_classification_for_each_change(self):
+        report = render_change_spec()
+        for change in V02_CHANGES:
+            assert change["classification"] in report, (
+                f"Classification {change['classification']} for "
+                f"{change['id']} not in report"
+            )
+
+    def test_report_contains_classification_rationale_for_each_change(self):
+        report = render_change_spec()
+        assert "Classification rationale" in report
+
 
 # ---------------------------------------------------------------------------
 # Cross-module invariant: change spec traces to failure matrix
@@ -242,3 +374,31 @@ class TestChangeSpecJSON:
         with open(CHANGE_SPEC_JSON, encoding="utf-8") as f:
             data = json.load(f)
         assert len(data["changes"]) == len(V02_CHANGES)
+
+    def test_json_has_classifications(self):
+        with open(CHANGE_SPEC_JSON, encoding="utf-8") as f:
+            data = json.load(f)
+        assert "classifications" in data
+        assert "MUST FIX" in data["classifications"]
+        assert "SHOULD FIX" in data["classifications"]
+        assert "DEFER" in data["classifications"]
+        assert "REJECT" in data["classifications"]
+
+    def test_json_has_proposed_scope(self):
+        with open(CHANGE_SPEC_JSON, encoding="utf-8") as f:
+            data = json.load(f)
+        assert "proposed_scope" in data
+        assert data["proposed_scope"]["change_count"] == len(proposed_v02_scope())
+        proposed_ids = set(data["proposed_scope"]["change_ids"])
+        expected_ids = {c["id"] for c in proposed_v02_scope()}
+        assert proposed_ids == expected_ids, "Proposed scope IDs mismatch"
+        assert data["proposed_scope"]["status"] == "pending human review"
+
+    def test_json_every_change_has_classification(self):
+        with open(CHANGE_SPEC_JSON, encoding="utf-8") as f:
+            data = json.load(f)
+        for change in data["changes"]:
+            assert "classification" in change, (
+                f"Change {change['id']} missing classification in JSON"
+            )
+            assert change["classification"] in CLASSIFICATIONS

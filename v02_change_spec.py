@@ -10,6 +10,33 @@ Priority order (per user instruction):
   3. Semantic mapper expansion (only if the failure matrix proves it
      is responsible as a primary bottleneck)
 
+Each change carries a classification from the evidence review:
+
+    MUST FIX   — directly justified by the failure matrix, addresses the
+                 publication bottleneck (S0/GT extraction), multiple
+                 chains affected, clear causal evidence.
+    SHOULD FIX — justified by the failure matrix but either affects
+                 fewer chains, is an acquisition-side fix rather than
+                 an extractor fix, or is lower-impact. Included in the
+                 proposed v0.2 scope.
+    DEFER      — justified by evidence but should wait: parser fixes
+                 that only matter after extraction is fixed, extraction
+                 changes that depend on other extraction fixes being
+                 implemented first (so the deferred change can be
+                 reassessed for residual need), high-complexity
+                 changes, or changes that may require re-acquisition
+                 of source documents. Excluded from v0.2 scope.
+    REJECT     — not a real failure fix. The system is correctly
+                 handling the case; the change only improves labeling
+                 or classification without fixing a defect. Excluded
+                 from v0.2 scope.
+
+The proposed v0.2 scope is: MUST FIX + SHOULD FIX.
+DEFER and REJECT are documented for the record but not implemented.
+
+NOTE: The scope is PROPOSED pending human review. The reviewer
+authorizes the final scope before any code changes.
+
 Output:
     results/v02_change_spec.md — human-readable change spec for review
     results/v02_change_spec.json — machine-readable change spec
@@ -18,6 +45,48 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Classification scheme
+# ---------------------------------------------------------------------------
+
+CLASSIFICATIONS = {
+    "MUST FIX": (
+        "Directly justified by the failure matrix. Addresses the "
+        "publication bottleneck (S0/GT extraction). Multiple chains "
+        "affected with clear causal evidence. Included in the proposed "
+        "v0.2 scope."
+    ),
+    "SHOULD FIX": (
+        "Justified by the failure matrix but either affects fewer "
+        "chains, is an acquisition-side fix, or is lower-impact. "
+        "Included in the proposed v0.2 scope."
+    ),
+    "DEFER": (
+        "Justified by evidence but should wait: parser fixes that only "
+        "matter after extraction is fixed, extraction changes that "
+        "depend on other extraction fixes being implemented first, "
+        "high-complexity changes, or changes that may require "
+        "re-acquisition. Excluded from v0.2 scope."
+    ),
+    "REJECT": (
+        "Not a real failure fix. The system is correctly handling the "
+        "case; the change only improves labeling. Excluded from v0.2 "
+        "scope."
+    ),
+}
+
+# The proposed v0.2 scope: MUST FIX and SHOULD FIX changes are
+# recommended for implementation pending human review. DEFER and REJECT
+# are documented for the record. The reviewer authorizes the final
+# scope before any code changes.
+PROPOSED_SCOPE_CLASSIFICATIONS = {"MUST FIX", "SHOULD FIX"}
+
+
+def proposed_v02_scope() -> list[dict]:
+    """Return the changes in the proposed v0.2 scope (pending review)."""
+    return [c for c in V02_CHANGES if c["classification"] in PROPOSED_SCOPE_CLASSIFICATIONS]
+
 
 # ---------------------------------------------------------------------------
 # v0.2 change spec — derived from failure matrix evidence
@@ -32,6 +101,14 @@ V02_CHANGES = [
         "title": "Expand section detection to non-'Financial Covenants' headers",
         "priority": 1,
         "layer": "extraction",
+        "classification": "MUST FIX",
+        "classification_rationale": (
+            "4 chains fail S0 extraction due to non-standard section "
+            "headers. This is the largest single cause of S0 extraction "
+            "failure in the matrix and directly blocks the publication "
+            "bottleneck. All 4 chains have confirmed covenant content "
+            "under alternative headers."
+        ),
         "failure_causes": ["S0_EXTRACTION_FAILURE"],
         "affected_chains": [
             "STUDY-004", "STUDY-008", "STUDY-020", "STUDY-031",
@@ -74,6 +151,14 @@ V02_CHANGES = [
         "title": "Fix TOC-skip logic for page numbers on separate lines",
         "priority": 1,
         "layer": "extraction",
+        "classification": "SHOULD FIX",
+        "classification_rationale": (
+            "Single chain (STUDY-021) but clear, well-isolated bug with "
+            "low risk. The TOC-skip logic misses page numbers on "
+            "separate lines, causing the extractor to bind to the TOC "
+            "entry instead of the section body. Justified by evidence "
+            "but affects only 1 chain."
+        ),
         "failure_causes": ["S0_EXTRACTION_FAILURE"],
         "affected_chains": ["STUDY-021"],
         "evidence": (
@@ -106,6 +191,14 @@ V02_CHANGES = [
         "title": "Add numbered-subsection clause extraction (10.1, 10.2 format)",
         "priority": 1,
         "layer": "extraction",
+        "classification": "MUST FIX",
+        "classification_rationale": (
+            "2 chains fail S0 extraction due to numbered-subsection "
+            "clause format (10.1, 10.2). This is a common credit "
+            "agreement format, not an edge case. Both chains have "
+            "confirmed covenant content in numbered subsections. "
+            "Directly addresses the extraction bottleneck."
+        ),
         "failure_causes": ["S0_EXTRACTION_FAILURE"],
         "affected_chains": ["STUDY-021", "STUDY-029"],
         "evidence": (
@@ -141,6 +234,13 @@ V02_CHANGES = [
         "title": "Expand fallback covenant-language pattern",
         "priority": 1,
         "layer": "extraction",
+        "classification": "SHOULD FIX",
+        "classification_rationale": (
+            "Single chain (STUDY-029) but clear evidence: the fallback "
+            "pattern misses 'shall have and maintain' verb form. Low "
+            "risk, small change. Also benefits V02-003 which targets "
+            "the same chain."
+        ),
         "failure_causes": ["S0_EXTRACTION_FAILURE"],
         "affected_chains": ["STUDY-029"],
         "evidence": (
@@ -171,6 +271,16 @@ V02_CHANGES = [
         "title": "Add S0 discovery validation (document type checking)",
         "priority": 1,
         "layer": "extraction",
+        "classification": "SHOULD FIX",
+        "classification_rationale": (
+            "3 chains have S0_DISCOVERY_FAILURE (wrong document "
+            "acquired). This is an acquisition pipeline fix, not an "
+            "extractor fix — it correctly attributes failures and "
+            "enables re-acquisition rather than improving extraction "
+            "logic. Important for correct failure attribution but "
+            "does not directly improve the extractor's success rate "
+            "on correctly-acquired documents."
+        ),
         "failure_causes": ["S0_DISCOVERY_FAILURE"],
         "affected_chains": ["STUDY-006", "STUDY-012", "STUDY-014"],
         "evidence": (
@@ -206,6 +316,13 @@ V02_CHANGES = [
         "title": "Add GT discovery validation (CMP document type checking)",
         "priority": 1,
         "layer": "extraction",
+        "classification": "SHOULD FIX",
+        "classification_rationale": (
+            "Single chain (STUDY-016) with GT_DISCOVERY_FAILURE. "
+            "Acquisition validation fix that correctly attributes the "
+            "failure and enables re-acquisition. Low risk, but only "
+            "1 chain and does not improve extraction logic directly."
+        ),
         "failure_causes": ["GT_DISCOVERY_FAILURE"],
         "affected_chains": ["STUDY-016"],
         "evidence": (
@@ -233,6 +350,17 @@ V02_CHANGES = [
         "title": "Add schedule/exhibit-based covenant extraction",
         "priority": 1,
         "layer": "extraction",
+        "classification": "DEFER",
+        "classification_rationale": (
+            "Single chain (STUDY-020) with schedule-based covenants. "
+            "The change itself notes this is 'lower-priority since "
+            "schedule-based covenants are less common' and requires "
+            "table parsing logic (medium complexity). STUDY-020 is "
+            "also targeted by V02-001 (non-standard headers), which "
+            "may partially address it. Defer until V02-001 is "
+            "implemented and we can assess whether schedule-specific "
+            "parsing is still needed."
+        ),
         "failure_causes": ["S0_EXTRACTION_FAILURE"],
         "affected_chains": ["STUDY-020"],
         "evidence": (
@@ -268,6 +396,16 @@ V02_CHANGES = [
         "title": "Add redline/composite amendment format support",
         "priority": 2,
         "layer": "transformation",
+        "classification": "DEFER",
+        "classification_rationale": (
+            "3 chains affected but this is a parser fix (Priority 2). "
+            "The prompt's priority order is explicit: parser fixes "
+            "only matter after extraction is fixed. Additionally, the "
+            "change notes 'High complexity' and that .txt files may "
+            "have lost strikethrough/underline formatting, requiring "
+            "re-acquisition of HTML versions. Defer until extraction "
+            "is fixed and source documents are re-acquired in HTML."
+        ),
         "failure_causes": ["UNSUPPORTED_DOCUMENT_FORMAT", "PARSER_FAILURE"],
         "affected_chains": ["STUDY-010", "STUDY-027", "STUDY-028"],
         "evidence": (
@@ -303,6 +441,16 @@ V02_CHANGES = [
         "title": "Add full-restatement amendment format support",
         "priority": 2,
         "layer": "transformation",
+        "classification": "DEFER",
+        "classification_rationale": (
+            "Single chain (STUDY-013) with full-restatement format. "
+            "The change notes 'Medium-high complexity' and that it "
+            "'changes the pipeline architecture' (full restatement "
+            "must be processed as a new S0, not as an amendment). "
+            "Parser fix (Priority 2) that should wait until extraction "
+            "is fixed. Architectural change is too risky for v0.2 "
+            "without separate design review."
+        ),
         "failure_causes": ["UNSUPPORTED_DOCUMENT_FORMAT", "PARSER_FAILURE"],
         "affected_chains": ["STUDY-013"],
         "evidence": (
@@ -341,6 +489,17 @@ V02_CHANGES = [
         "title": "Add definition-amendment mapping support",
         "priority": 3,
         "layer": "transformation",
+        "classification": "REJECT",
+        "classification_rationale": (
+            "The mapper is CORRECTLY rejecting definition changes — "
+            "these are out of scope (definition amendments are not "
+            "commitment mutations). The change only improves the "
+            "classification label from generic UNRESOLVED to "
+            "'definition change — out of scope'. The unresolved count "
+            "stays the same. This is not a failure fix; it is a "
+            "labeling improvement. The high unresolved rate for "
+            "STUDY-007 is expected behavior, not a defect."
+        ),
         "failure_causes": ["SEMANTIC_MAPPING_FAILURE"],
         "affected_chains": ["STUDY-007"],
         "evidence": (
@@ -384,6 +543,16 @@ V02_CHANGES = [
         "title": "Add consent/waiver amendment classification",
         "priority": 3,
         "layer": "transformation",
+        "classification": "REJECT",
+        "classification_rationale": (
+            "Same rationale as V02-010. The mapper is correctly "
+            "rejecting consent/waiver language — these are not "
+            "commitment mutations. The change only improves the "
+            "classification label. The 100% unresolved rate for these "
+            "4 chains is expected behavior for non-mutation amendments, "
+            "not a defect. The failure matrix flags SEMANTIC_MAPPING_"
+            "FAILURE, but the mapper is working as designed."
+        ),
         "failure_causes": ["SEMANTIC_MAPPING_FAILURE"],
         "affected_chains": ["STUDY-005", "STUDY-015", "STUDY-017", "STUDY-026"],
         "evidence": (
@@ -433,6 +602,27 @@ def render_change_spec() -> str:
     lines.append("in the 25-chain development set. No change is added because it")
     lines.append("\"sounds useful.\" The failure matrix is the sole evidence source.")
     lines.append("")
+    lines.append("## Classification Scheme")
+    lines.append("")
+    lines.append("Each change is classified by evidence strength:")
+    lines.append("")
+    for cls, desc in CLASSIFICATIONS.items():
+        lines.append(f"- **{cls}**: {desc}")
+    lines.append("")
+    lines.append("## Proposed v0.2 Scope (pending review)")
+    lines.append("")
+    proposed = proposed_v02_scope()
+    lines.append(f"The proposed v0.2 scope is **MUST FIX + SHOULD FIX** ({len(proposed)} changes).")
+    lines.append("DEFER and REJECT are documented for the record but NOT implemented.")
+    lines.append("The reviewer authorizes the final scope before any code changes.")
+    lines.append("")
+    for cls in ("MUST FIX", "SHOULD FIX", "DEFER", "REJECT"):
+        cls_changes = [c for c in V02_CHANGES if c["classification"] == cls]
+        ids = ", ".join(c["id"] for c in cls_changes)
+        lines.append(f"- **{cls}** ({len(cls_changes)}): {ids}")
+    lines.append("")
+
+    # Priority order
     lines.append("## Priority Order")
     lines.append("")
     lines.append("1. **S0/GT extraction coverage** — the publication bottleneck.")
@@ -457,10 +647,14 @@ def render_change_spec() -> str:
         for change in changes:
             lines.append(f"### {change['id']}: {change['title']}")
             lines.append("")
+            lines.append(f"**Classification**: {change['classification']}")
             lines.append(f"**Layer**: {change['layer']}")
             lines.append(f"**Failure causes**: {', '.join(change['failure_causes'])}")
             lines.append(f"**Affected chains**: {', '.join(change['affected_chains'])} "
                          f"({len(change['affected_chains'])} chains)")
+            lines.append("")
+            lines.append("**Classification rationale:**")
+            lines.append(f"  {change['classification_rationale']}")
             lines.append("")
             lines.append("**Evidence:**")
             lines.append(f"  {change['evidence']}")
@@ -483,24 +677,31 @@ def render_change_spec() -> str:
     # Summary table
     lines.append("## Summary")
     lines.append("")
-    lines.append("| ID | Priority | Layer | Title | Affected Chains |")
-    lines.append("|----|----------|-------|-------|-----------------|")
+    lines.append("| ID | Classification | Priority | Layer | Title | Affected Chains |")
+    lines.append("|----|---------------|----------|-------|-------|-----------------|")
     for change in V02_CHANGES:
         lines.append(
-            f"| {change['id']} | {change['priority']} | {change['layer']} | "
-            f"{change['title'][:60]} | {len(change['affected_chains'])} |"
+            f"| {change['id']} | {change['classification']} | {change['priority']} | "
+            f"{change['layer']} | "
+            f"{change['title'][:50]} | {len(change['affected_chains'])} |"
         )
     lines.append("")
 
     # Expected impact
-    lines.append("## Expected Impact (if all Priority 1 changes are implemented)")
+    lines.append("## Expected Impact (proposed scope: MUST FIX + SHOULD FIX)")
     lines.append("")
     lines.append("```text")
     lines.append("S0 extraction success rate:")
     lines.append("  Current:  12/22 (54.5%)")
-    lines.append("  Target:   18/22 (81.8%) — +6 from V02-001, V02-002, V02-003,")
-    lines.append("            V02-004, V02-007")
-    lines.append("  Remaining 4 failures: 3 discovery (V02-005) + 1 other (STUDY-030)")
+    lines.append("  Target:   18/22 (81.8%) — +6 unique chains recovered")
+    lines.append("    V02-001: STUDY-004, STUDY-008, STUDY-020, STUDY-031 (4 chains)")
+    lines.append("    V02-002: STUDY-021 (1 chain)")
+    lines.append("    V02-003: STUDY-021 (overlap), STUDY-029 (1 new chain)")
+    lines.append("    V02-004: STUDY-029 (overlap)")
+    lines.append("  Unique chains recovered: STUDY-004, STUDY-008, STUDY-020,")
+    lines.append("    STUDY-031, STUDY-021, STUDY-029 (6 chains)")
+    lines.append("  Remaining failures: 3 discovery (V02-005 flags) + STUDY-030")
+    lines.append("  V02-005/006 improve attribution, may enable re-acquisition")
     lines.append("")
     lines.append("GT extraction success rate:")
     lines.append("  Current:  2/5 (40.0%)")
@@ -520,8 +721,11 @@ def render_change_spec() -> str:
     lines.append("- No changes to the authority/lineage/persistence components")
     lines.append("- No changes to the executor (it is behaving correctly)")
     lines.append("- No mapper expansion to handle definition changes (V02-010,")
-    lines.append("  V02-011 are classification improvements only, not mapping")
-    lines.append("  capability expansion)")
+    lines.append("  V02-011 are REJECT — labeling improvements only, not failure fixes)")
+    lines.append("- No parser format expansion (V02-008, V02-009 are DEFER — wait")
+    lines.append("  until extraction is fixed)")
+    lines.append("- No schedule-based extraction (V02-007 is DEFER — wait until")
+    lines.append("  V02-001 is implemented and reassess)")
     lines.append("- No held-out issuer changes")
     lines.append("")
 
@@ -541,11 +745,19 @@ def main() -> int:
     print(f"v0.2 change spec: {report_path}")
 
     # Write machine-readable spec
+    proposed = proposed_v02_scope()
     spec_data = {
         "spec": "upsilon_v02_change_spec",
         "derived_from": "chain-study-v2-development",
         "frozen_commit": "fb0862d",
         "principle": "Every change must trace to an observed failure in the 25-chain development set.",
+        "classifications": CLASSIFICATIONS,
+        "proposed_scope": {
+            "classifications": sorted(PROPOSED_SCOPE_CLASSIFICATIONS),
+            "change_count": len(proposed),
+            "change_ids": [c["id"] for c in proposed],
+            "status": "pending human review",
+        },
         "changes": V02_CHANGES,
         "priority_order": [
             "S0/GT extraction coverage",
@@ -563,13 +775,14 @@ def main() -> int:
     print("v0.2 CHANGE SPEC SUMMARY")
     print("=" * 60)
     print()
-    for priority in (1, 2, 3):
-        changes = [c for c in V02_CHANGES if c["priority"] == priority]
-        priority_names = {1: "Extraction", 2: "Parser", 3: "Mapper"}
-        print(f"Priority {priority} ({priority_names[priority]}): {len(changes)} changes")
-        for c in changes:
+    for cls in ("MUST FIX", "SHOULD FIX", "DEFER", "REJECT"):
+        cls_changes = [c for c in V02_CHANGES if c["classification"] == cls]
+        print(f"{cls} ({len(cls_changes)} changes):")
+        for c in cls_changes:
             print(f"  {c['id']}: {c['title'][:70]}")
         print()
+    proposed_ids = [c["id"] for c in proposed]
+    print(f"Proposed v0.2 scope ({len(proposed)} changes, pending review): {', '.join(proposed_ids)}")
 
     return 0
 
