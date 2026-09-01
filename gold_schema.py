@@ -259,7 +259,13 @@ reconstruction accuracy.
 
 ## Commitment ID Convention
 
-Commitment IDs follow the existing canonical_key convention:
+Commitment IDs follow the existing canonical_key convention.  This is
+the complete list of classes the system's S0/GT extractors can produce;
+all of them are in scope for human annotation:
+
+  - facility.revolving_facility
+  - facility.term_loan
+  - facility.delayed_draw_term_loan
   - financial_covenant.leverage_ratio
   - financial_covenant.debt_service_coverage
   - financial_covenant.fixed_charge_coverage
@@ -269,9 +275,12 @@ Commitment IDs follow the existing canonical_key convention:
   - financial_covenant.tier_1_leverage_ratio
   - financial_covenant.risk_based_capital_ratio
   - financial_covenant.texas_ratio
-  - facility.term_loan
-  - facility.revolving_facility
-  - facility.delayed_draw_term_loan
+  - financial_covenant.return_on_average_assets
+
+This list MUST stay in sync with:
+  - commitment_extractor._COVENANT_NAME_MAP (financial_covenant.*)
+  - commitment_extractor._FACILITY_PATTERNS (facility.*)
+  - prepare_human_gold_handoff.py SYSTEM_EXTRACTION_SCOPE
 
 ## Field Names
 
@@ -340,6 +349,9 @@ def main() -> int:
             "second_value", "adjudicator", "adjudicated_value",
         ],
         "commitment_ids": [
+            "facility.revolving_facility",
+            "facility.term_loan",
+            "facility.delayed_draw_term_loan",
             "financial_covenant.leverage_ratio",
             "financial_covenant.debt_service_coverage",
             "financial_covenant.fixed_charge_coverage",
@@ -349,9 +361,7 @@ def main() -> int:
             "financial_covenant.tier_1_leverage_ratio",
             "financial_covenant.risk_based_capital_ratio",
             "financial_covenant.texas_ratio",
-            "facility.term_loan",
-            "facility.revolving_facility",
-            "facility.delayed_draw_term_loan",
+            "financial_covenant.return_on_average_assets",
         ],
         "field_names": [
             "threshold", "operator", "party", "action", "subject",

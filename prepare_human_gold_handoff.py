@@ -40,31 +40,47 @@ PREREGISTERED = ["HELD-002", "HELD-004", "HELD-008", "HELD-001", "HELD-005"]
 # Commitment classes the system's S0/GT extractors produce.
 # Human annotators MUST annotate these classes so gold and system
 # output share the same evaluable commitment scope.
+#
+# This list MUST stay in sync with the canonical commitment IDs the
+# extractors actually emit:
+#   - commitment_extractor._COVENANT_NAME_MAP (financial_covenant.*)
+#   - commitment_extractor._FACILITY_PATTERNS (facility.*)
+#   - gold_schema.py "Commitment ID Convention" block
+# If the extractor learns a new class, add it here AND in the
+# ANNOTATOR_INSTRUCTIONS "Required commitment scope" + "Commitment ID
+# convention" blocks below.
 SYSTEM_EXTRACTION_SCOPE = [
+    # Facility commitments (commitment_extractor._FACILITY_PATTERNS)
     "facility.revolving_facility",
     "facility.term_loan",
+    "facility.delayed_draw_term_loan",
+    # Financial covenants (commitment_extractor._COVENANT_NAME_MAP)
     "financial_covenant.leverage_ratio",
+    "financial_covenant.debt_service_coverage",
     "financial_covenant.fixed_charge_coverage",
     "financial_covenant.interest_coverage",
     "financial_covenant.current_ratio",
     "financial_covenant.tangible_net_worth",
-    "financial_covenant.return_on_average_assets",
+    "financial_covenant.tier_1_leverage_ratio",
     "financial_covenant.risk_based_capital_ratio",
+    "financial_covenant.texas_ratio",
+    "financial_covenant.return_on_average_assets",
 ]
 
 # Additional commitment classes that are valid credit-agreement
 # commitments but outside the system's extraction scope.  Annotators
 # MAY annotate these for completeness, but they will be classified
 # GOLD_NOT_IN_SCOPE and not scored as reconstruction errors.
+#
+# NOTE: every class the extractor produces MUST appear in
+# SYSTEM_EXTRACTION_SCOPE above, never here.  Misclassifying an
+# extractor-produced class as optional would tell annotators to skip
+# it, perpetuating the scope mismatch the human gold is meant to fix.
 OPTIONAL_SCOPE = [
-    "financial_covenant.debt_service_coverage",
     "financial_covenant.coverage_ratio",
     "financial_covenant.collateral_requirement",
     "financial_covenant.indebtedness_limit",
     "financial_covenant.liquidity",
-    "financial_covenant.tier_1_leverage_ratio",
-    "financial_covenant.texas_ratio",
-    "facility.delayed_draw_term_loan",
 ]
 
 # Fields annotators must capture for each commitment
@@ -151,17 +167,22 @@ source document.  Records without valid source spans will be rejected.
 
 ## Commitment ID convention
 
-Use the canonical_key format:
+Use the canonical_key format (this is the complete list of classes the
+system's extractors can produce; all of them are in scope):
+
+  - `facility.revolving_facility`
+  - `facility.term_loan`
+  - `facility.delayed_draw_term_loan`
   - `financial_covenant.leverage_ratio`
+  - `financial_covenant.debt_service_coverage`
   - `financial_covenant.fixed_charge_coverage`
   - `financial_covenant.interest_coverage`
   - `financial_covenant.current_ratio`
   - `financial_covenant.tangible_net_worth`
-  - `financial_covenant.return_on_average_assets`
+  - `financial_covenant.tier_1_leverage_ratio`
   - `financial_covenant.risk_based_capital_ratio`
-  - `facility.revolving_facility`
-  - `facility.term_loan`
-  - `facility.delayed_draw_term_loan`
+  - `financial_covenant.texas_ratio`
+  - `financial_covenant.return_on_average_assets`
 
 If a commitment does not fit any of these, use:
   - `financial_covenant.other` (with commitment_type describing it)
@@ -174,13 +195,17 @@ annotate all instances of these classes in each document:
 
   - facility.revolving_facility
   - facility.term_loan
+  - facility.delayed_draw_term_loan
   - financial_covenant.leverage_ratio
+  - financial_covenant.debt_service_coverage
   - financial_covenant.fixed_charge_coverage
   - financial_covenant.interest_coverage
   - financial_covenant.current_ratio
   - financial_covenant.tangible_net_worth
-  - financial_covenant.return_on_average_assets
+  - financial_covenant.tier_1_leverage_ratio
   - financial_covenant.risk_based_capital_ratio
+  - financial_covenant.texas_ratio
+  - financial_covenant.return_on_average_assets
 
 You MAY also annotate other commitment classes for completeness.  These
 will be recorded but classified as GOLD_NOT_IN_SCOPE for scoring.
