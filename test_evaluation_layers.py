@@ -410,10 +410,13 @@ class TestEvaluationLayersIntegration:
         with open(FAILURE_MATRIX, encoding="utf-8") as f:
             fm = json.load(f)
         m = compute_extraction_metrics(v2, fm)
-        # S0: 12/22 = 54.5%
-        assert m.s0_chains_succeeded == 12
+        # S0: 16/22 = 72.7%
+        # Pre-v0.2 this was 12/22; the four approved v0.2 extraction
+        # improvements (V02-001/003/004: STUDY-008, 021, 029, 031) moved
+        # four chains from 0 to >=1 extracted commitment.
+        assert m.s0_chains_succeeded == 16
         assert m.s0_chains_attempted == 22
-        assert m.s0_extraction_success_rate == pytest.approx(12 / 22)
+        assert m.s0_extraction_success_rate == pytest.approx(16 / 22)
 
     def test_gt_metrics_match_frozen_results(self):
         with open(V2_RESULTS, encoding="utf-8") as f:

@@ -649,6 +649,124 @@ class TestIntegrityChecks:
                 f"found {result['cycles']}"
             )
 
+    def test_lineage_check_no_cross_agreement_contamination(self):
+        """A cycle in another agreement must not contaminate this agreement's
+        cycle count.
+
+        The preflight can run against a shared database, so the cycle
+        detector's base case must be filtered by agreement_id.  Without
+        that filter, lineage edges from a different agreement could be
+        picked up by the recursive CTE and reported as cycles here.
+        """
+        from run_operational_preflight import check_lineage_integrity
+
+        with psycopg.connect(PSYCOPG_URL) as conn:
+            _init_db(conn)
+
+            # Agreement A: clean acyclic lineage (the one we check).
+            agree_a = conn.execute(
+                "INSERT INTO agreement (issuer_name, agreement_name) "
+                "VALUES ('TEST_NO_CONTAMINATION_A', 'A') RETURNING id"
+            ).fetchone()[0]
+            ver_a = _insert_agreement_version(conn, agree_a)
+            commit_a = conn.execute(
+                "INSERT INTO commitment (agreement_id, canonical_key, commitment_type) "
+                "VALUES (%s, 'test-a', 'financial_covenant') RETURNING id",
+                (agree_a,),
+            ).fetchone()[0]
+            a1 = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, 'ACTIVE', '2020-01-01+00', '2023-01-01+00')
+                RETURNING id
+                """,
+                (commit_a, ver_a),
+            ).fetchone()[0]
+            a2 = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id,
+                    parent_commitment_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, %s, 'ACTIVE', '2023-01-01+00', NULL)
+                RETURNING id
+                """,
+                (commit_a, ver_a, a1),
+            ).fetchone()[0]
+            conn.execute(
+                """
+                INSERT INTO lineage_edge (
+                    from_commitment_version_id, to_commitment_version_id,
+                    edge_type, authority_version_id
+                ) VALUES (%s, %s, 'MODIFIES', %s)
+                """,
+                (a1, a2, ver_a),
+            )
+
+            # Agreement B: contains a real cycle (b1 -> b2 -> b1).
+            agree_b = conn.execute(
+                "INSERT INTO agreement (issuer_name, agreement_name) "
+                "VALUES ('TEST_NO_CONTAMINATION_B', 'B') RETURNING id"
+            ).fetchone()[0]
+            ver_b = _insert_agreement_version(conn, agree_b)
+            commit_b = conn.execute(
+                "INSERT INTO commitment (agreement_id, canonical_key, commitment_type) "
+                "VALUES (%s, 'test-b', 'financial_covenant') RETURNING id",
+                (agree_b,),
+            ).fetchone()[0]
+            b1 = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, 'ACTIVE', '2020-01-01+00', '2023-01-01+00')
+                RETURNING id
+                """,
+                (commit_b, ver_b),
+            ).fetchone()[0]
+            b2 = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id,
+                    parent_commitment_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, %s, 'ACTIVE', '2023-01-01+00', NULL)
+                RETURNING id
+                """,
+                (commit_b, ver_b, b1),
+            ).fetchone()[0]
+            conn.execute(
+                """
+                INSERT INTO lineage_edge (
+                    from_commitment_version_id, to_commitment_version_id,
+                    edge_type, authority_version_id
+                ) VALUES (%s, %s, 'MODIFIES', %s)
+                """,
+                (b1, b2, ver_b),
+            )
+            conn.execute(
+                """
+                INSERT INTO lineage_edge (
+                    from_commitment_version_id, to_commitment_version_id,
+                    edge_type, authority_version_id
+                ) VALUES (%s, %s, 'MODIFIES', %s)
+                """,
+                (b2, b1, ver_b),
+            )
+
+            # Agreement A must report 0 cycles despite B's cycle.
+            result_a = check_lineage_integrity(conn, agree_a)
+            assert result_a["cycles"] == 0, (
+                f"Agreement A should report 0 cycles (it is acyclic); "
+                f"agreement B's cycle must not contaminate it. "
+                f"Got cycles={result_a['cycles']}"
+            )
+
+            # Sanity: agreement B's own check still detects its cycle.
+            result_b = check_lineage_integrity(conn, agree_b)
+            assert result_b["cycles"] >= 1, (
+                f"Agreement B should report >= 1 cycle (it has b1->b2->b1), "
+                f"got cycles={result_b['cycles']}"
+            )
+
 
 # ---------------------------------------------------------------------------
 # Test: rollback works

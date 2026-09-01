@@ -326,9 +326,19 @@ class TestChangeSpecTracesToFailureMatrix:
                 )
 
     def test_every_affected_chain_has_listed_cause(self):
-        """Every affected chain must have at least one of the listed failure causes."""
+        """Every affected chain must have at least one of the listed failure causes.
+
+        This invariant only holds for UNIMPLEMENTED changes (DEFER/REJECT).
+        The implemented changes (MUST FIX/SHOULD FIX, V02-001 through V02-006)
+        intentionally remove the listed cause from successfully fixed chains
+        — that is the whole point of the fix.  The post-fix state of those
+        chains is verified by test_v02_regression.py.
+        """
         _fm, fm_by_id = self._load()
         for change in V02_CHANGES:
+            if change["classification"] in PROPOSED_SCOPE_CLASSIFICATIONS:
+                # Implemented change: the cause may have been resolved.
+                continue
             for chain_id in change["affected_chains"]:
                 chain = fm_by_id[chain_id]
                 has_any = any(

@@ -782,12 +782,18 @@ def check_lineage_integrity(conn: psycopg.Connection, agreement_id: UUID) -> dic
     # node we are about to traverse FROM), not le.to_commitment_version_id.
     # Checking the latter prevents the path from ever returning to its
     # origin, so real cycles are silently missed.
+    # The base case is filtered by agreement_id so that lineage from
+    # another agreement cannot contaminate the cycle count when the
+    # preflight runs against a shared database.
     cycles = conn.execute(
         """
         WITH RECURSIVE path AS (
             SELECT from_commitment_version_id, to_commitment_version_id,
                    ARRAY[from_commitment_version_id] as visited
             FROM lineage_edge
+            JOIN commitment_version cv ON lineage_edge.from_commitment_version_id = cv.id
+            JOIN commitment c ON cv.commitment_id = c.id
+            WHERE c.agreement_id = %s
             UNION ALL
             SELECT p.from_commitment_version_id, le.to_commitment_version_id,
                    p.visited || le.from_commitment_version_id
@@ -798,6 +804,7 @@ def check_lineage_integrity(conn: psycopg.Connection, agreement_id: UUID) -> dic
         SELECT COUNT(*) FROM path
         WHERE from_commitment_version_id = to_commitment_version_id
         """,
+        (agreement_id,),
     ).fetchone()[0]
 
     # Current state reachable from origin: every version should have a
