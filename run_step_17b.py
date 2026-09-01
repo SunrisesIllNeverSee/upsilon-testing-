@@ -477,6 +477,12 @@ def run_postgresql_integrity_all_25() -> dict:
                 (agreement_id,),
             ).fetchone()[0]
 
+            # Cycles: detect via recursive CTE.
+            # The termination guard must check le.from_commitment_version_id
+            # (the node we are about to traverse FROM), not
+            # le.to_commitment_version_id.  Checking the latter prevents the
+            # path from ever returning to its origin, so real cycles are
+            # silently missed.
             cycles = conn.execute(
                 """
                 WITH RECURSIVE path AS (
@@ -491,7 +497,7 @@ def run_postgresql_integrity_all_25() -> dict:
                            p.visited || le.from_commitment_version_id
                     FROM path p
                     JOIN lineage_edge le ON p.to_commitment_version_id = le.from_commitment_version_id
-                    WHERE NOT le.to_commitment_version_id = ANY(p.visited)
+                    WHERE NOT le.from_commitment_version_id = ANY(p.visited)
                 )
                 SELECT COUNT(*) FROM path
                 WHERE from_commitment_version_id = to_commitment_version_id

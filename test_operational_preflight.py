@@ -490,6 +490,164 @@ class TestIntegrityChecks:
                 f"Lineage check should detect orphan, found {result['orphans']}"
             )
 
+    def test_lineage_check_detects_cycles(self):
+        """The lineage check must detect cycles in the lineage graph.
+
+        Regression: the recursive CTE's termination guard checked
+        le.to_commitment_version_id against the visited array, but
+        visited starts with the path's origin node.  This prevented
+        the path from ever returning to its origin, so real cycles
+        (e.g. v1 -> v2 -> v1) were silently missed and the cycle
+        count was always 0.
+        """
+        from run_operational_preflight import check_lineage_integrity
+
+        with psycopg.connect(PSYCOPG_URL) as conn:
+            _init_db(conn)
+
+            agree_id = conn.execute(
+                "INSERT INTO agreement (issuer_name, agreement_name) "
+                "VALUES ('TEST_LINEAGE_CYCLE', 'Test') RETURNING id"
+            ).fetchone()[0]
+
+            ver_id = _insert_agreement_version(conn, agree_id)
+
+            commit_id = conn.execute(
+                "INSERT INTO commitment (agreement_id, canonical_key, commitment_type) "
+                "VALUES (%s, 'test', 'financial_covenant') RETURNING id",
+                (agree_id,),
+            ).fetchone()[0]
+
+            # Insert two versions
+            v1 = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, 'ACTIVE', '2020-01-01+00', '2023-01-01+00')
+                RETURNING id
+                """,
+                (commit_id, ver_id),
+            ).fetchone()[0]
+            v2 = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id,
+                    parent_commitment_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, %s, 'ACTIVE', '2023-01-01+00', NULL)
+                RETURNING id
+                """,
+                (commit_id, ver_id, v1),
+            ).fetchone()[0]
+
+            # Create a cycle: v1 -> v2 (legitimate) and v2 -> v1 (cycle)
+            conn.execute(
+                """
+                INSERT INTO lineage_edge (
+                    from_commitment_version_id, to_commitment_version_id,
+                    edge_type, authority_version_id
+                ) VALUES (%s, %s, 'MODIFIES', %s)
+                """,
+                (v1, v2, ver_id),
+            )
+            conn.execute(
+                """
+                INSERT INTO lineage_edge (
+                    from_commitment_version_id, to_commitment_version_id,
+                    edge_type, authority_version_id
+                ) VALUES (%s, %s, 'MODIFIES', %s)
+                """,
+                (v2, v1, ver_id),
+            )
+
+            result = check_lineage_integrity(conn, agree_id)
+            assert result["cycles"] >= 1, (
+                f"Lineage check should detect cycle (v1->v2->v1), "
+                f"found {result['cycles']} — the recursive CTE termination "
+                f"guard may be checking the wrong column"
+            )
+
+    def test_lineage_check_passes_on_acyclic_graph(self):
+        """The lineage check must report 0 cycles on a clean acyclic graph."""
+        from run_operational_preflight import check_lineage_integrity
+
+        with psycopg.connect(PSYCOPG_URL) as conn:
+            _init_db(conn)
+
+            agree_id = conn.execute(
+                "INSERT INTO agreement (issuer_name, agreement_name) "
+                "VALUES ('TEST_LINEAGE_ACYCLIC', 'Test') RETURNING id"
+            ).fetchone()[0]
+
+            ver_id = _insert_agreement_version(conn, agree_id)
+
+            commit_id = conn.execute(
+                "INSERT INTO commitment (agreement_id, canonical_key, commitment_type) "
+                "VALUES (%s, 'test', 'financial_covenant') RETURNING id",
+                (agree_id,),
+            ).fetchone()[0]
+
+            # Linear chain: origin -> v2 -> v3 (no cycle)
+            origin = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, 'ACTIVE', '2020-01-01+00', '2023-01-01+00')
+                RETURNING id
+                """,
+                (commit_id, ver_id),
+            ).fetchone()[0]
+            v2 = conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id,
+                    parent_commitment_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, %s, 'ACTIVE', '2023-01-01+00', '2024-01-01+00')
+                RETURNING id
+                """,
+                (commit_id, ver_id, origin),
+            ).fetchone()[0]
+            conn.execute(
+                """
+                INSERT INTO commitment_version (
+                    commitment_id, agreement_version_id,
+                    parent_commitment_version_id, status, valid_from, valid_to
+                ) VALUES (%s, %s, %s, 'ACTIVE', '2024-01-01+00', NULL)
+                """,
+                (commit_id, ver_id, v2),
+            )
+
+            # Edges: origin -> v2, v2 -> v3
+            conn.execute(
+                """
+                INSERT INTO lineage_edge (
+                    from_commitment_version_id, to_commitment_version_id,
+                    edge_type, authority_version_id
+                ) VALUES (%s, %s, 'MODIFIES', %s)
+                """,
+                (origin, v2, ver_id),
+            )
+            v3 = conn.execute(
+                """
+                SELECT id FROM commitment_version
+                WHERE commitment_id = %s AND valid_from = '2024-01-01+00'
+                """,
+                (commit_id,),
+            ).fetchone()[0]
+            conn.execute(
+                """
+                INSERT INTO lineage_edge (
+                    from_commitment_version_id, to_commitment_version_id,
+                    edge_type, authority_version_id
+                ) VALUES (%s, %s, 'MODIFIES', %s)
+                """,
+                (v2, v3, ver_id),
+            )
+
+            result = check_lineage_integrity(conn, agree_id)
+            assert result["cycles"] == 0, (
+                f"Lineage check should report 0 cycles on acyclic graph, "
+                f"found {result['cycles']}"
+            )
 
 
 # ---------------------------------------------------------------------------

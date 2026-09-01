@@ -518,7 +518,6 @@ def check_persistence_integrity(
 
         if actual_versions != expected_versions:
             versions_match = False
-            no_partial = False
             details.append(
                 f"A{step_result.amendment_number}: version count mismatch: "
                 f"expected={expected_versions}, actual={actual_versions}"
@@ -557,12 +556,10 @@ def check_persistence_integrity(
                 f"edges={edges_for_amendment}"
             )
 
-    no_partial = versions_match
-
     return {
         "versions_match": versions_match,
         "edges_match": edges_match,
-        "no_partial_commits": no_partial,
+        "no_partial_commits": versions_match,
         "details": details,
     }
 
@@ -780,7 +777,11 @@ def check_lineage_integrity(conn: psycopg.Connection, agreement_id: UUID) -> dic
         (agreement_id,),
     ).fetchone()[0]
 
-    # Cycles: detect via recursive CTE
+    # Cycles: detect via recursive CTE.
+    # The termination guard must check le.from_commitment_version_id (the
+    # node we are about to traverse FROM), not le.to_commitment_version_id.
+    # Checking the latter prevents the path from ever returning to its
+    # origin, so real cycles are silently missed.
     cycles = conn.execute(
         """
         WITH RECURSIVE path AS (
@@ -792,7 +793,7 @@ def check_lineage_integrity(conn: psycopg.Connection, agreement_id: UUID) -> dic
                    p.visited || le.from_commitment_version_id
             FROM path p
             JOIN lineage_edge le ON p.to_commitment_version_id = le.from_commitment_version_id
-            WHERE NOT le.to_commitment_version_id = ANY(p.visited)
+            WHERE NOT le.from_commitment_version_id = ANY(p.visited)
         )
         SELECT COUNT(*) FROM path
         WHERE from_commitment_version_id = to_commitment_version_id
