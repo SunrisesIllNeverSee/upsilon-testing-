@@ -159,6 +159,28 @@ def get_frozen_at() -> str:
     return datetime.now(UTC).isoformat()
 
 
+def get_frozen_commit() -> str:
+    """Get the frozen code commit SHA for determinism.
+
+    If ``freeze_record.json`` already exists, reuse its ``git_commit``
+    value.  This ensures that after the freeze artifacts are committed
+    (creating a new commit SHA), re-running the script at the new commit
+    still produces a report referencing the original code commit that
+    was frozen — not the artifacts commit.
+
+    On the first run (no existing freeze record), returns the current
+    HEAD commit SHA.
+    """
+    record_path = FREEZE_DIR / "freeze_record.json"
+    if record_path.exists():
+        try:
+            existing = json.loads(record_path.read_text(encoding="utf-8"))
+            return existing["git_commit"]
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return git_commit_sha()
+
+
 # ---------------------------------------------------------------------------
 # Build input manifest with source hashes
 # ---------------------------------------------------------------------------
@@ -759,8 +781,11 @@ def freeze() -> dict[str, Any]:
     print(f"Building Step 18 freeze: {FREEZE_TITLE}")
     print()
 
-    commit_sha = git_commit_sha()
-    short_sha = git_short_sha()
+    # Use the frozen commit SHA for determinism — on re-runs this reads
+    # the stored value from the existing freeze record so the report
+    # references the original code commit, not the artifacts commit.
+    commit_sha = get_frozen_commit()
+    short_sha = commit_sha[:7]
     frozen_at = get_frozen_at()
     # Capture working-tree cleanliness BEFORE writing any artifacts so
     # the freeze record reflects the state of the repo at freeze time,
