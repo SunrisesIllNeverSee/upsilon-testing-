@@ -1,0 +1,206 @@
+{
+  "chains": [
+    {
+      "chain_id": "EDGAR-AMERESCO",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "EDGAR-AMEDISYS",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "EDGAR-BAUSCH-LOMB",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-004",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-005",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-006",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-007",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-008",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-010",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-012",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-013",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-014",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-015",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-016",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-017",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-018",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-020",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-021",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-022",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-026",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-027",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-028",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-029",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-030",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    },
+    {
+      "chain_id": "STUDY-031",
+      "orphans": 0,
+      "cycles": 0,
+      "contradictory_active": 0,
+      "invalid_intervals": 0,
+      "integrity_pass": true
+    }
+  ],
+  "all_pass": true,
+  "chains_with_issues": []
+}
