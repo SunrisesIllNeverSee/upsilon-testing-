@@ -1,11 +1,11 @@
 # Upsilon Financial Commitment Integrity v1 — Development Methods & Results
 
-**Track A Publication Package — Step 19B.2**
+**Track A Publication Package — Step 19B.3 (Review-Ready)**
 
 **Frozen system:** `v1.0-frozen-operational-build`
 **Frozen commit:** `9771fe5`
 **Frozen at UTC:** `2026-09-01T05:48:44.147775+00:00`
-**Document generated:** `2026-09-01` (Step 19B.2)
+**Document generated:** `2026-09-01` (Step 19B.3)
 
 > **Held-out confirmatory performance remains pending independent human gold verification.**
 >
@@ -551,6 +551,70 @@ The system's coverage is intentionally narrow (4 mapping rules, 3.30% mapping co
 > **Held-out confirmatory performance remains pending independent human gold verification.**
 >
 > The development methods and results presented in this document are based solely on evidence that is valid independently of pending human held-out gold. No held-out reconstruction accuracy is reported as final. Automated proxy annotations are not human gold and are not used as confirmatory evidence. The held-out confirmatory study (Step 19B) is partially executed and blocked on human gold annotation and defect verification.
+
+---
+
+## 19. Defect / Safety Distinction (Step 19B.3)
+
+The held-out study identified 3 incorrect automatic mutations. These are analyzed across three distinct system layers. This distinction is critical for honest reporting.
+
+### Three-layer analysis
+
+| Layer | Finding | Count | Impact |
+|-------|---------|-------|--------|
+| Semantic Mapper | Wrong confident mappings produced | 3 | Mapper defect confirmed (Class A, no gold needed) |
+| Execution Safety | Wrong mutations rejected by executor | 3/3 | State not corrupted |
+| Authoritative Corruption | Incorrect state promoted as authoritative | 0 | No authoritative corruption |
+
+### The distinction that belongs in the paper
+
+> The frozen v1 system produced 3 wrong confident semantic mappings on held-out data, but the executor rejected them all as UNKNOWN_COMMITMENT. The system has a confirmed semantic mapper defect, but NOT silent authoritative-state corruption. The safety layer did its job.
+
+### Root cause
+
+All 3 mutations target `facility.credit_agreement`, a phantom key the S0 extractor never produces in any chain (development or held-out). The Step 17B fix guarded the maturity-date rule against RESTATE_SECTION and DELETE instruction types, but did not guard against ADD or REPLACE_TEXT. On held-out chains, the rule fires on these unguarded instruction types.
+
+### What this means
+
+- **Confirmed mapper defect**: the mapper's schema is misaligned with the extractor's output schema
+- **Execution safety held**: the executor's key-existence check caught all 3 wrong mutations
+- **Authority safety held**: no chain with incorrect mutations was promoted to authoritative status
+- **No human gold needed for this finding**: the defect is independently demonstrable from the system's architecture
+
+Full analysis: `results/step_19b_defect_safety_record.md`
+
+---
+
+## 20. Review-Readiness Checklist
+
+| Item | Status |
+|------|--------|
+| Architecture documented | YES (Section 1) |
+| Preregistration protocol | YES (Section 2) |
+| Parser development history | YES (Section 3) |
+| Semantic mapper development | YES (Section 4) |
+| S0/GT extraction architecture | YES (Section 5) |
+| 25-chain development study | YES (Section 6) |
+| Frozen v1 capability census | YES (Section 7) |
+| Failure taxonomy | YES (Section 8) |
+| PostgreSQL/lineage/temporal validation | YES (Section 9) |
+| Development safety results (0 incorrect, 0 false auth) | YES (Section 10) |
+| Reproducibility/freeze infrastructure | YES (Section 11) |
+| Explicit development limitations | YES (Section 12) |
+| Held-out acquisition/protocol status ONLY | YES (Section 13) |
+| Publication-ready tables with 95% CIs | YES (Section 14) |
+| Methods summary | YES (Section 15) |
+| Limitations section | YES (Section 16) |
+| Reproducibility manifest | YES (Section 17) |
+| Clear pending-gold statement | YES (Section 18) |
+| Defect/safety distinction | YES (Section 19) |
+| No held-out accuracy reported as final | YES |
+| No proxy gold called human gold | YES |
+| No provisional metrics as confirmatory | YES |
+| Frozen v1 not modified | YES |
+| All tests passing (703 passed, 0 failed) | YES |
+
+**Track A publication package: READY FOR REVIEW.**
 
 ---
 
