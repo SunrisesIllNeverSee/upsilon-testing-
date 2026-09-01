@@ -126,6 +126,7 @@ _SIGNATURES: list[tuple[AmendmentPattern, str, str]] = [
         r"conformed\s+copy\s+of\s+the\s+Amended\s+Credit\s+Agreement",
     ),
     # Incremental: explicit section-level amendment language.
+    # Expanded with v2 patterns observed in the 50-chain development corpus.
     (
         AmendmentPattern.INCREMENTAL,
         "incremental_section_amended_by",
@@ -150,6 +151,87 @@ _SIGNATURES: list[tuple[AmendmentPattern, str, str]] = [
         AmendmentPattern.INCREMENTAL,
         "incremental_section_amended_to_read",
         r"Section\s+[\d.]+\w*\s+is\s+hereby\s+amended\s+to\s+read",
+    ),
+    # v2 additions: broader incremental patterns
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_section_amended_to_add",
+        r"Section\s+[\d.]+\w*\s+is\s+hereby\s+amended\s+to\s+add",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_section_amended_and_rested",
+        r"Section\s+[\d.]+\w*\s+is\s+hereby\s+amended\s+and\s+restated",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_amended_to_add_following",
+        r"is\s+hereby\s+amended\s+to\s+add\s+the\s+following",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_credit_agreement_amended",
+        r"Credit\s+Agreement\s+is\s+hereby\s+amended\s+(?:as\s+follows|by)",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_amended_as_follows",
+        r"is\s+hereby\s+amended\s+as\s+follows",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_amended_to_provide",
+        r"is\s+hereby\s+amended\s+to\s+provide\s+as\s+follows",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_amended_to_read",
+        r"is\s+hereby\s+amended\s+to\s+read\s+as\s+follows",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_section_modified",
+        r"Section\s+[\d.]+\w*\s+(?:of\s+the\s+)?(?:Credit\s+Agreement\s+)?is\s+(?:hereby\s+)?modified",
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_definition_amended",
+        r'(?:definition|clause)\s+(?:of\s+)?[""\x93\x94].+?[""\x93\x94]\s+(?:in\s+)?Section\s+[\d.]+\w*\s+is\s+hereby\s+amended',
+    ),
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_agreement_amended_hereby",
+        r"(?:Agreement|Credit\s+Agreement)\s+is\s+hereby\s+(?:amended|modified|supplemented)",
+    ),
+    # v2: catch "is amended by" without "hereby"
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_is_amended_by",
+        r"Section\s+[\d.]+\w*\s+is\s+amended\s+by",
+    ),
+    # v2: catch "shall be amended" pattern
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_shall_be_amended",
+        r"shall\s+be\s+amended\s+(?:to|by|as)",
+    ),
+    # v2: catch "is amended by deleting/replacing/adding" (no "hereby")
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_is_amended_by_deleting",
+        r"is\s+amended\s+by\s+(?:deleting|replacing|adding)",
+    ),
+    # v2: catch "are amended" (plural sections)
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_are_amended",
+        r"Sections\s+[\d.]+\w*\s+(?:and\s+[\d.]+\w*\s+)?are\s+hereby\s+amended",
+    ),
+    # v2: catch "by deleting ... and replacing" (common amendment structure)
+    (
+        AmendmentPattern.INCREMENTAL,
+        "incremental_by_deleting_and_replacing",
+        r"by\s+deleting\s+.*?\s+and\s+(?:replacing|inserting|adding)",
     ),
 ]
 

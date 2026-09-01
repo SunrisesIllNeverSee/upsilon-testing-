@@ -48,7 +48,9 @@ def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float, float]:
     """Exact Clopper-Pearson binomial confidence interval.
 
     Returns (lower, upper) bounds.  Uses scipy.stats.beta.ppf if
-    available; falls back to a normal approximation otherwise.
+    available; falls back to an exact computation using the binomial
+    distribution and bisection for the general case, with closed-form
+    solutions for boundary cases (k=0, k=n).
     """
     if n == 0:
         return 0.0, 1.0
@@ -56,14 +58,61 @@ def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float, float]:
         lo = _beta_dist.ppf(alpha / 2, k, n - k + 1) if k > 0 else 0.0
         hi = _beta_dist.ppf(1 - alpha / 2, k + 1, n - k) if k < n else 1.0
         return float(lo), float(hi)
-    # Fallback: Wilson score interval (good approximation)
+    # Fallback: exact Clopper-Pearson without scipy.
+    # Boundary cases have closed-form solutions:
+    #   k=0: lower=0, upper = 1 - (alpha/2)^(1/n)
+    #   k=n: lower = (alpha/2)^(1/n), upper=1
+    # General case: use bisection on the binomial CDF.
     import math
-    z = 1.95996397458  # 95% normal quantile
-    p = k / n
-    denom = 1 + z * z / n
-    center = (p + z * z / (2 * n)) / denom
-    margin = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
-    return max(0.0, center - margin), min(1.0, center + margin)
+    if k == 0:
+        return 0.0, 1.0 - (alpha / 2) ** (1.0 / n)
+    if k == n:
+        return (alpha / 2) ** (1.0 / n), 1.0
+    # General case: bisection on binomial CDF
+    # Lower bound: find p such that P(X >= k | p) = alpha/2
+    #   i.e., 1 - binom_cdf(k-1, n, p) = alpha/2
+    # Upper bound: find p such that P(X <= k | p) = alpha/2
+    #   i.e., binom_cdf(k, n, p) = alpha/2
+    def _log_binom_coeff(n_val: int, j: int) -> float:
+        return math.lgamma(n_val + 1) - math.lgamma(j + 1) - math.lgamma(n_val - j + 1)
+
+    def _binom_cdf(j: int, n_val: int, p: float) -> float:
+        """P(X <= j | n, p) using log-space computation."""
+        if p <= 0:
+            return 1.0 if j >= 0 else 0.0
+        if p >= 1:
+            return 1.0 if j >= n_val else 0.0
+        total = 0.0
+        log_p = math.log(p)
+        log_1mp = math.log(1 - p)
+        for i in range(j + 1):
+            total += math.exp(_log_binom_coeff(n_val, i) + i * log_p + (n_val - i) * log_1mp)
+        return min(1.0, total)
+
+    # Bisection for lower bound
+    lo_lo, lo_hi = 0.0, 1.0
+    for _ in range(100):
+        mid = (lo_lo + lo_hi) / 2
+        # P(X >= k | p) = 1 - P(X <= k-1 | p)
+        tail = 1.0 - _binom_cdf(k - 1, n, mid)
+        if tail > alpha / 2:
+            lo_lo = mid
+        else:
+            lo_hi = mid
+    lower = (lo_lo + lo_hi) / 2
+
+    # Bisection for upper bound
+    hi_lo, hi_hi = 0.0, 1.0
+    for _ in range(100):
+        mid = (hi_lo + hi_hi) / 2
+        cdf = _binom_cdf(k, n, mid)
+        if cdf < alpha / 2:
+            hi_lo = mid
+        else:
+            hi_hi = mid
+    upper = (hi_lo + hi_hi) / 2
+
+    return lower, upper
 
 
 def pct(x: float | None) -> str:
