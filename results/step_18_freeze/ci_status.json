@@ -1,0 +1,48 @@
+{
+  "workflow_file": ".github/workflows/tests.yml",
+  "workflow_triggers": {
+    "push": [
+      "main",
+      "develop"
+    ],
+    "pull_request": [
+      "main"
+    ],
+    "workflow_dispatch": true
+  },
+  "ci_jobs": [
+    {
+      "name": "unit-tests",
+      "runs_on": "ubuntu-latest",
+      "python": "3.12",
+      "command": "pytest -q"
+    },
+    {
+      "name": "postgres-integration",
+      "runs_on": "ubuntu-latest",
+      "python": "3.12",
+      "command": "pytest -q test_persistence_integration.py",
+      "services": [
+        "postgres:16"
+      ]
+    }
+  ],
+  "freeze_branch": "feature/semantic-mapper-v0.1",
+  "ci_triggered_on_branch": false,
+  "note": "The freeze commit is on a feature branch that does not trigger CI.  The local test run (with DATABASE_URL set) is the authoritative test status: it runs the same suite as the CI unit-tests job plus the PostgreSQL integration tests that CI runs in a separate job.",
+  "local_test_results": {
+    "exit_code": 0,
+    "passed": 662,
+    "failed": 0,
+    "skipped": 2,
+    "output_tail": "........................................................................ [ 10%]\n........................................................................ [ 21%]\n........................................................................ [ 32%]\n........................................................................ [ 43%]\n........................................................................ [ 54%]\n........................................................................ [ 65%]\n......................................s................................. [ 75%]\n........................................................................ [ 86%]\n........................................................................ [ 97%]\n..............s.                                                         [100%]\n662 passed, 2 skipped in 43.62s"
+  },
+  "freeze_commit": "9771fe5db5f672c3d653ef2a9ba1fc54ffd08900",
+  "latest_ci_run_on_main": {
+    "status": "completed",
+    "conclusion": "success",
+    "branch": "main",
+    "run_id": 33329769560,
+    "created_at": "2026-08-30T19:02:58Z"
+  }
+}
