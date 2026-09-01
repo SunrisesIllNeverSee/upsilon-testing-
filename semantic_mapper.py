@@ -559,17 +559,35 @@ def _rule_maturity_date_replacement(
 ) -> StructuredMutation | None:
     """Map explicit Maturity Date amendments.
 
-    Trigger: source_text contains "Maturity Date" AND a parseable date
-    within 80 chars of that mention AND the section is not a known
-    financial covenant section (a Maturity Date mention in a covenant
-    section is likely a cross-reference, not an amendment to the
-    maturity date).
+    Trigger: instruction_type is REPLACE_VALUE or REPLACE_TEXT AND
+    source_text contains "Maturity Date" AND a parseable date within 80
+    chars of that mention AND the section is not a known financial
+    covenant section (a Maturity Date mention in a covenant section is
+    likely a cross-reference, not an amendment to the maturity date).
 
     Produces a REPLACE_VALUE mutation on facility.credit_agreement.deadline
     with the extracted date string (YYYY-MM-DD).
 
+    The instruction_type guard prevents the rule from firing on
+    RESTATE_SECTION or DELETE instructions whose source_text merely
+    mentions "Maturity Date" as part of a broader multi-section
+    restatement or an unrelated deletion.  Without this guard the rule
+    produces confident mutations targeting facility.credit_agreement —
+    a key that does not exist in any chain's state — causing silent
+    corruption (wrong + confident).
+
     Returns None if the rule does not match.
     """
+    # Guard: only value-replacement instruction types are semantically
+    # compatible with a maturity-date field replacement.  RESTATE_SECTION
+    # and DELETE may mention "Maturity Date" in their source text without
+    # being amendments to the maturity date itself.
+    if parser_instruction.instruction_type not in (
+        InstructionType.REPLACE_VALUE,
+        InstructionType.REPLACE_TEXT,
+    ):
+        return None
+
     source_text = parser_instruction.source_text or ""
     section_ref = parser_instruction.target_section_ref or ""
 

@@ -503,6 +503,83 @@ def test_rule_maturity_date_does_not_fire_without_keyword():
 
 
 # ---------------------------------------------------------------------------
+# Step 17B regression: maturity-date rule must not fire on non-replacement
+# instruction types (RESTATE_SECTION / DELETE).  These produce confident
+# mutations targeting facility.credit_agreement which does not exist in any
+# chain's state, causing silent corruption (wrong + confident).
+# ---------------------------------------------------------------------------
+
+
+def test_regression_maturity_date_does_not_fire_on_restate_section():
+    """RESTATE_SECTION containing 'Maturity Date' must NOT produce a
+    confident mapped mutation.
+
+    Reproduces STUDY-007 A1 ins 4/5: the parser groups multiple definition
+    amendments (FATCA, Maturity Date, Other Taxes) into one RESTATE_SECTION.
+    The mapper fires _rule_maturity_date_replacement on the Maturity Date
+    mention, producing a confident REPLACE_VALUE targeting
+    facility.credit_agreement — a key that does not exist in the chain's
+    state.  The executor rejects it as an incorrect automatic mutation.
+    """
+    parser_ins = AmendmentInstruction(
+        order=4,
+        instruction_type=InstructionType.RESTATE_SECTION,
+        target_section_ref="Section 1.1",
+        source_text=(
+            'The definition of FATCA set forth in Section 1.1 of the Credit '
+            "Agreement is hereby amended and restated in its entirety to read "
+            'as follows: "FATCA" shall mean Sections 1471 through 1474 of the '
+            "Code. The definition of Maturity Date set forth in Section 1.1 of "
+            "the Credit Agreement is hereby amended and restated in its entirety "
+            'to read as follows: "Maturity Date" shall mean the date that is '
+            "the earlier of (i) February 12, 2021 and (ii) the date that is six "
+            "months prior to the maturity date of the Second Lien Notes."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    # Must NOT produce a confident mapped mutation
+    assert len(result.mutations) == 0
+    # Must be UNRESOLVED
+    assert len(result.unresolved) == 1
+    assert result.unresolved[0].ambiguity_reason is not None
+
+
+def test_regression_maturity_date_does_not_fire_on_delete():
+    """DELETE containing 'Maturity Date' must NOT produce a confident
+    mapped mutation.
+
+    Reproduces STUDY-022 A3 ins 2: the parser produces a DELETE instruction
+    whose source text mentions 'Revolving Credit Maturity Date' as a defined
+    term (not an amendment to the maturity date).  The mapper fires
+    _rule_maturity_date_replacement, producing a confident REPLACE_VALUE
+    targeting facility.credit_agreement — a key that does not exist in the
+    chain's state.  The executor rejects it as an incorrect automatic
+    mutation.
+    """
+    parser_ins = AmendmentInstruction(
+        order=2,
+        instruction_type=InstructionType.DELETE,
+        target_section_ref="Section 2.5",
+        source_text=(
+            "in the event that a Replacement Rate with respect to LIBOR is "
+            "implemented then all references herein to LIBOR shall be deemed "
+            'references to such Replacement Rate. "Revolving Credit Maturity '
+            'Date" means the earliest to occur of (a) November 30, 2023 (b) '
+            "the date of termination of the entire Revolving Credit Commitment "
+            "by the Borrower pursuant to Section 2.5."
+        ),
+        provenance=InstructionProvenance.PARSER,
+    )
+    result = map_instruction(parser_ins)
+    # Must NOT produce a confident mapped mutation
+    assert len(result.mutations) == 0
+    # Must be UNRESOLVED
+    assert len(result.unresolved) == 1
+    assert result.unresolved[0].ambiguity_reason is not None
+
+
+# ---------------------------------------------------------------------------
 # Rule tests — rate / percentage replacement
 # ---------------------------------------------------------------------------
 
