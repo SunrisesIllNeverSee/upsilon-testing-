@@ -141,6 +141,24 @@ def pip_freeze() -> str:
     return result.stdout
 
 
+def get_frozen_at() -> str:
+    """Get the frozen_at timestamp for determinism.
+
+    If ``freeze_record.json`` already exists in the freeze directory,
+    reuse its ``frozen_at_utc`` value so that re-running the script at
+    the same commit produces byte-identical output.  Otherwise, capture
+    the current UTC time as the freeze timestamp (first run only).
+    """
+    record_path = FREEZE_DIR / "freeze_record.json"
+    if record_path.exists():
+        try:
+            existing = json.loads(record_path.read_text(encoding="utf-8"))
+            return existing["frozen_at_utc"]
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return datetime.now(UTC).isoformat()
+
+
 # ---------------------------------------------------------------------------
 # Build input manifest with source hashes
 # ---------------------------------------------------------------------------
@@ -208,8 +226,15 @@ def build_final_report(
     code_hashes: dict,
     input_manifest: dict,
     report_sha256: str | None,
+    frozen_at: str,
 ) -> str:
-    """Build the timestamped final development report (Markdown)."""
+    """Build the timestamped final development report (Markdown).
+
+    ``frozen_at`` is the single ISO timestamp captured at the start of
+    ``freeze()``.  It is used for every timestamp in the report body so
+    that the report is deterministic and reproduces byte-identically when
+    re-run at the same commit.
+    """
     deliv = step_17b.get("deliverables", {})
     tests = deliv.get("2_tests", {})
     extraction = deliv.get("4_extraction_metrics", {})
@@ -227,7 +252,8 @@ def build_final_report(
     pg_chains = pg_integrity.get("chains", [])
     pg_all_pass = pg_integrity.get("all_pass", False)
 
-    now = datetime.now(UTC).isoformat()
+    # Use the single frozen_at timestamp for determinism.
+    now = frozen_at
 
     lines = []
     lines.append(f"# {FREEZE_TITLE}")
@@ -302,6 +328,17 @@ def build_final_report(
     lines.append(f"- **Failed**: {tests.get('failed', 'N/A')}")
     lines.append(f"- **Skipped**: {tests.get('skipped', 'N/A')}")
     lines.append(f"- **Exit code**: {tests.get('exit_code', 'N/A')}")
+    lines.append("")
+    lines.append("### CI Status")
+    lines.append("")
+    lines.append("- **Workflow**: `.github/workflows/tests.yml`")
+    lines.append("- **CI triggers**: push to main/develop, PR to main")
+    lines.append(f"- **Freeze branch**: {git_branch()} (does not trigger CI)")
+    lines.append("- **Authoritative test status**: local run with DATABASE_URL set")
+    lines.append(f"  (passed={tests.get('passed', 'N/A')}, "
+                 f"skipped={tests.get('skipped', 'N/A')}, "
+                 f"failed={tests.get('failed', 'N/A')})")
+    lines.append("- Full CI status details in `ci_status.json`")
     lines.append("")
     lines.append("## 4. PostgreSQL / Lineage / Temporal Integrity")
     lines.append("")
@@ -482,12 +519,19 @@ def build_final_report(
 # ---------------------------------------------------------------------------
 
 
-def build_run_record(commit_sha: str, code_hashes: dict, input_manifest: dict) -> dict:
-    """Build the immutable run record for research/run_records/."""
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+def build_run_record(
+    commit_sha: str, code_hashes: dict, input_manifest: dict, frozen_at: str,
+) -> dict:
+    """Build the immutable run record for research/run_records/.
+
+    ``frozen_at`` is the single ISO timestamp captured at the start of
+    ``freeze()``.  Using it here ensures the run record and freeze record
+    agree on the timestamp and that re-running the script produces a
+    byte-identical run record.
+    """
     return {
         "label": "step-18-freeze",
-        "recorded_at_utc": datetime.now(UTC).isoformat(),
+        "recorded_at_utc": frozen_at,
         "platform": platform.platform(),
         "machine": platform.machine(),
         "python": sys.version,
@@ -503,6 +547,83 @@ def build_run_record(commit_sha: str, code_hashes: dict, input_manifest: dict) -
             "data_directories": input_manifest["data_directories"],
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# Build CI status record
+# ---------------------------------------------------------------------------
+
+
+def build_ci_status(commit_sha: str, test_results: dict) -> dict[str, Any]:
+    """Build a CI status record for the freeze package.
+
+    Records the CI workflow configuration, the latest CI run on the
+    repository (if available via ``gh``), and the local test results
+    that serve as the authoritative test status for this freeze.
+
+    The freeze commit is on a feature branch that does not trigger CI
+    (the workflow fires on push to main/develop and PRs to main).  The
+    local test run with ``DATABASE_URL`` set is the authoritative
+    equivalent: it runs the same test suite that CI runs, plus the
+    PostgreSQL integration tests that CI runs in a separate job.
+    """
+    ci_status: dict[str, Any] = {
+        "workflow_file": ".github/workflows/tests.yml",
+        "workflow_triggers": {
+            "push": ["main", "develop"],
+            "pull_request": ["main"],
+            "workflow_dispatch": True,
+        },
+        "ci_jobs": [
+            {
+                "name": "unit-tests",
+                "runs_on": "ubuntu-latest",
+                "python": "3.12",
+                "command": "pytest -q",
+            },
+            {
+                "name": "postgres-integration",
+                "runs_on": "ubuntu-latest",
+                "python": "3.12",
+                "command": "pytest -q test_persistence_integration.py",
+                "services": ["postgres:16"],
+            },
+        ],
+        "freeze_branch": git_branch(),
+        "ci_triggered_on_branch": False,
+        "note": (
+            "The freeze commit is on a feature branch that does not "
+            "trigger CI.  The local test run (with DATABASE_URL set) is "
+            "the authoritative test status: it runs the same suite as "
+            "the CI unit-tests job plus the PostgreSQL integration tests "
+            "that CI runs in a separate job."
+        ),
+        "local_test_results": test_results,
+        "freeze_commit": commit_sha,
+    }
+
+    # Attempt to query the latest CI run on main via gh CLI.
+    try:
+        result = subprocess.run(
+            ["gh", "run", "list", "--branch", "main", "--limit", "1",
+             "--json", "status,conclusion,headBranch,databaseId,createdAt"],
+            capture_output=True, text=True, check=True, timeout=15,
+        )
+        runs = json.loads(result.stdout)
+        if runs:
+            run = runs[0]
+            ci_status["latest_ci_run_on_main"] = {
+                "status": run.get("status"),
+                "conclusion": run.get("conclusion"),
+                "branch": run.get("headBranch"),
+                "run_id": run.get("databaseId"),
+                "created_at": run.get("createdAt"),
+            }
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+            json.JSONDecodeError, FileNotFoundError):
+        ci_status["latest_ci_run_on_main"] = None
+
+    return ci_status
 
 
 # ---------------------------------------------------------------------------
@@ -637,7 +758,7 @@ def freeze() -> dict[str, Any]:
 
     commit_sha = git_commit_sha()
     short_sha = git_short_sha()
-    frozen_at = datetime.now(UTC).isoformat()
+    frozen_at = get_frozen_at()
 
     print(f"  Commit: {commit_sha}")
     print(f"  Branch: {git_branch()}")
@@ -728,11 +849,20 @@ def freeze() -> dict[str, Any]:
         encoding="utf-8",
     )
 
+    # --- Write CI status ---
+    print("  Writing CI status...")
+    test_results = deliv.get("2_tests", {})
+    ci_status = build_ci_status(commit_sha, test_results)
+    (FREEZE_DIR / "ci_status.json").write_text(
+        json.dumps(ci_status, indent=2, default=str), encoding="utf-8"
+    )
+
     # --- Write artifact 14: Final development report ---
     print("  Building final development report...")
     report_text = build_final_report(
         commit_sha, step_17b, defect_diagnosis, code_hashes, input_manifest,
         report_sha256=None,  # will be filled after hashing
+        frozen_at=frozen_at,
     )
     report_path = FREEZE_DIR / "FINAL_DEVELOPMENT_REPORT.md"
     report_path.write_text(report_text, encoding="utf-8")
@@ -821,8 +951,15 @@ def freeze() -> dict[str, Any]:
 
     # --- Write artifact 16: Immutable run record ---
     print("  Writing immutable run record...")
-    run_record = build_run_record(commit_sha, code_hashes, input_manifest)
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    run_record = build_run_record(
+        commit_sha, code_hashes, input_manifest, frozen_at,
+    )
+    # Derive a deterministic filename from frozen_at so re-runs overwrite
+    # the same file rather than creating duplicates.
+    timestamp = (
+        frozen_at.replace(":", "").replace("-", "")
+        .replace("+0000", "Z").split(".")[0]
+    )
     run_record_path = RUN_RECORDS_DIR / f"{timestamp}_step_18_freeze.json"
     run_record_path.write_text(
         json.dumps(run_record, indent=2), encoding="utf-8"
@@ -1020,6 +1157,7 @@ def verify_freeze(freeze_info: dict) -> list[str]:
         "test_results.json",
         "postgresql_integrity.json",
         "false_authoritative_promotion.json",
+        "ci_status.json",
         "REPRODUCIBILITY.md",
         "CAPABILITY_STATEMENT.md",
     ]

@@ -14,7 +14,7 @@ __pycache__/
 
 # Local data and generated outputs
 data/
-results/
+results/*
 *.log
 
 # IDE
@@ -24,3 +24,9 @@ results/
 # Research exception:
 # Do NOT ignore research/run_records if you intentionally want to commit
 # immutable formal run records after review.
+
+# Freeze exception:
+# The Step 18 freeze package is an immutable release artifact and must be
+# version-controlled so the frozen hashes, report, and records are
+# reproducible from the tagged commit.
+!results/step_18_freeze/
