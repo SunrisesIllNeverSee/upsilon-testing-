@@ -161,7 +161,11 @@ def _latest_version(conn: "Connection", commitment_id: UUID) -> dict[str, Any] |
           cure, application_order
         FROM commitment_version
         WHERE commitment_id = %s
-        ORDER BY recorded_at DESC, created_at DESC
+        ORDER BY
+            (valid_to IS NULL) DESC,
+            valid_from DESC,
+            recorded_at DESC,
+            created_at DESC
         LIMIT 1
         """,
         (commitment_id,),
