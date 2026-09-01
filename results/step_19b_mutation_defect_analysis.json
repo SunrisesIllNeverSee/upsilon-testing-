@@ -1,0 +1,133 @@
+{
+  "analysis": "step_19b_mutation_defect_analysis",
+  "analysis_timestamp": "2026-09-01T11:28:14.236661+00:00",
+  "frozen_system": "v1.0-frozen-operational-build",
+  "total_incorrect_mutations": 3,
+  "evidence_class_counts": {
+    "A": 3,
+    "B": 0,
+    "C": 0
+  },
+  "mutations": [
+    {
+      "chain_id": "HELD-009",
+      "issuer": "Kayne Anderson BDC, Inc.  (KBDC) (CIK 0001747172)",
+      "cik": "0001747172",
+      "amendment_number": 2,
+      "accession": "0001213900-24-001581",
+      "source_document": "data/held_out/HELD-009/A2.txt",
+      "source_span": [
+        2657,
+        3727
+      ],
+      "source_excerpt": "s hereby amended by amending and restating the following definitions as follows:\n\u201c\nApplicable Margin\n\u201d\nmeans from and after the Fourth Amendment Effective Date, with respect to the Subscription Facility, (i) in the case of any Base Rate\nLoan, 0.50 percentage points, or (ii) in the case of any SOFR L",
+      "parsed_instruction": {
+        "order": 1,
+        "instruction_type": "ADD",
+        "target_section_ref": "Section\n1.1",
+        "old_value": null,
+        "new_value": null
+      },
+      "semantic_mapping": {
+        "target_key": "facility.credit_agreement",
+        "operation": "REPLACE_VALUE",
+        "value": "0.075",
+        "ambiguity_reason": null
+      },
+      "applied_mutation": {
+        "order": 1,
+        "instruction_type": "REPLACE_VALUE",
+        "target_key": "facility.credit_agreement"
+      },
+      "reconstructed_field": "facility.credit_agreement",
+      "reconstructed_value": null,
+      "executor_rejection_reason": "UNKNOWN_COMMITMENT",
+      "target_key_in_state": false,
+      "state_keys_sample": [],
+      "basis_for_incorrect": "Target key 'facility.credit_agreement' is a PHANTOM KEY: the S0 extractor never produces this key in any chain (development or held-out).  The mapper's rule targets a commitment that the system's own extractor cannot create.  This is independently demonstrable from the system's architecture \u2014 no gold required.",
+      "evidence_class": "A",
+      "evidence_label": "INDEPENDENTLY DEMONSTRABLE FROM SOURCE TEXT",
+      "source_supports_mapping": false
+    },
+    {
+      "chain_id": "HELD-012",
+      "issuer": "HighPeak Energy, Inc.  (HPK, HPKEW) (CIK 0001792849)",
+      "cik": "0001792849",
+      "amendment_number": 10,
+      "accession": "0001437749-25-024452",
+      "source_document": "data/held_out/HELD-012/A8.txt",
+      "source_span": [
+        2840,
+        3904
+      ],
+      "source_excerpt": "8.12(a), then the \u201cApplicable Margin\u201d means the rate per annum set forth on the grid when the Utilization Percentage is at its highest level until such Reserve Report is delivered;\nprovided further\nthat, at all times from the Ninth Amendment Effective Date through and including the September\u00a02023 Re",
+      "parsed_instruction": {
+        "order": 1,
+        "instruction_type": "ADD",
+        "target_section_ref": "Section 1.02",
+        "old_value": null,
+        "new_value": null
+      },
+      "semantic_mapping": {
+        "target_key": "facility.credit_agreement",
+        "operation": "REPLACE_VALUE",
+        "value": "1.0",
+        "ambiguity_reason": null
+      },
+      "applied_mutation": {
+        "order": 1,
+        "instruction_type": "REPLACE_VALUE",
+        "target_key": "facility.credit_agreement"
+      },
+      "reconstructed_field": "facility.credit_agreement",
+      "reconstructed_value": null,
+      "executor_rejection_reason": "UNKNOWN_COMMITMENT",
+      "target_key_in_state": false,
+      "state_keys_sample": [],
+      "basis_for_incorrect": "Target key 'facility.credit_agreement' is a PHANTOM KEY: the S0 extractor never produces this key in any chain (development or held-out).  The mapper's rule targets a commitment that the system's own extractor cannot create.  This is independently demonstrable from the system's architecture \u2014 no gold required.",
+      "evidence_class": "A",
+      "evidence_label": "INDEPENDENTLY DEMONSTRABLE FROM SOURCE TEXT",
+      "source_supports_mapping": false
+    },
+    {
+      "chain_id": "HELD-016",
+      "issuer": "BOSTON OMAHA Corp  (BOC) (CIK 0001494582)",
+      "cik": "0001494582",
+      "amendment_number": 9,
+      "accession": "0001437749-24-004563",
+      "source_document": "data/held_out/HELD-016/A8.txt",
+      "source_span": [
+        1344,
+        2477
+      ],
+      "source_excerpt": "and\nWHEREAS, the parties desire to amend the Credit Agreement as set forth in this Amendment.\nNOW, THEREFORE, in consideration of the mutual covenants herein contained and for other good and valuable consideration, the receipt and sufficiency of which is hereby acknowledged, the parties hereto agree",
+      "parsed_instruction": {
+        "order": 1,
+        "instruction_type": "REPLACE_TEXT",
+        "target_section_ref": "Section 3.01(a)",
+        "old_value": "reference to ",
+        "new_value": " "
+      },
+      "semantic_mapping": {
+        "target_key": "facility.credit_agreement",
+        "operation": "REPLACE_VALUE",
+        "value": "2025-08-12",
+        "ambiguity_reason": null
+      },
+      "applied_mutation": {
+        "order": 1,
+        "instruction_type": "REPLACE_VALUE",
+        "target_key": "facility.credit_agreement"
+      },
+      "reconstructed_field": "facility.credit_agreement",
+      "reconstructed_value": null,
+      "executor_rejection_reason": "UNKNOWN_COMMITMENT",
+      "target_key_in_state": false,
+      "state_keys_sample": [],
+      "basis_for_incorrect": "Target key 'facility.credit_agreement' is a PHANTOM KEY: the S0 extractor never produces this key in any chain (development or held-out).  The mapper's rule targets a commitment that the system's own extractor cannot create.  This is independently demonstrable from the system's architecture \u2014 no gold required.",
+      "evidence_class": "A",
+      "evidence_label": "INDEPENDENTLY DEMONSTRABLE FROM SOURCE TEXT",
+      "source_supports_mapping": false
+    }
+  ]
+}

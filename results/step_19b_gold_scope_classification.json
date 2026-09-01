@@ -1,0 +1,409 @@
+{
+  "analysis": "step_19b_gold_scope_classification",
+  "analysis_timestamp": "2026-09-01T11:29:34.039841+00:00",
+  "frozen_system": "v1.0-frozen-operational-build",
+  "system_extractor_keys": {
+    "s0": [
+      "facility.revolving_facility",
+      "facility.term_loan",
+      "financial_covenant.fixed_charge_coverage",
+      "financial_covenant.interest_coverage",
+      "financial_covenant.leverage_ratio"
+    ],
+    "gt": [
+      "facility.revolving_facility"
+    ],
+    "mapper_targets": [
+      "facility.credit_agreement"
+    ]
+  },
+  "gold_commitment_ids": [
+    "financial_covenant.collateral_requirement",
+    "financial_covenant.coverage_ratio",
+    "financial_covenant.indebtedness_limit",
+    "financial_covenant.leverage_ratio",
+    "financial_covenant.liquidity",
+    "financial_covenant.other",
+    "financial_covenant.tangible_net_worth"
+  ],
+  "classification_counts": {
+    "GOLD_PENDING": 1,
+    "SYSTEM_UNSUPPORTED": 4,
+    "GOLD_NOT_IN_SCOPE": 6,
+    "GOLD_ELIGIBLE": 1
+  },
+  "classifications": [
+    {
+      "commitment_id": "facility.credit_agreement",
+      "classification": "GOLD_PENDING",
+      "in_s0_extractor": false,
+      "in_gt_extractor": false,
+      "in_gold": false,
+      "is_mapper_target": true
+    },
+    {
+      "commitment_id": "facility.revolving_facility",
+      "classification": "SYSTEM_UNSUPPORTED",
+      "in_s0_extractor": true,
+      "in_gt_extractor": true,
+      "in_gold": false,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "facility.term_loan",
+      "classification": "SYSTEM_UNSUPPORTED",
+      "in_s0_extractor": true,
+      "in_gt_extractor": false,
+      "in_gold": false,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.collateral_requirement",
+      "classification": "GOLD_NOT_IN_SCOPE",
+      "in_s0_extractor": false,
+      "in_gt_extractor": false,
+      "in_gold": true,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.coverage_ratio",
+      "classification": "GOLD_NOT_IN_SCOPE",
+      "in_s0_extractor": false,
+      "in_gt_extractor": false,
+      "in_gold": true,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.fixed_charge_coverage",
+      "classification": "SYSTEM_UNSUPPORTED",
+      "in_s0_extractor": true,
+      "in_gt_extractor": false,
+      "in_gold": false,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.indebtedness_limit",
+      "classification": "GOLD_NOT_IN_SCOPE",
+      "in_s0_extractor": false,
+      "in_gt_extractor": false,
+      "in_gold": true,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.interest_coverage",
+      "classification": "SYSTEM_UNSUPPORTED",
+      "in_s0_extractor": true,
+      "in_gt_extractor": false,
+      "in_gold": false,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.leverage_ratio",
+      "classification": "GOLD_ELIGIBLE",
+      "in_s0_extractor": true,
+      "in_gt_extractor": false,
+      "in_gold": true,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.liquidity",
+      "classification": "GOLD_NOT_IN_SCOPE",
+      "in_s0_extractor": false,
+      "in_gt_extractor": false,
+      "in_gold": true,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.other",
+      "classification": "GOLD_NOT_IN_SCOPE",
+      "in_s0_extractor": false,
+      "in_gt_extractor": false,
+      "in_gold": true,
+      "is_mapper_target": false
+    },
+    {
+      "commitment_id": "financial_covenant.tangible_net_worth",
+      "classification": "GOLD_NOT_IN_SCOPE",
+      "in_s0_extractor": false,
+      "in_gt_extractor": false,
+      "in_gold": true,
+      "is_mapper_target": false
+    }
+  ],
+  "per_chain": [
+    {
+      "chain_id": "HELD-002",
+      "total_records": 34,
+      "classifications": [
+        {
+          "commitment_id": "financial_covenant.leverage_ratio",
+          "field": "commitment_type",
+          "classification": "GOLD_ELIGIBLE"
+        },
+        {
+          "commitment_id": "financial_covenant.leverage_ratio",
+          "field": "operator",
+          "classification": "GOLD_ELIGIBLE"
+        },
+        {
+          "commitment_id": "financial_covenant.leverage_ratio",
+          "field": "party",
+          "classification": "GOLD_ELIGIBLE"
+        },
+        {
+          "commitment_id": "financial_covenant.leverage_ratio",
+          "field": "threshold",
+          "classification": "GOLD_ELIGIBLE"
+        },
+        {
+          "commitment_id": "financial_covenant.leverage_ratio",
+          "field": "unit",
+          "classification": "GOLD_ELIGIBLE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "party",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "party",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.coverage_ratio",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.tangible_net_worth",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.tangible_net_worth",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.tangible_net_worth",
+          "field": "party",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.tangible_net_worth",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.tangible_net_worth",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.liquidity",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.liquidity",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.liquidity",
+          "field": "party",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.liquidity",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.liquidity",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "party",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.collateral_requirement",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.collateral_requirement",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.collateral_requirement",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.collateral_requirement",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        }
+      ]
+    },
+    {
+      "chain_id": "HELD-004",
+      "total_records": 4,
+      "classifications": [
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.indebtedness_limit",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        }
+      ]
+    },
+    {
+      "chain_id": "HELD-008",
+      "total_records": 0,
+      "classifications": []
+    },
+    {
+      "chain_id": "HELD-001",
+      "total_records": 0,
+      "classifications": []
+    },
+    {
+      "chain_id": "HELD-005",
+      "total_records": 11,
+      "classifications": [
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "party",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "commitment_type",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "frequency",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "operator",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "party",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "threshold",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        },
+        {
+          "commitment_id": "financial_covenant.other",
+          "field": "unit",
+          "classification": "GOLD_NOT_IN_SCOPE"
+        }
+      ]
+    }
+  ],
+  "scoring_rule": "Only GOLD_ELIGIBLE records (keys produced by BOTH the system extractor AND the gold annotator) can be scored as reconstruction errors.  GOLD_NOT_IN_SCOPE and SYSTEM_UNSUPPORTED records represent scope mismatches, not reconstruction errors.  GOLD_PENDING records await human review."
+}

@@ -30,3 +30,17 @@ results/*
 # version-controlled so the frozen hashes, report, and records are
 # reproducible from the tagged commit.
 !results/step_18_freeze/
+
+# Step 19B.2 exception:
+# The held-out run lock, mutation defect analysis, gold scope
+# classification, and Track B status are immutable records that must be
+# version-controlled for reproducibility.  The held-out study results
+# JSON and the provisional report are also version-controlled so the
+# locked predictions are reproducible.  Raw data/ and proxy gold files
+# remain gitignored (large, and human gold is not yet locked).
+!results/step_19b_held_out_run_lock.json
+!results/step_19b_mutation_defect_analysis.json
+!results/step_19b_gold_scope_classification.json
+!results/step_19b_track_b_status.md
+!results/step_19b_held_out_confirmatory_study.md
+!results/held_out_study_results.json
