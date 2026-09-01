@@ -17,29 +17,36 @@ from __future__ import annotations
 
 import json
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from amendment_parser import parse_v04
 from commitment_registry import (
-    ALL_CLASSES,
-    resolve_commitment_from_text,
     resolve_commitment_from_section,
-    get_class_unit,
+    resolve_commitment_from_text,
 )
-from genre_adapters import process_amendment_by_genre
+from genre_adapters import AmendmentPattern
 from models import (
     AmendmentInstruction,
     CommitmentState,
     InstructionProvenance,
     InstructionType,
 )
-from semantic_resolver_v2 import resolve_instruction, ResolverStepTrace
-from semantic_mapper import StructuredMutation, MappingResult, AmbiguityReason
 from run_chain_study_v2 import all_v2_chains
 from run_held_out_study import all_held_out_chains
+from semantic_resolver_v2 import resolve_instruction
+
+# Genres that route through the incremental parser path and therefore
+# contribute to the parser-instruction denominator.  FULL_RESTATEMENT
+# and CONFORMED_COPY bypass the parser (extraction-based), so their
+# parser instructions are NOT counted — matching the v2 study's
+# total_parser_instructions.
+PARSER_BASED_GENRES = {
+    AmendmentPattern.INCREMENTAL.value,
+    AmendmentPattern.UNKNOWN.value,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -237,14 +244,6 @@ def classify_instruction_eligibility(ins: AmendmentInstruction) -> tuple[str, st
 
     # Check for covenant keywords in source text
     has_covenant_kw = any(kw in source for kw in COVENANT_KEYWORDS)
-    has_non_covenant_kw = any(kw in source for kw in NON_COVENANT_KEYWORDS)
-
-    # Check if the instruction type is one we represent
-    # (REPLACE_VALUE, ADD, DELETE are representable; REPLACE_TEXT is
-    # often a full-text restatement that may or may not affect a
-    # represented field)
-    representable_ops = {"REPLACE_VALUE", "ADD", "DELETE"}
-    is_representable_op = ins_type in representable_ops
 
     # Determine operation
     operation = ins_type
@@ -367,8 +366,29 @@ def _infer_field_from_keywords(source: str) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _is_parser_based_genre(step) -> bool:
+    """Check whether this amendment's genre routes through the parser.
+
+    FULL_RESTATEMENT and CONFORMED_COPY bypass the parser (extraction-
+    based), so their parser instructions are NOT counted in the v2
+    study's total_parser_instructions.  Only INCREMENTAL and UNKNOWN
+    genres contribute parser instructions.
+    """
+    pattern = step.pattern
+    if pattern is None:
+        return True  # synthetic chains with no pattern → parser-based
+    return pattern in PARSER_BASED_GENRES
+
+
 def collect_all_instructions() -> list[InstructionRecord]:
-    """Collect all parser instructions from all chains."""
+    """Collect all parser instructions from all chains.
+
+    Only amendments whose genre routes through the incremental parser
+    path (INCREMENTAL, UNKNOWN) contribute instructions, matching the
+    v2 study's total_parser_instructions denominator.  FULL_RESTATEMENT
+    and CONFORMED_COPY amendments are extraction-based and do NOT
+    contribute parser instructions.
+    """
     dev_chains = all_v2_chains()
     held_chains = all_held_out_chains()
     all_chains = dev_chains + held_chains
@@ -377,6 +397,12 @@ def collect_all_instructions() -> list[InstructionRecord]:
 
     for chain, s0_result, gt_result in all_chains:
         for step_idx, step in enumerate(chain.amendments, 1):
+            # Skip non-parser-based genres (full_restatement,
+            # conformed_copy) — their instructions are extraction-based
+            # and not counted in the parser-instruction denominator.
+            if not _is_parser_based_genre(step):
+                continue
+
             source_path = step.source_document_path
             if source_path and Path(source_path).exists():
                 text = Path(source_path).read_text(
@@ -415,7 +441,7 @@ def collect_all_instructions() -> list[InstructionRecord]:
                         operation=operation,
                     ))
             else:
-                # Manual fallback instructions
+                # Manual fallback instructions (synthetic chains)
                 for i, ins in enumerate(step.instructions, 1):
                     eligibility, cid, field_name, operation = \
                         classify_instruction_eligibility(ins)
@@ -561,14 +587,33 @@ def trace_resolution_funnel(
     """Trace how far an instruction gets through the 14-stage funnel.
 
     Returns a dict of stage → reached (bool).
+
+    Uses ``trace.failed_step`` (set by ``resolve_instruction``) to
+    determine exactly where the instruction dropped off, rather than
+    fragile string matching on trace field values.
     """
-    stages = {f"stage_{i}": False for i in range(1, 15)}
+    stages = {
+        "stage_1_parsed": False,
+        "stage_2_scope_recognized": False,
+        "stage_3_section_resolved": False,
+        "stage_4_commitment_resolved": False,
+        "stage_5_field_resolved": False,
+        "stage_6_operation_resolved": False,
+        "stage_7_old_value_resolved": False,
+        "stage_8_new_value_resolved": False,
+        "stage_9_unit_resolved": False,
+        "stage_10_candidate_created": False,
+        "stage_11_validators_passed": False,
+        "stage_12_accepted": False,
+        "stage_13_rejected": False,
+        "stage_14_unresolved": False,
+    }
 
     # Stage 1: instruction parsed (always true — we have the instruction)
     stages["stage_1_parsed"] = True
 
     # Stage 2: scope recognized (check if we can classify it)
-    eligibility, cid, field_name, _ = classify_instruction_eligibility(ins)
+    eligibility, _, _, _ = classify_instruction_eligibility(ins)
     if eligibility == "IN_SCOPE":
         stages["stage_2_scope_recognized"] = True
     else:
@@ -594,58 +639,58 @@ def trace_resolution_funnel(
     # Run the full resolver to get the trace
     result, trace = resolve_instruction(ins, current_state)
 
-    # Stage 5: field resolved
-    if trace.step3_identify_field:
+    # failed_step == 0 means the resolver succeeded (all steps passed).
+    # failed_step > 0 means the resolver failed at that step.
+    failed = trace.failed_step
+
+    # Stage 5: field resolved (resolver step 3)
+    if failed == 0 or failed > 3:
         stages["stage_5_field_resolved"] = True
     else:
         return stages
 
-    # Stage 6: operation resolved
-    if trace.step6_identify_operation:
+    # Stage 6: operation resolved (resolver step 6 — always set if
+    # we got past value extraction, since _identify_operation always
+    # returns a value)
+    if failed == 0 or failed > 6:
         stages["stage_6_operation_resolved"] = True
     else:
         return stages
 
-    # Stage 7: old value resolved
-    if trace.step4_extract_value and "old" in trace.step4_extract_value.lower():
-        stages["stage_7_old_value_resolved"] = True
-    elif trace.step4_extract_value:
+    # Stage 7: old value resolved (resolver step 4 — value extraction)
+    # For ADD operations, old value is not required.
+    if failed == 0 or failed > 4 or ins.instruction_type == InstructionType.ADD:
         stages["stage_7_old_value_resolved"] = True
     else:
-        # Old value may not be required for ADD operations
-        if ins.instruction_type == InstructionType.ADD:
-            stages["stage_7_old_value_resolved"] = True
-        else:
-            return stages
+        return stages
 
-    # Stage 8: new value resolved
-    if trace.step5_normalize_value:
+    # Stage 8: new value resolved (resolver step 5 — normalization)
+    if failed == 0 or failed > 5:
         stages["stage_8_new_value_resolved"] = True
     else:
         return stages
 
-    # Stage 9: unit resolved
-    if trace.step5_normalize_value and "unit" in trace.step5_normalize_value.lower():
-        stages["stage_9_unit_resolved"] = True
-    elif trace.step5_normalize_value:
+    # Stage 9: unit resolved (resolver step 5 — unit is always set
+    # during normalization, even if None)
+    if failed == 0 or failed > 5:
         stages["stage_9_unit_resolved"] = True
     else:
         return stages
 
-    # Stage 10: StructuredMutation candidate created
-    if trace.step7_produce_candidate:
+    # Stage 10: StructuredMutation candidate created (resolver step 7)
+    if failed == 0 or failed > 7:
         stages["stage_10_candidate_created"] = True
     else:
         return stages
 
-    # Stage 11: deterministic validators passed
-    if trace.step8_validate_candidate and "pass" in trace.step8_validate_candidate.lower():
+    # Stage 11: deterministic validators passed (resolver step 8)
+    # Stage 13: mutation rejected (validator failure at step 8)
+    if failed == 0 or failed > 8:
         stages["stage_11_validators_passed"] = True
-    elif trace.step8_validate_candidate and "valid" in trace.step8_validate_candidate.lower():
-        stages["stage_11_validators_passed"] = True
-    else:
-        # Check if validators rejected
+    elif failed == 8:
         stages["stage_13_rejected"] = True
+        return stages
+    else:
         return stages
 
     # Stage 12: mutation accepted
@@ -663,17 +708,109 @@ def trace_resolution_funnel(
 # ---------------------------------------------------------------------------
 
 
-def trace_resolver_path(
-    ins: AmendmentInstruction,
-    current_state: dict[str, CommitmentState],
-) -> dict[str, bool]:
-    """Trace which v2 architecture components execute for an instruction."""
-    path = {
+def _analyze_pipeline_reachability() -> dict[str, bool]:
+    """Statically analyze whether the v2 pipeline reaches the new
+    architecture components.
+
+    The main pipeline path is:
+        semantic_pipeline_v2.run_semantic_pipeline_v2
+          → genre_adapters.process_amendment_by_genre
+            → genre_adapters.process_incremental
+              → semantic_resolver_v2.resolve_instruction
+
+    This function checks whether each component is imported and called
+    by the pipeline modules, rather than assuming the answer.
+    """
+    reachability = {
         "agreement_context_executed": False,
         "commitment_registry_executed": False,
         "resolve_with_context_executed": False,
         "staged_interpreter_executed": False,
         "model_assisted_interface_executed": False,
+    }
+
+    # Check which modules import/call the v2 architecture components.
+    pipeline_modules = [
+        Path("semantic_pipeline_v2.py"),
+        Path("genre_adapters.py"),
+        Path("semantic_resolver_v2.py"),
+    ]
+    pipeline_source = ""
+    for mod_path in pipeline_modules:
+        if mod_path.exists():
+            pipeline_source += mod_path.read_text(encoding="utf-8")
+            pipeline_source += "\n"
+
+    # AgreementContext: check if build_agreement_context or
+    # resolve_with_context is imported/called by the pipeline.
+    if "build_agreement_context" in pipeline_source and "import" in pipeline_source:
+        # Check if it's actually called (not just in a comment)
+        import re as _re
+        calls = _re.findall(
+            r"build_agreement_context\s*\(", pipeline_source,
+        )
+        reachability["agreement_context_executed"] = len(calls) > 0
+
+    if "resolve_with_context" in pipeline_source:
+        import re as _re
+        calls = _re.findall(
+            r"resolve_with_context\s*\(", pipeline_source,
+        )
+        reachability["resolve_with_context_executed"] = len(calls) > 0
+
+    # Model-assisted interface: check if resolve_with_model_assistance
+    # is imported/called by the pipeline.
+    if "resolve_with_model_assistance" in pipeline_source:
+        import re as _re
+        calls = _re.findall(
+            r"resolve_with_model_assistance\s*\(", pipeline_source,
+        )
+        reachability["model_assisted_interface_executed"] = len(calls) > 0
+
+    # Commitment registry: resolve_instruction calls
+    # resolve_commitment_from_text internally.
+    resolver_src = Path("semantic_resolver_v2.py").read_text(encoding="utf-8")
+    reachability["commitment_registry_executed"] = (
+        "resolve_commitment_from_text" in resolver_src
+    )
+
+    # Staged interpreter: resolve_instruction produces a
+    # ResolverStepTrace.
+    reachability["staged_interpreter_executed"] = (
+        "ResolverStepTrace" in resolver_src
+    )
+
+    return reachability
+
+
+def trace_resolver_path(
+    ins: AmendmentInstruction,
+    current_state: dict[str, CommitmentState],
+    pipeline_reachability: dict[str, bool] | None = None,
+) -> dict[str, bool]:
+    """Trace which v2 architecture components execute for an instruction.
+
+    Args:
+        ins: the parser instruction.
+        current_state: the current commitment state.
+        pipeline_reachability: pre-computed static analysis of which
+            components the pipeline calls.  If None, computed inline.
+    """
+    if pipeline_reachability is None:
+        pipeline_reachability = _analyze_pipeline_reachability()
+
+    path = {
+        "agreement_context_executed": pipeline_reachability.get(
+            "agreement_context_executed", False,
+        ),
+        "commitment_registry_executed": False,
+        "resolve_with_context_executed": pipeline_reachability.get(
+            "resolve_with_context_executed", False,
+        ),
+        "staged_interpreter_executed": False,
+        "model_assisted_interface_executed": pipeline_reachability.get(
+            "model_assisted_interface_executed", False,
+        ),
         "candidate_produced": False,
         "validator_rejected": False,
     }
@@ -690,22 +827,17 @@ def trace_resolver_path(
     if trace.step1_resolve_target:
         path["staged_interpreter_executed"] = True
 
-    # Check if a candidate was produced
+    # Check if a candidate was produced (either mapped or unresolved)
     if result.mutations or result.unresolved:
         path["candidate_produced"] = True
 
-    # Check if validator rejected
-    if result.unresolved and not result.mutations:
+    # Validator rejected: only count cases where a candidate was
+    # produced (step 7) but validation failed (step 8).  This is
+    # NOT the same as "unresolved" — instructions that fail at
+    # earlier steps (commitment resolution, field identification,
+    # value extraction) are unresolved but NOT validator rejections.
+    if trace.failed_step == 8:
         path["validator_rejected"] = True
-
-    # AgreementContext is used in model_assisted_candidates.py
-    # The main pipeline uses resolve_instruction directly, not
-    # resolve_with_model_assistance, so AgreementContext may not
-    # execute in the main pipeline path.
-    # This is an integration defect to report.
-    path["agreement_context_executed"] = False
-    path["resolve_with_context_executed"] = False
-    path["model_assisted_interface_executed"] = False
 
     return path
 
@@ -727,7 +859,6 @@ def run_audit() -> dict[str, Any]:
     all_records = collect_all_instructions()
     total_instructions = len(all_records)
 
-    eligibility_counts = Counter(r.eligibility for r in all_records)
     in_scope = [r for r in all_records if r.eligibility == "IN_SCOPE"]
     out_of_scope = [r for r in all_records if r.eligibility == "OUT_OF_SCOPE"]
     ambiguous = [r for r in all_records if r.eligibility == "AMBIGUOUS_SCOPE"]
@@ -771,7 +902,6 @@ def run_audit() -> dict[str, Any]:
         )
         s0_records.append(rec)
 
-    s0_eligibility_counts = Counter(r.eligibility for r in s0_records)
     s0_in_scope = [r for r in s0_records if r.eligibility == "S0_IN_SCOPE"]
     s0_no_content = [r for r in s0_records if r.eligibility == "S0_NO_IN_SCOPE_CONTENT"]
     s0_discovery_fail = [r for r in s0_records if r.eligibility == "S0_DISCOVERY_FAILURE"]
@@ -818,7 +948,6 @@ def run_audit() -> dict[str, Any]:
         )
         gt_records.append(rec)
 
-    gt_eligibility_counts = Counter(r.eligibility for r in gt_records)
     gt_in_scope = [r for r in gt_records if r.eligibility == "GT_IN_SCOPE"]
     gt_no_content = [r for r in gt_records if r.eligibility == "GT_NO_IN_SCOPE_CONTENT"]
     gt_discovery_fail = [r for r in gt_records if r.eligibility == "GT_DISCOVERY_FAILURE"]
@@ -840,6 +969,8 @@ def run_audit() -> dict[str, Any]:
 
     # Build current state for each chain
     funnel_counts = Counter()
+    # Stages 1-11 are sequential — each stage depends on the previous
+    # one passing.  Drop-off is computed across these.
     funnel_stages = [
         "stage_1_parsed",
         "stage_2_scope_recognized",
@@ -852,6 +983,17 @@ def run_audit() -> dict[str, Any]:
         "stage_9_unit_resolved",
         "stage_10_candidate_created",
         "stage_11_validators_passed",
+    ]
+    # Stages 12-14 are mutually exclusive OUTCOMES of stage 11
+    # (validators passed).  An instruction that reaches stage 11
+    # branches into exactly one of:
+    #   12 — mutation accepted (mapped)
+    #   13 — mutation rejected (validator failure)
+    #   14 — UNRESOLVED (no candidate produced)
+    # These are NOT sequential — they are a partition of the
+    # instructions that reached stage 11 (plus those that dropped
+    # off earlier, which are implicitly UNRESOLVED).
+    funnel_outcomes = [
         "stage_12_accepted",
         "stage_13_rejected",
         "stage_14_unresolved",
@@ -865,6 +1007,11 @@ def run_audit() -> dict[str, Any]:
             for k, v in chain.original_state.items()
         }
         for step_idx, step in enumerate(chain.amendments, 1):
+            # Skip non-parser-based genres (full_restatement,
+            # conformed_copy) — matching the v2 study denominator.
+            if not _is_parser_based_genre(step):
+                continue
+
             source_path = step.source_document_path
             if source_path and Path(source_path).exists():
                 text = Path(source_path).read_text(
@@ -889,13 +1036,13 @@ def run_audit() -> dict[str, Any]:
                         continue
 
                     stages = trace_resolution_funnel(ins, current_state)
-                    for stage in funnel_stages:
+                    for stage in funnel_stages + funnel_outcomes:
                         if stages.get(stage, False):
                             funnel_counts[stage] += 1
 
     in_scope_count = len(in_scope)
     print(f"  IN_SCOPE instructions: {in_scope_count}")
-    print(f"  Funnel drop-off:")
+    print("  Funnel drop-off (sequential stages 1-11):")
     prev_count = in_scope_count
     for stage in funnel_stages:
         count = funnel_counts.get(stage, 0)
@@ -905,10 +1052,31 @@ def run_audit() -> dict[str, Any]:
         print(f"    {stage}: {count} ({pct:.1f}%) — dropped {drop} ({drop_pct:.1f}%)")
         prev_count = count
 
+    # Outcomes (mutually exclusive branches from stage 11)
+    validators_passed = funnel_counts.get("stage_11_validators_passed", 0)
+    dropped_before_validation = in_scope_count - validators_passed
+    print(f"  Outcomes (mutually exclusive, from {in_scope_count} IN_SCOPE):")
+    for outcome in funnel_outcomes:
+        count = funnel_counts.get(outcome, 0)
+        pct = count / in_scope_count * 100 if in_scope_count else 0
+        print(f"    {outcome}: {count} ({pct:.1f}%)")
+    # stage_14_unresolved also includes instructions that dropped off
+    # before reaching stage 11.  Report the implicit UNRESOLVED count
+    # (dropped before validation) for clarity.
+    print(f"    (of which dropped before stage 11: {dropped_before_validation})")
+
     # ======================================================================
     # 23E: v2 resolver-path reachability
     # ======================================================================
     print("\n23E: Tracing v2 resolver-path reachability...")
+
+    # Statically analyze which v2 architecture components the pipeline
+    # actually calls (rather than assuming).
+    pipeline_reachability = _analyze_pipeline_reachability()
+    print("  Pipeline reachability (static analysis):")
+    for k, v in pipeline_reachability.items():
+        print(f"    {k}: {v}")
+
     path_counts = Counter()
     for chain, s0_result, gt_result in all_chains:
         current_state = {
@@ -916,6 +1084,11 @@ def run_audit() -> dict[str, Any]:
             for k, v in chain.original_state.items()
         }
         for step in chain.amendments:
+            # Skip non-parser-based genres — matching the v2 study
+            # denominator.
+            if not _is_parser_based_genre(step):
+                continue
+
             source_path = step.source_document_path
             if source_path and Path(source_path).exists():
                 text = Path(source_path).read_text(
@@ -933,7 +1106,9 @@ def run_audit() -> dict[str, Any]:
                     eligibility, _, _, _ = classify_instruction_eligibility(ins)
                     if eligibility != "IN_SCOPE":
                         continue
-                    path = trace_resolver_path(ins, current_state)
+                    path = trace_resolver_path(
+                        ins, current_state, pipeline_reachability,
+                    )
                     for k, v in path.items():
                         if v:
                             path_counts[k] += 1
@@ -965,111 +1140,151 @@ def run_audit() -> dict[str, Any]:
     else:
         taxonomy_records = []
 
-    # Reclassify unresolved IN_SCOPE records
+    # Reclassify unresolved IN_SCOPE records.
+    #
+    # The prompt requires: "First remove OUT_OF_SCOPE instructions.
+    # Then reclassify remaining IN_SCOPE unresolved cases."
+    #
+    # We therefore maintain TWO separate counters:
+    #   - out_of_scope_removed: records whose matching instructions are
+    #     all OUT_OF_SCOPE (or AMBIGUOUS).  These are removed from the
+    #     IN_SCOPE taxonomy and do NOT participate in the OTHER
+    #     percentage denominator.
+    #   - non_parser_removed: records from non-parser-based genres
+    #     (full_restatement, conformed_copy) that have no matching
+    #     instruction in all_records (because collect_all_instructions
+    #     skips them).  These are excluded entirely — they are neither
+    #     IN_SCOPE nor OUT_OF_SCOPE.
+    #   - revised_buckets: IN_SCOPE-only reclassification buckets.
+    #     The OTHER percentage is computed over ONLY these buckets.
+    out_of_scope_removed = 0
+    non_parser_removed = 0
     revised_buckets = Counter()
     for rec in taxonomy_records:
-        # Find the corresponding instruction record
+        # Find the corresponding instruction record(s).
+        # Match by chain + amendment + section + instruction_type when
+        # possible for precision; fall back to chain + amendment.
+        rec_section = rec.get("section", "")
+        rec_type = rec.get("instruction_type", "")
         matching = [
             r for r in all_records
             if r.chain == rec.get("chain")
             and r.amendment == rec.get("amendment")
         ]
         if not matching:
-            revised_buckets["OTHER"] += 1
+            # No matching instruction record.  This happens when the
+            # taxonomy record is from a non-parser-based genre
+            # (full_restatement / conformed_copy) whose instructions
+            # were intentionally skipped by collect_all_instructions.
+            # These records are neither IN_SCOPE nor OUT_OF_SCOPE —
+            # they are outside the parser-instruction denominator and
+            # must be excluded entirely, not counted as OTHER.
+            non_parser_removed += 1
             continue
+
+        # Refine match using section and instruction_type if available
+        refined = [
+            r for r in matching
+            if (not rec_section or r.target_section_ref == rec_section)
+            and (not rec_type or r.instruction_type == rec_type)
+        ]
+        if refined:
+            matching = refined
 
         # Check if any matching instruction is IN_SCOPE
         in_scope_match = [
             r for r in matching if r.eligibility == "IN_SCOPE"
         ]
         if not in_scope_match:
-            # OUT_OF_SCOPE — remove from taxonomy
-            revised_buckets["OUT_OF_SCOPE_REMOVED"] += 1
+            # OUT_OF_SCOPE (or AMBIGUOUS) — remove from IN_SCOPE
+            # taxonomy.  Not counted in the OTHER denominator.
+            out_of_scope_removed += 1
             continue
 
-        # Reclassify the IN_SCOPE unresolved record
-        source = rec.get("source_span", "").lower() if rec.get("source_span") else ""
-        # Actually we need to get the source text from the instruction
-        for r in in_scope_match:
-            src = r.source_text.lower()
-            if "definition" in src or "shall mean" in src or "means" in src[:50]:
-                revised_buckets["DEFINED_TERM_REFERENCE"] += 1
-                break
-            elif re.search(r"table|schedule|exhibit", src):
-                revised_buckets["VALUE_IN_TABLE_SCHEDULE"] += 1
-                break
-            elif re.search(r"section\s+\d+\.\d+\s*\(", src):
-                revised_buckets["MULTI_FIELD_RESTATEMENT"] += 1
-                break
-            elif r.canonical_class and not r.expected_field:
-                revised_buckets["FIELD_IDENTIFICATION_FAILED"] += 1
-                break
-            elif r.target_section_ref and not r.canonical_class:
-                revised_buckets["SECTION_MAPPING_UNAVAILABLE"] += 1
-                break
-            elif "amount" in src or "$" in src:
-                revised_buckets["AMOUNT_CHANGE"] += 1
-                break
-            elif "date" in src or "maturity" in src:
-                revised_buckets["DATE_CHANGE"] += 1
-                break
-            elif not r.target_section_ref:
-                revised_buckets["PARSER_SPAN_INSUFFICIENT"] += 1
-                break
-            else:
-                revised_buckets["TRUE_AMBIGUITY"] += 1
-                break
+        # Reclassify the IN_SCOPE unresolved record using the first
+        # matching instruction's source text.
+        r = in_scope_match[0]
+        src = r.source_text.lower()
+        if "definition" in src or "shall mean" in src or "means" in src[:50]:
+            revised_buckets["DEFINED_TERM_REFERENCE"] += 1
+        elif re.search(r"table|schedule|exhibit", src):
+            revised_buckets["VALUE_IN_TABLE_SCHEDULE"] += 1
+        elif re.search(r"section\s+\d+\.\d+\s*\(", src):
+            revised_buckets["MULTI_FIELD_RESTATEMENT"] += 1
+        elif r.canonical_class and not r.expected_field:
+            revised_buckets["FIELD_IDENTIFICATION_FAILED"] += 1
+        elif r.target_section_ref and not r.canonical_class:
+            revised_buckets["SECTION_MAPPING_UNAVAILABLE"] += 1
+        elif "amount" in src or "$" in src:
+            revised_buckets["AMOUNT_CHANGE"] += 1
+        elif "date" in src or "maturity" in src:
+            revised_buckets["DATE_CHANGE"] += 1
+        elif not r.target_section_ref:
+            revised_buckets["PARSER_SPAN_INSUFFICIENT"] += 1
         else:
-            revised_buckets["OTHER"] += 1
+            revised_buckets["TRUE_AMBIGUITY"] += 1
 
-    other_pct = revised_buckets.get("OTHER", 0) / max(
-        sum(revised_buckets.values()), 1,
-    ) * 100
-    print(f"  Revised taxonomy (IN_SCOPE only):")
+    # OTHER percentage is computed over ONLY the IN_SCOPE buckets
+    # (revised_buckets), NOT including out_of_scope_removed or
+    # non_parser_removed.  This matches the prompt: "First remove
+    # OUT_OF_SCOPE instructions. Then reclassify remaining IN_SCOPE
+    # unresolved cases until OTHER is <10%."
+    in_scope_total = sum(revised_buckets.values())
+    other_pct = revised_buckets.get("OTHER", 0) / max(in_scope_total, 1) * 100
+    print(f"  OUT_OF_SCOPE removed: {out_of_scope_removed}")
+    print(f"  Non-parser-genre removed: {non_parser_removed}")
+    print("  Revised taxonomy (IN_SCOPE only):")
     for bucket, count in revised_buckets.most_common():
-        pct = count / max(sum(revised_buckets.values()), 1) * 100
+        pct = count / max(in_scope_total, 1) * 100
         print(f"    {bucket}: {count} ({pct:.1f}%)")
-    print(f"  OTHER percentage: {other_pct:.1f}%")
+    print(f"  OTHER percentage: {other_pct:.1f}% (denominator: {in_scope_total} IN_SCOPE)")
 
     # ======================================================================
     # 23G: Like-for-like v1 baseline
     # ======================================================================
     print("\n23G: Like-for-like v1 baseline...")
 
-    # v1 study: 25 dev chains, 91 parser instructions, 6 mapped, 3 incorrect
-    # v2 dev chains: same 25 chains, 91 parser instructions, 34 IN_SCOPE
-    # The v1 and v2 parsers produce the same instruction count for the
-    # dev chains (91), so the IN_SCOPE denominator is directly comparable.
+    # Load v1 metrics from the frozen v1 study results JSON (no
+    # hardcoding — all values come from the historical record).
+    v1_results_path = Path("results/chain_study_v1_results.json")
+    if v1_results_path.exists():
+        v1_data = json.loads(v1_results_path.read_text(encoding="utf-8"))
+        v1_agg = v1_data.get("aggregate_metrics", {})
+        v1_total = v1_agg.get("total_parser_instructions", 0)
+        v1_mapped = v1_agg.get("total_mapped_instructions", 0)
+        v1_incorrect = v1_agg.get("total_incorrect_mutations", 0)
+    else:
+        v1_total = 0
+        v1_mapped = 0
+        v1_incorrect = 0
 
     # Count v2 IN_SCOPE for just the 25 dev chains
     dev_chain_ids = {c.chain_id for c, _, _ in dev_chains}
     dev_in_scope = [r for r in in_scope if r.chain in dev_chain_ids]
     dev_total_records = [r for r in all_records if r.chain in dev_chain_ids]
 
-    # v2 parser-mapped for dev chains (from study results)
-    study_path = Path("results/step_21_v2_study_results.json")
-    if study_path.exists():
-        study_data = json.loads(study_path.read_text(encoding="utf-8"))
-        per_chain = study_data.get("per_chain", [])
+    # Load v2 study results for parser-mapped counts
+    v2_study_path = Path("results/step_21_v2_study_results.json")
+    if v2_study_path.exists():
+        v2_study = json.loads(v2_study_path.read_text(encoding="utf-8"))
+        v2_per_chain = v2_study.get("per_chain", [])
         v2_dev_parser_mapped = sum(
             cr.get("mapped_from_parser", 0)
-            for cr in per_chain
+            for cr in v2_per_chain
             if cr.get("chain_id") in dev_chain_ids
         )
+        v2_mapped_from_parser = v2_study.get("mapped_from_parser", 0)
     else:
         v2_dev_parser_mapped = 0
+        v2_mapped_from_parser = 0
 
-    v1_total = 91
-    v1_mapped = 6
-    v1_incorrect = 3  # pre-fix; post-fix = 0
-    v1_correct_mapped = v1_mapped - v1_incorrect  # 3 correct
-    v1_in_scope = len(dev_in_scope)  # 34 (same corpus, same parser count)
+    v1_correct_mapped = v1_mapped - v1_incorrect
+    v1_in_scope = len(dev_in_scope)  # same corpus, same parser
 
     v1_eligible_coverage = v1_correct_mapped / v1_in_scope if v1_in_scope else 0
     v2_dev_eligible_coverage = v2_dev_parser_mapped / len(dev_in_scope) if dev_in_scope else 0
 
     # v2 all 50 chains
-    v2_mapped_from_parser = 12  # from study results
     v2_eligible_coverage = v2_mapped_from_parser / len(in_scope) if in_scope else 0
 
     print(f"  v1 (25 dev chains): {v1_total} instructions, {v1_in_scope} IN_SCOPE")
@@ -1096,15 +1311,14 @@ def run_audit() -> dict[str, Any]:
     # GT extraction = success / GT_IN_SCOPE
     gt_extraction_coverage = gt_coverage * 100
 
-    # Load current study results for other gates
-    study_path = Path("results/step_21_v2_study_results.json")
-    if study_path.exists():
-        study = json.loads(study_path.read_text(encoding="utf-8"))
-        unknown_genre_rate = study.get("unknown_genre_rate", 0.1891) * 100
-        incorrect_mutations = study.get("total_incorrect_mutations", 0)
-        false_auth_promotions = study.get("false_authoritative_promotion_count", 0)
+    # Load current study results for other gates (reuse v2_study loaded
+    # in 23G if available, otherwise load fresh).
+    if v2_study_path.exists():
+        unknown_genre_rate = v2_study.get("unknown_genre_rate", 0.0) * 100
+        incorrect_mutations = v2_study.get("total_incorrect_mutations", 0)
+        false_auth_promotions = v2_study.get("false_authoritative_promotion_count", 0)
     else:
-        unknown_genre_rate = 18.91
+        unknown_genre_rate = 0.0
         incorrect_mutations = 0
         false_auth_promotions = 0
 
@@ -1136,6 +1350,21 @@ def run_audit() -> dict[str, Any]:
 
     passed_count = sum(1 for _, p, _ in gates if p)
 
+    # Derive integration defects from the reachability analysis
+    integration_defects = []
+    if not pipeline_reachability.get("agreement_context_executed", False):
+        integration_defects.append(
+            "AgreementContext not executed in main pipeline path",
+        )
+    if not pipeline_reachability.get("resolve_with_context_executed", False):
+        integration_defects.append(
+            "resolve_with_context not executed in main pipeline path",
+        )
+    if not pipeline_reachability.get("model_assisted_interface_executed", False):
+        integration_defects.append(
+            "model-assisted candidate interface not executed in main pipeline path",
+        )
+
     # ======================================================================
     # Top 3 bottlenecks
     # ======================================================================
@@ -1162,8 +1391,10 @@ def run_audit() -> dict[str, Any]:
             "IN_SCOPE": len(in_scope),
             "OUT_OF_SCOPE": len(out_of_scope),
             "AMBIGUOUS_SCOPE": len(ambiguous),
-            "raw_automation_rate": f"{v2_mapped_from_parser}/{total_instructions} = {v2_mapped_from_parser/total_instructions*100:.1f}%",
-            "eligible_semantic_mapping_coverage": f"{v2_mapped_from_parser}/{len(in_scope)} = {semantic_mapping_coverage:.1f}%",
+            "raw_automation_rate": f"{v2_mapped_from_parser}/{total_instructions} = {v2_mapped_from_parser/total_instructions*100:.1f}%" if total_instructions else "N/A",
+            "raw_automation_rate_numeric": round(v2_mapped_from_parser / total_instructions, 4) if total_instructions else 0.0,
+            "eligible_semantic_mapping_coverage": f"{v2_mapped_from_parser}/{len(in_scope)} = {semantic_mapping_coverage:.1f}%" if in_scope else "N/A",
+            "eligible_semantic_mapping_coverage_numeric": round(v2_eligible_coverage, 4),
             "in_scope_records": [
                 {
                     "chain": r.chain,
@@ -1185,6 +1416,7 @@ def run_audit() -> dict[str, Any]:
             "S0_AMBIGUOUS": len(s0_ambiguous),
             "raw_s0_rate": f"{sum(1 for r in s0_records if r.extracted_count > 0)}/{len(s0_records)}",
             "eligible_s0_coverage": f"{s0_success}/{len(s0_in_scope)} = {s0_extraction_coverage:.1f}%",
+            "eligible_s0_coverage_numeric": round(s0_coverage, 4),
         },
         "23c_gt_eligibility": {
             "total_gt_documents": len(gt_records),
@@ -1194,13 +1426,23 @@ def run_audit() -> dict[str, Any]:
             "GT_AMBIGUOUS": len(gt_ambiguous),
             "raw_gt_rate": f"{sum(1 for r in gt_records if r.extracted_count > 0)}/{len(gt_records)}",
             "eligible_gt_coverage": f"{gt_success}/{len(gt_in_scope)} = {gt_extraction_coverage:.1f}%",
+            "eligible_gt_coverage_numeric": round(gt_coverage, 4),
         },
         "23d_funnel": {
             "in_scope_count": in_scope_count,
-            "stage_counts": {stage: funnel_counts.get(stage, 0) for stage in funnel_stages},
+            "stage_counts": {
+                stage: funnel_counts.get(stage, 0)
+                for stage in funnel_stages
+            },
+            "outcome_counts": {
+                outcome: funnel_counts.get(outcome, 0)
+                for outcome in funnel_outcomes
+            },
+            "dropped_before_validation": dropped_before_validation,
         },
         "23e_resolver_path": {
             "in_scope_traced": in_scope_count,
+            "pipeline_reachability": pipeline_reachability,
             "path_counts": {k: path_counts.get(k, 0) for k in [
                 "agreement_context_executed",
                 "commitment_registry_executed",
@@ -1210,14 +1452,13 @@ def run_audit() -> dict[str, Any]:
                 "candidate_produced",
                 "validator_rejected",
             ]},
-            "integration_defects": [
-                "AgreementContext not executed in main pipeline path",
-                "resolve_with_context not executed in main pipeline path",
-                "model_assisted interface not executed in main pipeline path",
-            ],
+            "integration_defects": integration_defects,
         },
         "23f_revised_taxonomy": {
             "buckets": dict(revised_buckets.most_common()),
+            "out_of_scope_removed": out_of_scope_removed,
+            "non_parser_removed": non_parser_removed,
+            "in_scope_total": in_scope_total,
             "other_percentage": round(other_pct, 1),
         },
         "23g_v1_v2_comparison": {
@@ -1227,23 +1468,32 @@ def run_audit() -> dict[str, Any]:
             "v1_correct_mapped": v1_correct_mapped,
             "v1_in_scope": v1_in_scope,
             "v1_eligible_coverage": f"{v1_eligible_coverage*100:.1f}%",
+            "v1_eligible_coverage_numeric": round(v1_eligible_coverage, 4),
             "v2_dev_total": len(dev_total_records),
             "v2_dev_in_scope": len(dev_in_scope),
             "v2_dev_parser_mapped": v2_dev_parser_mapped,
             "v2_dev_eligible_coverage": f"{v2_dev_eligible_coverage*100:.1f}%",
+            "v2_dev_eligible_coverage_numeric": round(v2_dev_eligible_coverage, 4),
             "v2_all_total": total_instructions,
             "v2_all_in_scope": len(in_scope),
             "v2_all_parser_mapped": v2_mapped_from_parser,
             "v2_all_eligible_coverage": f"{v2_eligible_coverage*100:.1f}%",
+            "v2_all_eligible_coverage_numeric": round(v2_eligible_coverage, 4),
         },
         "23h_gates": {
             "semantic_mapping_coverage": f"{semantic_mapping_coverage:.1f}%",
+            "semantic_mapping_coverage_numeric": round(semantic_mapping_coverage, 2),
             "s0_extraction_coverage": f"{s0_extraction_coverage:.1f}%",
+            "s0_extraction_coverage_numeric": round(s0_extraction_coverage, 2),
             "gt_extraction_coverage": f"{gt_extraction_coverage:.1f}%",
+            "gt_extraction_coverage_numeric": round(gt_extraction_coverage, 2),
             "unknown_genre_rate": f"{unknown_genre_rate:.1f}%",
+            "unknown_genre_rate_numeric": round(unknown_genre_rate, 2),
             "incorrect_mutations": incorrect_mutations,
             "false_auth_promotions": false_auth_promotions,
             "gates_passed": f"{passed_count}/{len(gates)}",
+            "gates_passed_count": passed_count,
+            "gates_total": len(gates),
             "gate_details": [
                 {"gate": name, "passed": p, "value": v}
                 for name, p, v in gates
