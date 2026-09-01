@@ -227,6 +227,7 @@ def build_final_report(
     input_manifest: dict,
     report_sha256: str | None,
     frozen_at: str,
+    was_clean: bool,
 ) -> str:
     """Build the timestamped final development report (Markdown).
 
@@ -262,7 +263,7 @@ def build_final_report(
     lines.append(f"**Git commit**: `{commit_sha}`")
     lines.append(f"**Git tag**: `{TAG_NAME}`")
     lines.append(f"**Branch**: {git_branch()}")
-    lines.append(f"**Working tree**: {'clean' if git_status_clean() else 'DIRTY'}")
+    lines.append(f"**Working tree**: {'clean' if was_clean else 'DIRTY'}")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -520,14 +521,16 @@ def build_final_report(
 
 
 def build_run_record(
-    commit_sha: str, code_hashes: dict, input_manifest: dict, frozen_at: str,
+    commit_sha: str, code_hashes: dict, input_manifest: dict,
+    frozen_at: str, was_clean: bool,
 ) -> dict:
     """Build the immutable run record for research/run_records/.
 
     ``frozen_at`` is the single ISO timestamp captured at the start of
     ``freeze()``.  Using it here ensures the run record and freeze record
     agree on the timestamp and that re-running the script produces a
-    byte-identical run record.
+    byte-identical run record.  ``was_clean`` is the working-tree state
+    captured before any artifacts were written.
     """
     return {
         "label": "step-18-freeze",
@@ -537,7 +540,7 @@ def build_run_record(
         "python": sys.version,
         "git_commit": commit_sha,
         "git_branch": git_branch(),
-        "git_status_clean": git_status_clean(),
+        "git_status_clean": was_clean,
         "pip_freeze": pip_freeze(),
         "tag": TAG_NAME,
         "system_name": SYSTEM_NAME,
@@ -759,10 +762,14 @@ def freeze() -> dict[str, Any]:
     commit_sha = git_commit_sha()
     short_sha = git_short_sha()
     frozen_at = get_frozen_at()
+    # Capture working-tree cleanliness BEFORE writing any artifacts so
+    # the freeze record reflects the state of the repo at freeze time,
+    # not the state after the script has written files to disk.
+    was_clean = git_status_clean()
 
     print(f"  Commit: {commit_sha}")
     print(f"  Branch: {git_branch()}")
-    print(f"  Working tree clean: {git_status_clean()}")
+    print(f"  Working tree clean: {was_clean}")
     print()
 
     # Clean and create the freeze directory
@@ -863,6 +870,7 @@ def freeze() -> dict[str, Any]:
         commit_sha, step_17b, defect_diagnosis, code_hashes, input_manifest,
         report_sha256=None,  # will be filled after hashing
         frozen_at=frozen_at,
+        was_clean=was_clean,
     )
     report_path = FREEZE_DIR / "FINAL_DEVELOPMENT_REPORT.md"
     report_path.write_text(report_text, encoding="utf-8")
@@ -885,7 +893,7 @@ def freeze() -> dict[str, Any]:
         "git_commit": commit_sha,
         "git_short_commit": short_sha,
         "git_branch": git_branch(),
-        "git_status_clean": git_status_clean(),
+        "git_status_clean": was_clean,
         "tag": TAG_NAME,
         "artifact_hashes": {},
     }
@@ -910,7 +918,7 @@ def freeze() -> dict[str, Any]:
         f"**Git commit**: `{commit_sha}`",
         f"**Git tag**: `{TAG_NAME}`",
         f"**Branch**: {git_branch()}",
-        f"**Working tree**: {'clean' if git_status_clean() else 'DIRTY'}",
+        f"**Working tree**: {'clean' if was_clean else 'DIRTY'}",
         "",
         "## Frozen Artifacts",
         "",
@@ -952,7 +960,7 @@ def freeze() -> dict[str, Any]:
     # --- Write artifact 16: Immutable run record ---
     print("  Writing immutable run record...")
     run_record = build_run_record(
-        commit_sha, code_hashes, input_manifest, frozen_at,
+        commit_sha, code_hashes, input_manifest, frozen_at, was_clean,
     )
     # Derive a deterministic filename from frozen_at so re-runs overwrite
     # the same file rather than creating duplicates.
@@ -1078,7 +1086,7 @@ def freeze() -> dict[str, Any]:
         f"**Git commit**: `{commit_sha}`",
         f"**Git tag**: `{TAG_NAME}`",
         f"**Branch**: {git_branch()}",
-        f"**Working tree**: {'clean' if git_status_clean() else 'DIRTY'}",
+        f"**Working tree**: {'clean' if was_clean else 'DIRTY'}",
         "",
         "## Frozen Artifacts",
         "",
