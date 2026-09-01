@@ -211,7 +211,7 @@ def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
         current_num = section_num
         for sm in re.finditer(
             r"(?:(?:Section|SECTION|ARTICLE)\s+)?"
-            r"(\d+(?:\.\d+)?|[IVX]+)\s+"
+            r"(\d+(?:\.\d+)?|[IVX]+)\s*\.?\s*"
             r"([A-Z][a-zA-Z]+\s+[A-Z])",
             remaining,
         ):
@@ -324,6 +324,44 @@ def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
             continue
         section_matches.setdefault(section_num, []).append(m)
 
+    # Step 22H: Content-based individual covenant section detection.
+    # Many credit agreements list covenants as individual numbered
+    # sections without a parent "Financial Covenants" header, e.g.:
+    #   SECTION 6.11. Minimum Tangible Net Worth
+    #   SECTION 6.12. Minimum Liquidity Ratio
+    #   SECTION 6.13. Leverage Ratio
+    # These are not found by the header-based patterns above.  We scan
+    # for section headers that contain a known covenant name and extract
+    # them as individual covenant sections.
+    _INDIVIDUAL_COVENANT_SECTION_RE = re.compile(
+        r"(?:SECTION|Section)\s+(\d+\.\d+)\s*\.?\s*"
+        r"([A-Z][^\n]{3,80}?)\s*[\.\n]",
+        re.IGNORECASE,
+    )
+    for m in _INDIVIDUAL_COVENANT_SECTION_RE.finditer(text):
+        if _is_toc_entry(m, text):
+            continue
+        section_num = m.group(1)
+        header_name = m.group(2).strip()
+        # Check if the header name matches any known covenant name
+        classification = _classify_covenant(header_name)
+        if classification is None:
+            continue
+        # Content-based validation: confirm the section body contains
+        # a ratio threshold, dollar amount, or covenant verb.
+        peek_end = min(len(text), m.end() + 2000)
+        peek_text = text[m.end():peek_end]
+        has_ratio = bool(_RATIO_THRESHOLD_RE.search(peek_text))
+        has_verb = bool(_COVENANT_VERB_RE.search(peek_text))
+        has_dollar = bool(re.search(r"\$\s*[\d,]+", peek_text))
+        has_percent = bool(re.search(r"\d+(?:\.\d+)?\s*%", peek_text))
+        if not (has_ratio or has_verb or has_dollar or has_percent):
+            continue
+        # Avoid duplicates with standard matches
+        if section_num in section_matches:
+            continue
+        section_matches.setdefault(section_num, []).append(m)
+
     # V02-002: For each section number, prefer the LAST match (the
     # actual section body) over earlier matches (TOC entries that
     # survived the dot-leader/page-number checks).
@@ -374,6 +412,24 @@ _NUMBERED_CLAUSE_RE = re.compile(
     r"([A-Z][^.]{3,80}?)\s*\.\s+"  # clause name (capitalized, ends with period)
     # clause body: until the NEXT numbered clause header or end of text
     r"(.*?)(?=\d+\.\d+\s+[A-Z][^.]{3,80}?\s*\.\s|\Z)",
+    re.DOTALL,
+)
+
+# Step 22H: Three-level numbered subsection pattern with newlines.
+# Some credit agreements use three-level numbering (7.19.1, 7.19.2)
+# with the name on a separate line from the number, and the period
+# on yet another line:
+#   7.19.1
+#   Liquidity
+#   . Not suffer or permit...
+#   7.19.2
+#   Total Leverage Ratio
+#   . Not suffer or permit...
+_THREE_LEVEL_NUMBERED_CLAUSE_RE = re.compile(
+    r"(\d+\.\d+\.\d+)\s*\n\s*"
+    r"([A-Z][^\n]{3,80}?)\s*\n\s*\.\s*"
+    # clause body: until the NEXT three-level clause header or end
+    r"(.*?)(?=\d+\.\d+\.\d+\s*\n\s*[A-Z][^\n]{3,80}?\s*\n\s*\.\s|\Z)",
     re.DOTALL,
 )
 
@@ -452,6 +508,58 @@ def _extract_clauses_from_section(
                 end_offset=clause_end,
             ))
 
+    # Step 22H: Try three-level numbered subsections (7.19.1, 7.19.2
+    # format with newlines between number, name, and period).
+    if not clauses:
+        for m in _THREE_LEVEL_NUMBERED_CLAUSE_RE.finditer(section_text):
+            clause_num = m.group(1)
+            clause_name = m.group(2).strip()
+            clause_body = m.group(3).strip()
+            clause_start = start + m.start()
+            clause_end = start + m.end()
+
+            # Clean up the clause body — remove excessive whitespace
+            clause_body = re.sub(r"\s+", " ", clause_body).strip()
+
+            clauses.append(ExtractedClause(
+                section_ref=f"{section_ref}({clause_num})",
+                clause_name=clause_name,
+                text=clause_body,
+                start_offset=clause_start,
+                end_offset=clause_end,
+            ))
+
+    # Step 22H: Try lenient lettered subsections — clauses where the
+    # name and body are not separated by a period (e.g., HELD-005:
+    # "(b)     Interest Coverage Ratio not less than 3.0 to 1.0").
+    # This pattern matches (letter) followed by text containing a
+    # covenant name, without requiring a period after the name.
+    if not clauses:
+        _LENIENT_CLAUSE_RE = re.compile(
+            r"\(([a-z])\)\s+"
+            r"(.*?)(?=\([a-z]\)\s+|\Z)",
+            re.DOTALL,
+        )
+        for m in _LENIENT_CLAUSE_RE.finditer(section_text):
+            clause_letter = m.group(1)
+            clause_text = m.group(2).strip()
+            clause_text = re.sub(r"\s+", " ", clause_text).strip()
+            # Try to extract a covenant name from the text
+            clause_name = _extract_covenant_name_from_text(clause_text)
+            if clause_name is None:
+                continue
+            # Only accept if the clause name matches a known covenant
+            classification = _classify_covenant(clause_name)
+            if classification is None:
+                continue
+            clauses.append(ExtractedClause(
+                section_ref=f"{section_ref}({clause_letter})",
+                clause_name=clause_name,
+                text=clause_text,
+                start_offset=start + m.start(),
+                end_offset=start + m.end(),
+            ))
+
     # If no subsection clauses were found, try treating the section
     # header itself as a clause (some sections have the covenant directly
     # after the section title without (a)/(b) subsections).
@@ -467,6 +575,7 @@ def _extract_clauses_from_section(
         covenant_match = re.search(
             r"(shall\s+not\s+permit|will\s+not\s+permit"
             r"|shall\s+have\s+and\s+maintain|shall\s+maintain"
+            r"|will\s+maintain"
             r"|shall\s+(?:not\s+)?be\s+(?:less|greater)\s+than"
             r"|may\s+not\s+(?:be\s+)?(?:less|greater)\s+than"
             r"|shall\s+(?:not\s+)?exceed|may\s+not\s+exceed"
@@ -621,6 +730,12 @@ def _extract_threshold_ratio(text: str) -> tuple[float | None, str | None]:
     V02-001: Also handles colon-separated ratio format "4.00 : 1.0"
     (STUDY-031 pattern: "not more than 4.00 : 1.0").
 
+    Step 22H: Also handles bare ratio thresholds without the "to 1.00"
+    suffix (e.g., "of at least 1.20" in HELD-003).  This pattern is
+    only used when the standard "X.XX to 1.00" pattern is not found,
+    and requires explicit ratio language ("of at least", "of not less
+    than", "to exceed", etc.) to avoid false positives.
+
     Returns (None, None) if no threshold is found.
     """
     # Ratio pattern: "X.XX to 1.00" or "X.X to 1.0" or "X.XX : 1.0"
@@ -629,10 +744,28 @@ def _extract_threshold_ratio(text: str) -> tuple[float | None, str | None]:
         text,
         re.IGNORECASE,
     )
-    if not ratio_match:
-        return None, None
-
-    threshold = float(ratio_match.group(1))
+    if ratio_match:
+        threshold = float(ratio_match.group(1))
+    else:
+        # Step 22H: Bare ratio threshold without "to 1.00" suffix.
+        # Only match when preceded by ratio covenant language to avoid
+        # false positives from non-covenant numbers.
+        bare_match = re.search(
+            r"(?:of\s+(?:at\s+least|not\s+less\s+than|no\s+less\s+than)\s+"
+            r"|to\s+exceed\s+"
+            r"|shall\s+not\s+exceed\s+"
+            r"|shall\s+not\s+be\s+less\s+than\s+"
+            r"|not\s+greater\s+than\s+)"
+            r"([\d.]+)",
+            text,
+            re.IGNORECASE,
+        )
+        if not bare_match:
+            return None, None
+        threshold = float(bare_match.group(1))
+        # Validate: ratio thresholds are typically between 0.01 and 100
+        if threshold <= 0 or threshold > 100:
+            return None, None
 
     # Determine operator from language
     text_lower = text.lower()
@@ -642,7 +775,7 @@ def _extract_threshold_ratio(text: str) -> tuple[float | None, str | None]:
     # Check "less than or equal" first (more specific) before "less than".
     if "less than or equal" in text_lower or "exceed" in text_lower or "greater than" in text_lower or "more than" in text_lower:
         operator = "<="
-    elif "less than" in text_lower or "be less than" in text_lower:
+    elif "less than" in text_lower or "be less than" in text_lower or "at least" in text_lower:
         operator = ">="
     else:
         operator = "<="  # default for "shall not permit ... to exceed"
@@ -918,6 +1051,29 @@ _COVENANT_NAME_MAP: list[tuple[str, str, str, str]] = [
     # Leverage Ratio") so they match first.
     (r"Leverage Ratio",
      "financial_covenant.leverage_ratio", "leverage_ratio", "ratio"),
+    # Step 22E: Evidence-derived covenant name patterns from the
+    # 50-chain corpus.  These are covenant section headers that appear
+    # in S0/GT documents but were not in the original name map.
+    (r"Minimum\s+Tangible\s+Net\s+Worth",
+     "financial_covenant.tangible_net_worth", "tangible_net_worth", "ratio"),
+    (r"Minimum\s+Shareholders.?\s+Equity",
+     "financial_covenant.tangible_net_worth", "shareholders_equity", "ratio"),
+    (r"Minimum\s+Stockholders.?\s+Equity",
+     "financial_covenant.tangible_net_worth", "stockholders_equity", "ratio"),
+    (r"Asset\s+Coverage\s+Ratio",
+     "financial_covenant.debt_service_coverage", "asset_coverage_ratio", "ratio"),
+    (r"Minimum\s+Working\s+Capital",
+     "financial_covenant.current_ratio", "working_capital", "ratio"),
+    (r"Minimum\s+Liquidity(?:\s+Ratio)?",
+     "financial_covenant.interest_coverage", "liquidity_ratio", "ratio"),
+    (r"Funded\s+Debt\s+to\s+EBITDA",
+     "financial_covenant.leverage_ratio", "funded_debt_to_ebitda", "ratio"),
+    (r"Net\s+Leverage\s+Ratio",
+     "financial_covenant.leverage_ratio", "net_leverage_ratio", "ratio"),
+    (r"First\s+Lien\s+Leverage\s+Ratio",
+     "financial_covenant.leverage_ratio", "first_lien_leverage_ratio", "ratio"),
+    (r"Secured\s+Leverage\s+Ratio",
+     "financial_covenant.leverage_ratio", "secured_leverage_ratio", "ratio"),
 ]
 
 
@@ -1067,10 +1223,72 @@ def _rule_percentage_covenant(clause: ExtractedClause) -> CommitmentState | None
 # Ordered list of extraction rules. Each rule takes an ExtractedClause
 # and returns a CommitmentState if it matches, or None if it doesn't.
 # The first matching rule wins.
+def _rule_dollar_amount_covenant(clause: ExtractedClause) -> CommitmentState | None:
+    """Extract dollar-amount covenants (e.g., Tangible Net Worth in dollars).
+
+    Trigger: clause name matches a known covenant pattern with unit
+    "ratio" (Tangible Net Worth can be expressed as either a ratio or
+    a dollar amount) AND clause text contains a dollar amount.
+
+    Produces a CommitmentState with threshold (as a float dollar
+    amount) and unit="usd".
+    """
+    classification = _classify_covenant(clause.clause_name)
+    if classification is None:
+        return None
+    key, subject, unit = classification
+
+    # Only apply to covenants that can be expressed as dollar amounts
+    # (tangible_net_worth is the most common one).  Ratio covenants
+    # (leverage_ratio, current_ratio, etc.) should NOT match this rule
+    # — their thresholds are ratios, not dollar amounts.
+    if key not in ("financial_covenant.tangible_net_worth",):
+        return None
+
+    # Skip if this has a step-down schedule or ratio threshold
+    if _extract_step_down_schedule(clause.text) is not None:
+        return None
+    if _extract_threshold_ratio(clause.text)[0] is not None:
+        return None
+
+    amount = _extract_dollar_amount(clause.text)
+    if amount is None or amount <= 0:
+        return None
+
+    # Determine operator from text
+    text_lower = clause.text.lower()
+    if "not less than" in text_lower or "at least" in text_lower:
+        operator = ">="
+    elif "not greater than" in text_lower or "not exceed" in text_lower:
+        operator = "<="
+    else:
+        operator = ">="  # default for "maintain" covenants
+
+    return CommitmentState(
+        canonical_key=key,
+        commitment_type="financial_covenant",
+        status="ACTIVE",
+        party=_extract_party(clause.text),
+        action="maintain",
+        subject=subject,
+        operator=operator,
+        threshold=float(amount),
+        unit="usd",
+        frequency=_extract_frequency(clause.text),
+        exceptions=_extract_exceptions(clause.text),
+        deadline=_extract_deadline(clause.text),
+        valid_from=_extract_effective_date(clause.text),
+    )
+
+
+# Ordered list of extraction rules. Each rule takes an ExtractedClause
+# and returns a CommitmentState if it matches, or None if it doesn't.
+# The first matching rule wins.
 _EXTRACTION_RULES: list = [
     _rule_leverage_ratio_with_step_down,
     _rule_simple_ratio_covenant,
     _rule_percentage_covenant,
+    _rule_dollar_amount_covenant,
 ]
 
 

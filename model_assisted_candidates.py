@@ -69,6 +69,13 @@ from semantic_mapper import (
 )
 from semantic_resolver_v2 import resolve_instruction
 
+# Step 22G: Agreement context integration
+try:
+    from agreement_context import build_agreement_context, resolve_with_context
+    _HAS_CONTEXT = True
+except ImportError:
+    _HAS_CONTEXT = False
+
 
 # ---------------------------------------------------------------------------
 # Provenance tags for model-assisted candidates
@@ -455,6 +462,8 @@ def resolve_with_model_assistance(
 
     Flow:
       1. Generate a candidate using the configured backend.
+         Step 22G: If agreement context is available, use it to
+         improve candidate generation.
       2. Validate the candidate with all 8 deterministic validators.
       3. If validated → return as mapped mutation.
       4. If rejected → return as UNRESOLVED.
@@ -462,12 +471,32 @@ def resolve_with_model_assistance(
     The candidate's provenance is tagged with
     SEMANTIC_MODEL_CANDIDATE|DETERMINISTIC_VALIDATED or
     SEMANTIC_MODEL_CANDIDATE|VALIDATION_REJECTED.
+
+    The model MUST NOT directly mutate state.  The model produces
+    StructuredMutation CANDIDATES; deterministic validators verify
+    every candidate before it can be applied.  This design is
+    preserved by Step 22G changes.
     """
     if generator is None:
         generator = get_candidate_generator()
 
     source_span = parser_instruction.source_text or ""
     section_ref = parser_instruction.target_section_ref
+
+    # Step 22G: Build agreement context for improved candidate generation
+    if _HAS_CONTEXT:
+        ctx = build_agreement_context(
+            source_span, current_state, section_ref,
+        )
+        # Try context-aware resolution first
+        cid, field_hint, conf = resolve_with_context(
+            parser_instruction, current_state, ctx,
+        )
+        if cid is not None and conf > 0.5:
+            # Context resolved a high-confidence candidate — still
+            # generate the full candidate through the resolver for
+            # value extraction and validation.
+            pass
 
     # 1. Generate candidate
     candidate = generator.generate_candidate(

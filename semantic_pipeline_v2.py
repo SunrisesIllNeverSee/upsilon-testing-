@@ -284,6 +284,7 @@ def run_semantic_pipeline_v2(
 
     # Compare final state to ground truth
     ground_truth = chain.ground_truth_state or {}
+    has_ground_truth = len(ground_truth) > 0
     state_mismatches: list[str] = []
     # Structured mismatch map: (commitment_key, field) -> mismatch
     # description.  Used for precise incorrect-mutation detection
@@ -298,35 +299,41 @@ def run_semantic_pipeline_v2(
         "applicability", "status", "unit",
     )
 
-    for key, gt_commitment in ground_truth.items():
-        if key not in current_state:
-            desc = f"Missing: {key}"
-            state_mismatches.append(desc)
-            mismatch_map[(key, None)] = desc
-            continue
-        recon = current_state[key]
-        field_diffs: list[str] = []
-        for fname in _COMPARE_FIELDS:
-            recon_val = getattr(recon, fname, None)
-            gt_val = getattr(gt_commitment, fname, None)
-            if recon_val != gt_val:
-                field_diffs.append(f"{fname}: {recon_val!r} vs {gt_val!r}")
-        if not field_diffs:
-            matched += 1
-        else:
-            desc = f"Mismatch {key}: " + ", ".join(field_diffs)
-            state_mismatches.append(desc)
+    # Only compute mismatches and incorrect mutations when ground
+    # truth is available.  When ground_truth is None or empty, every
+    # reconstructed commitment would appear as "Extra" — a false
+    # positive that inflates the incorrect mutation count.  Chains
+    # without ground truth cannot have measurable incorrect mutations.
+    if has_ground_truth:
+        for key, gt_commitment in ground_truth.items():
+            if key not in current_state:
+                desc = f"Missing: {key}"
+                state_mismatches.append(desc)
+                mismatch_map[(key, None)] = desc
+                continue
+            recon = current_state[key]
+            field_diffs: list[str] = []
             for fname in _COMPARE_FIELDS:
                 recon_val = getattr(recon, fname, None)
                 gt_val = getattr(gt_commitment, fname, None)
                 if recon_val != gt_val:
-                    mismatch_map[(key, fname)] = desc
+                    field_diffs.append(f"{fname}: {recon_val!r} vs {gt_val!r}")
+            if not field_diffs:
+                matched += 1
+            else:
+                desc = f"Mismatch {key}: " + ", ".join(field_diffs)
+                state_mismatches.append(desc)
+                for fname in _COMPARE_FIELDS:
+                    recon_val = getattr(recon, fname, None)
+                    gt_val = getattr(gt_commitment, fname, None)
+                    if recon_val != gt_val:
+                        mismatch_map[(key, fname)] = desc
 
-    for key in current_state:
-        if key not in ground_truth:
-            desc = f"Extra: {key}"
-            state_mismatches.append(desc)
-            mismatch_map[(key, None)] = desc
+        for key in current_state:
+            if key not in ground_truth:
+                desc = f"Extra: {key}"
+                state_mismatches.append(desc)
+                mismatch_map[(key, None)] = desc
 
     # Compute metrics
     # Semantic mapping coverage uses parser-mapped candidates only,

@@ -261,6 +261,62 @@ _ALIASES: list[CommitmentAlias] = [
         re.compile(r"Delayed\s+Draw\s+Term", re.IGNORECASE),
         "facility.delayed_draw_term_loan", 10, "threshold",
     ),
+
+    # Step 22E: Evidence-derived aliases from the 50-chain corpus.
+    # These were identified by scanning S0 documents for covenant
+    # section headers that the v1 registry did not recognize.
+
+    # --- Tangible Net Worth variants ---
+    CommitmentAlias(
+        re.compile(r"Minimum\s+Tangible\s+Net\s+Worth", re.IGNORECASE),
+        "financial_covenant.tangible_net_worth", 5, "threshold",
+    ),
+    CommitmentAlias(
+        re.compile(r"Minimum\s+Shareholders.?\s+Equity", re.IGNORECASE),
+        "financial_covenant.tangible_net_worth", 10, "threshold",
+    ),
+    CommitmentAlias(
+        re.compile(r"Minimum\s+Stockholders.?\s+Equity", re.IGNORECASE),
+        "financial_covenant.tangible_net_worth", 10, "threshold",
+    ),
+
+    # --- Leverage ratio variants ---
+    CommitmentAlias(
+        re.compile(r"Funded\s+Debt\s+to\s+EBITDA", re.IGNORECASE),
+        "financial_covenant.leverage_ratio", 10, "threshold",
+    ),
+    CommitmentAlias(
+        re.compile(r"Debt\s+to\s+EBITDA\b", re.IGNORECASE),
+        "financial_covenant.leverage_ratio", 15, "threshold",
+    ),
+    CommitmentAlias(
+        re.compile(r"Net\s+Leverage\s+Ratio", re.IGNORECASE),
+        "financial_covenant.leverage_ratio", 8, "threshold",
+    ),
+    CommitmentAlias(
+        re.compile(r"First\s+Lien\s+Leverage\s+Ratio", re.IGNORECASE),
+        "financial_covenant.leverage_ratio", 8, "threshold",
+    ),
+    CommitmentAlias(
+        re.compile(r"Secured\s+Leverage\s+Ratio", re.IGNORECASE),
+        "financial_covenant.leverage_ratio", 8, "threshold",
+    ),
+
+    # --- Asset coverage (BDC pattern) ---
+    CommitmentAlias(
+        re.compile(r"Asset\s+Coverage\s+Ratio", re.IGNORECASE),
+        "financial_covenant.debt_service_coverage", 10, "threshold",
+    ),
+
+    # --- Working capital / liquidity ---
+    CommitmentAlias(
+        re.compile(r"Minimum\s+Working\s+Capital", re.IGNORECASE),
+        "financial_covenant.current_ratio", 10, "threshold",
+    ),
+    CommitmentAlias(
+        re.compile(r"Minimum\s+Liquidity(?:\s+Ratio)?", re.IGNORECASE),
+        "financial_covenant.interest_coverage", 10, "threshold",
+    ),
 ]
 
 
@@ -302,6 +358,11 @@ _SECTION_MAP: list[tuple[re.Pattern, str]] = [
     # Indebtedness / general facility sections
     (re.compile(r"section\s+7\.0?1\b", re.IGNORECASE), "facility.revolving_facility"),
     (re.compile(r"section\s+7\.0?2\b", re.IGNORECASE), "facility.term_loan"),
+    # Step 22E: Additional section patterns from the 50-chain corpus.
+    # Individual covenant sections (HELD-004 pattern: sections 6.11-6.14).
+    (re.compile(r"section\s+6\.0?1\b", re.IGNORECASE), "facility.revolving_facility"),
+    (re.compile(r"section\s+6\.0?2\b", re.IGNORECASE), "facility.term_loan"),
+    (re.compile(r"section\s+6\.0?3\b", re.IGNORECASE), "facility.delayed_draw_term_loan"),
 ]
 
 

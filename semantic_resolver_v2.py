@@ -61,6 +61,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
 from commitment_registry import (
@@ -80,6 +81,27 @@ from semantic_mapper import (
     MappingResult,
     StructuredMutation,
 )
+
+
+# ---------------------------------------------------------------------------
+# Step 22F: Stage status enum for staged interpretation
+# ---------------------------------------------------------------------------
+
+
+class StageStatus(str, Enum):
+    """Status of a single resolution stage.
+
+    Each stage in the staged interpreter returns one of:
+      - RESOLVED: the stage successfully resolved its target
+      - AMBIGUOUS: the stage found multiple candidates and cannot
+        resolve without guessing
+      - UNSUPPORTED: the stage's target is not supported by the
+        13-class ontology or the available extractors
+    """
+
+    RESOLVED = "RESOLVED"
+    AMBIGUOUS = "AMBIGUOUS"
+    UNSUPPORTED = "UNSUPPORTED"
 
 
 # ---------------------------------------------------------------------------
@@ -407,7 +429,8 @@ class ResolverStepTrace:
     """Trace of the 10-step resolver for one instruction.
 
     Records which steps passed and which failed, for debugging and
-    root-cause analysis.
+    root-cause analysis.  Step 22F adds stage_status fields that
+    explicitly record RESOLVED/AMBIGUOUS/UNSUPPORTED for each stage.
     """
 
     step1_resolve_target: str = ""
@@ -422,6 +445,14 @@ class ResolverStepTrace:
     step10_unresolved: str = ""
     failed_step: int = 0
     failure_reason: str = ""
+    # Step 22F: Explicit stage statuses
+    stage1_legal_operation: StageStatus = StageStatus.RESOLVED
+    stage2_target_commitment: StageStatus = StageStatus.RESOLVED
+    stage3_target_field: StageStatus = StageStatus.RESOLVED
+    stage4_old_value: StageStatus = StageStatus.RESOLVED
+    stage5_new_value: StageStatus = StageStatus.RESOLVED
+    stage6_unit: StageStatus = StageStatus.RESOLVED
+    stage7_effective_time: StageStatus = StageStatus.RESOLVED
 
 
 def resolve_instruction(
