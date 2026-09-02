@@ -125,6 +125,8 @@ def main() -> int:
     lines.append("")
     lines.append(f"**IN_SCOPE instructions:** {funnel_in_scope}")
     lines.append("")
+    lines.append("### Sequential stages (1-11)")
+    lines.append("")
     lines.append("| Stage | Count | % of IN_SCOPE | Drop | Drop % |")
     lines.append("|---|---:|---:|---:|---:|")
     stage_names = [
@@ -133,8 +135,7 @@ def main() -> int:
         "stage_5_field_resolved", "stage_6_operation_resolved",
         "stage_7_old_value_resolved", "stage_8_new_value_resolved",
         "stage_9_unit_resolved", "stage_10_candidate_created",
-        "stage_11_validators_passed", "stage_12_accepted",
-        "stage_13_rejected", "stage_14_unresolved",
+        "stage_11_validators_passed",
     ]
     stage_labels = [
         "1. Instruction parsed",
@@ -148,9 +149,6 @@ def main() -> int:
         "9. Unit resolved",
         "10. StructuredMutation candidate created",
         "11. Deterministic validators passed",
-        "12. Mutation accepted",
-        "13. Mutation rejected",
-        "14. UNRESOLVED",
     ]
     prev = funnel_in_scope
     for stage, label in zip(stage_names, stage_labels):
@@ -160,6 +158,34 @@ def main() -> int:
         drop_pct = drop / prev * 100 if prev else 0
         lines.append(f"| {label} | {count} | {pct:.1f}% | {drop} | {drop_pct:.1f}% |")
         prev = count
+    lines.append("")
+    # Outcomes (mutually exclusive branches from stage 11)
+    outcome_names = [
+        "stage_12_accepted",
+        "stage_13_rejected",
+        "stage_14_unresolved",
+    ]
+    outcome_labels = [
+        "12. Mutation accepted",
+        "13. Mutation rejected",
+        "14. UNRESOLVED",
+    ]
+    lines.append("### Outcomes (mutually exclusive, from IN_SCOPE)")
+    lines.append("")
+    lines.append("| Outcome | Count | % of IN_SCOPE |")
+    lines.append("|---|---:|---:|")
+    outcome_counts = d.get("outcome_counts", {})
+    for stage, label in zip(outcome_names, outcome_labels):
+        count = outcome_counts.get(stage, 0)
+        pct = count / funnel_in_scope * 100 if funnel_in_scope else 0
+        lines.append(f"| {label} | {count} | {pct:.1f}% |")
+    dropped_before = d.get("dropped_before_validation", 0)
+    lines.append("")
+    lines.append(
+        f"Of {funnel_in_scope} IN_SCOPE instructions, "
+        f"{dropped_before} dropped off before reaching stage 11 "
+        f"(validators) and are implicitly UNRESOLVED."
+    )
     lines.append("")
 
     # 23E
@@ -232,14 +258,30 @@ def main() -> int:
         "remaining IN_SCOPE unresolved cases:"
     )
     lines.append("")
+    # Removal summary (excluded from the IN_SCOPE-only table)
+    oos_removed = f.get("out_of_scope_removed", 0)
+    np_removed = f.get("non_parser_removed", 0)
+    in_scope_total = f.get("in_scope_total", 0)
+    if oos_removed or np_removed:
+        lines.append(
+            f"Removed from taxonomy: {oos_removed} OUT_OF_SCOPE, "
+            f"{np_removed} non-parser-genre (full_restatement / "
+            f"conformed_copy).  These are excluded from the IN_SCOPE "
+            f"denominator."
+        )
+        lines.append("")
+    lines.append("### IN_SCOPE unresolved buckets")
+    lines.append("")
     lines.append("| Bucket | Count | % |")
     lines.append("|---|---:|---:|")
-    total_revised = sum(f["buckets"].values())
     for bucket, count in f["buckets"].items():
-        pct = count / total_revised * 100 if total_revised else 0
+        pct = count / in_scope_total * 100 if in_scope_total else 0
         lines.append(f"| {bucket} | {count} | {pct:.1f}% |")
     lines.append("")
-    lines.append(f"**OTHER percentage: {f['other_percentage']}%** (target: <10%)")
+    lines.append(
+        f"**OTHER percentage: {f['other_percentage']}%** "
+        f"(target: <10%, denominator: {in_scope_total} IN_SCOPE)"
+    )
     lines.append("")
 
     # 23G

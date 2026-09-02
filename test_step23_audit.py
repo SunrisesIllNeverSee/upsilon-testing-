@@ -243,6 +243,30 @@ class TestResolverPath:
         path = trace_resolver_path(ins, {})
         assert path["validator_rejected"] is False
 
+    def test_commitment_registry_executed_requires_resolution(self):
+        """commitment_registry_executed must only be True when the
+        registry actually resolved a canonical commitment (cid is not
+        None), NOT just because the instruction has a section_ref."""
+        # An instruction with a section_ref but no covenant content —
+        # the registry should NOT resolve a commitment.
+        ins = _make_instruction(
+            source_text="The accounting principles definition is amended",
+            section_ref="Section 1.03",
+        )
+        path = trace_resolver_path(ins, {})
+        # The registry was called but did not resolve a commitment.
+        assert path["commitment_registry_executed"] is False
+
+    def test_commitment_registry_executed_when_covenant_resolved(self):
+        """commitment_registry_executed must be True when the registry
+        resolves a canonical commitment from covenant keywords."""
+        ins = _make_instruction(
+            source_text="The maximum leverage ratio shall be 3.00 to 1.00",
+            section_ref="Section 7.10",
+        )
+        path = trace_resolver_path(ins, {})
+        assert path["commitment_registry_executed"] is True
+
     def test_pipeline_reachability_is_determined_by_code(self):
         """_analyze_pipeline_reachability must return a dict with
         boolean values determined by static code analysis, not
@@ -405,3 +429,119 @@ class TestGateEvaluation:
         assert f["other_percentage"] < 10.0, (
             f"OTHER is {f['other_percentage']}%, target is <10%"
         )
+
+
+# ---------------------------------------------------------------------------
+# 23F: OTHER percentage denominator correctness
+# ---------------------------------------------------------------------------
+
+
+class TestOtherPercentageDenominator:
+    """The OTHER percentage must be computed over ONLY the IN_SCOPE
+    buckets, NOT including OUT_OF_SCOPE_REMOVED or non-parser-genre
+    records.  This matches the prompt: "First remove OUT_OF_SCOPE
+    instructions. Then reclassify remaining IN_SCOPE unresolved cases
+    until OTHER is <10%."
+    """
+
+    def test_buckets_do_not_contain_out_of_scope_removed(self):
+        """The IN_SCOPE-only buckets must NOT contain
+        OUT_OF_SCOPE_REMOVED — that is a removal count, not an
+        IN_SCOPE reclassification bucket."""
+        audit_path = Path("results/step_23_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        f = audit["23f_revised_taxonomy"]
+        assert "OUT_OF_SCOPE_REMOVED" not in f["buckets"], (
+            "OUT_OF_SCOPE_REMOVED must not appear in the IN_SCOPE-only "
+            "buckets — it is tracked separately as out_of_scope_removed."
+        )
+
+    def test_other_percentage_uses_in_scope_denominator(self):
+        """other_percentage must equal OTHER / in_scope_total, NOT
+        OTHER / (in_scope_total + out_of_scope_removed +
+        non_parser_removed)."""
+        audit_path = Path("results/step_23_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        f = audit["23f_revised_taxonomy"]
+        buckets = f["buckets"]
+        in_scope_total = f.get("in_scope_total", sum(buckets.values()))
+        other_count = buckets.get("OTHER", 0)
+        expected_pct = round(
+            other_count / max(in_scope_total, 1) * 100, 1,
+        )
+        assert f["other_percentage"] == expected_pct, (
+            f"other_percentage is {f['other_percentage']} but should be "
+            f"{expected_pct} (OTHER={other_count}/"
+            f"{in_scope_total} IN_SCOPE)"
+        )
+
+    def test_removal_counts_present(self):
+        """The audit JSON must include out_of_scope_removed and
+        non_parser_removed counts for transparency."""
+        audit_path = Path("results/step_23_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        f = audit["23f_revised_taxonomy"]
+        assert "out_of_scope_removed" in f
+        assert "non_parser_removed" in f
+        assert "in_scope_total" in f
+        assert isinstance(f["out_of_scope_removed"], int)
+        assert isinstance(f["non_parser_removed"], int)
+        assert isinstance(f["in_scope_total"], int)
+
+
+# ---------------------------------------------------------------------------
+# 23D: Funnel outcomes presented as mutually exclusive branches
+# ---------------------------------------------------------------------------
+
+
+class TestFunnelOutcomes:
+    """Stages 12-14 are mutually exclusive outcomes, not sequential
+    stages.  The audit JSON must separate them from stage_counts."""
+
+    def test_stage_counts_excludes_outcomes(self):
+        """stage_counts must only contain stages 1-11, not 12-14."""
+        audit_path = Path("results/step_23_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        d = audit["23d_funnel"]
+        outcome_keys = {"stage_12_accepted", "stage_13_rejected",
+                        "stage_14_unresolved"}
+        assert set(d["stage_counts"].keys()).isdisjoint(outcome_keys), (
+            f"stage_counts must not contain outcome stages, found: "
+            f"{set(d['stage_counts'].keys()) & outcome_keys}"
+        )
+
+    def test_outcome_counts_present(self):
+        """outcome_counts must be present and contain stages 12-14."""
+        audit_path = Path("results/step_23_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        d = audit["23d_funnel"]
+        assert "outcome_counts" in d, "outcome_counts missing from 23d_funnel"
+        for key in ("stage_12_accepted", "stage_13_rejected",
+                    "stage_14_unresolved"):
+            assert key in d["outcome_counts"], (
+                f"{key} missing from outcome_counts"
+            )
+
+    def test_dropped_before_validation_present(self):
+        """dropped_before_validation must be present and equal
+        in_scope_count - stage_11_validators_passed."""
+        audit_path = Path("results/step_23_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        d = audit["23d_funnel"]
+        assert "dropped_before_validation" in d
+        expected = d["in_scope_count"] - d["stage_counts"].get(
+            "stage_11_validators_passed", 0,
+        )
+        assert d["dropped_before_validation"] == expected

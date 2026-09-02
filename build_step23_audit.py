@@ -741,28 +741,26 @@ def _analyze_pipeline_reachability() -> dict[str, bool]:
             pipeline_source += mod_path.read_text(encoding="utf-8")
             pipeline_source += "\n"
 
-    # AgreementContext: check if build_agreement_context or
-    # resolve_with_context is imported/called by the pipeline.
-    if "build_agreement_context" in pipeline_source and "import" in pipeline_source:
-        # Check if it's actually called (not just in a comment)
-        import re as _re
-        calls = _re.findall(
+    # AgreementContext: check if build_agreement_context is actually
+    # called (not just mentioned in a comment) by the pipeline.
+    if "build_agreement_context" in pipeline_source:
+        calls = re.findall(
             r"build_agreement_context\s*\(", pipeline_source,
         )
         reachability["agreement_context_executed"] = len(calls) > 0
 
+    # resolve_with_context: check if it is actually called by the
+    # pipeline.
     if "resolve_with_context" in pipeline_source:
-        import re as _re
-        calls = _re.findall(
+        calls = re.findall(
             r"resolve_with_context\s*\(", pipeline_source,
         )
         reachability["resolve_with_context_executed"] = len(calls) > 0
 
     # Model-assisted interface: check if resolve_with_model_assistance
-    # is imported/called by the pipeline.
+    # is actually called by the pipeline.
     if "resolve_with_model_assistance" in pipeline_source:
-        import re as _re
-        calls = _re.findall(
+        calls = re.findall(
             r"resolve_with_model_assistance\s*\(", pipeline_source,
         )
         reachability["model_assisted_interface_executed"] = len(calls) > 0
@@ -815,11 +813,16 @@ def trace_resolver_path(
         "validator_rejected": False,
     }
 
-    # The resolver calls commitment_registry
+    # The resolver calls commitment_registry.  We count it as
+    # executed only when the registry actually resolved a canonical
+    # commitment (cid is not None) — having a section_ref alone does
+    # not mean the registry was successfully exercised.
     cid, _, _ = resolve_commitment_from_text(
         ins.source_text or "", ins.target_section_ref, current_state,
     )
-    if cid is not None or ins.target_section_ref:
+    if cid is None and ins.target_section_ref:
+        cid = resolve_commitment_from_section(ins.target_section_ref)
+    if cid is not None:
         path["commitment_registry_executed"] = True
 
     # The resolver uses the staged interpreter (ResolverStepTrace)
