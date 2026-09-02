@@ -19,6 +19,7 @@ import pytest
 from build_step23_audit import (
     CANONICAL_CLASSES,
     _analyze_pipeline_reachability,
+    _count_calls_in_source,
     _is_parser_based_genre,
     classify_gt_eligibility,
     classify_instruction_eligibility,
@@ -280,6 +281,47 @@ class TestResolverPath:
         # The resolver must use commitment_registry and staged_interpreter
         assert reachability["commitment_registry_executed"] is True
         assert reachability["staged_interpreter_executed"] is True
+
+    def test_count_calls_excludes_function_definitions(self):
+        """Regression: re.findall(r'name\\s*\\(') matches 'def name('
+        as well as actual calls.  _count_calls_in_source must use AST
+        and return 0 for a function that is only defined, never
+        called."""
+        src = "def build_agreement_context():\n    pass\n"
+        assert _count_calls_in_source(src, "build_agreement_context") == 0
+
+    def test_count_counts_actual_calls(self):
+        """_count_calls_in_source must return 1 when the function is
+        actually called (and also defined)."""
+        src = (
+            "def build_agreement_context():\n    pass\n"
+            "build_agreement_context()\n"
+        )
+        assert _count_calls_in_source(src, "build_agreement_context") == 1
+
+    def test_count_handles_attribute_calls(self):
+        """_count_calls_in_source must count module.attr() calls."""
+        src = "from x import y\ny.build_agreement_context()\n"
+        assert _count_calls_in_source(src, "build_agreement_context") == 1
+
+    def test_count_ignores_comments_and_docstrings(self):
+        """_count_calls_in_source must not count mentions in comments
+        or docstrings."""
+        src = (
+            '# build_agreement_context() is not called here\n'
+            '"""build_agreement_context() mentioned in docstring"""\n'
+            'x = 1\n'
+        )
+        assert _count_calls_in_source(src, "build_agreement_context") == 0
+
+    def test_count_ignores_type_annotations(self):
+        """_count_calls_in_source must not count type annotations
+        like `-> ResolverStepTrace` as calls."""
+        src = (
+            "def f() -> ResolverStepTrace:\n"
+            "    pass\n"
+        )
+        assert _count_calls_in_source(src, "ResolverStepTrace") == 0
 
     def test_resolver_path_returns_all_keys(self):
         ins = _make_instruction(

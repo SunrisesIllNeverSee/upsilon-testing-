@@ -15,6 +15,7 @@ Produces:
 """
 from __future__ import annotations
 
+import ast
 import json
 import re
 from collections import Counter
@@ -708,6 +709,46 @@ def trace_resolution_funnel(
 # ---------------------------------------------------------------------------
 
 
+def _count_calls_in_source(source: str, func_name: str) -> int:
+    """Count actual ``ast.Call`` nodes for ``func_name`` in ``source``.
+
+    This excludes function definitions (``def func_name(...)``), type
+    annotations, docstrings, and comments — only real call sites are
+    counted.  Handles both bare-name calls (``func_name(...)``) and
+    attribute calls (``module.func_name(...)``).
+
+    Returns 0 if the source cannot be parsed as valid Python.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return 0
+    count = 0
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == func_name:
+            count += 1
+        elif isinstance(func, ast.Attribute) and func.attr == func_name:
+            count += 1
+    return count
+
+
+def _count_calls_in_modules(
+    module_paths: list[Path], func_name: str,
+) -> int:
+    """Count actual call sites for ``func_name`` across modules."""
+    total = 0
+    for mod_path in module_paths:
+        if not mod_path.exists():
+            continue
+        total += _count_calls_in_source(
+            mod_path.read_text(encoding="utf-8"), func_name,
+        )
+    return total
+
+
 def _analyze_pipeline_reachability() -> dict[str, bool]:
     """Statically analyze whether the v2 pipeline reaches the new
     architecture components.
@@ -718,67 +759,46 @@ def _analyze_pipeline_reachability() -> dict[str, bool]:
             → genre_adapters.process_incremental
               → semantic_resolver_v2.resolve_instruction
 
-    This function checks whether each component is imported and called
-    by the pipeline modules, rather than assuming the answer.
+    Each component is counted as "reached" only when an actual
+    ``ast.Call`` node for it exists in the pipeline source — function
+    definitions, type annotations, docstrings, and comments do NOT
+    count.  This avoids overstating reachability when a helper is
+    defined but never invoked.
     """
-    reachability = {
-        "agreement_context_executed": False,
-        "commitment_registry_executed": False,
-        "resolve_with_context_executed": False,
-        "staged_interpreter_executed": False,
-        "model_assisted_interface_executed": False,
-    }
-
-    # Check which modules import/call the v2 architecture components.
     pipeline_modules = [
         Path("semantic_pipeline_v2.py"),
         Path("genre_adapters.py"),
         Path("semantic_resolver_v2.py"),
     ]
-    pipeline_source = ""
-    for mod_path in pipeline_modules:
-        if mod_path.exists():
-            pipeline_source += mod_path.read_text(encoding="utf-8")
-            pipeline_source += "\n"
+    resolver_path = Path("semantic_resolver_v2.py")
 
-    # AgreementContext: check if build_agreement_context is actually
-    # called (not just mentioned in a comment) by the pipeline.
-    if "build_agreement_context" in pipeline_source:
-        calls = re.findall(
-            r"build_agreement_context\s*\(", pipeline_source,
-        )
-        reachability["agreement_context_executed"] = len(calls) > 0
-
-    # resolve_with_context: check if it is actually called by the
-    # pipeline.
-    if "resolve_with_context" in pipeline_source:
-        calls = re.findall(
-            r"resolve_with_context\s*\(", pipeline_source,
-        )
-        reachability["resolve_with_context_executed"] = len(calls) > 0
-
-    # Model-assisted interface: check if resolve_with_model_assistance
-    # is actually called by the pipeline.
-    if "resolve_with_model_assistance" in pipeline_source:
-        calls = re.findall(
-            r"resolve_with_model_assistance\s*\(", pipeline_source,
-        )
-        reachability["model_assisted_interface_executed"] = len(calls) > 0
-
-    # Commitment registry: resolve_instruction calls
-    # resolve_commitment_from_text internally.
-    resolver_src = Path("semantic_resolver_v2.py").read_text(encoding="utf-8")
-    reachability["commitment_registry_executed"] = (
-        "resolve_commitment_from_text" in resolver_src
-    )
-
-    # Staged interpreter: resolve_instruction produces a
-    # ResolverStepTrace.
-    reachability["staged_interpreter_executed"] = (
-        "ResolverStepTrace" in resolver_src
-    )
-
-    return reachability
+    return {
+        # AgreementContext: build_agreement_context must be actually
+        # called by the pipeline (not just defined or mentioned).
+        "agreement_context_executed": _count_calls_in_modules(
+            pipeline_modules, "build_agreement_context",
+        ) > 0,
+        # resolve_with_context must be actually called.
+        "resolve_with_context_executed": _count_calls_in_modules(
+            pipeline_modules, "resolve_with_context",
+        ) > 0,
+        # Model-assisted interface: resolve_with_model_assistance must
+        # be actually called.
+        "model_assisted_interface_executed": _count_calls_in_modules(
+            pipeline_modules, "resolve_with_model_assistance",
+        ) > 0,
+        # Commitment registry: resolve_instruction must actually call
+        # resolve_commitment_from_text (not just import or mention it).
+        "commitment_registry_executed": _count_calls_in_modules(
+            [resolver_path], "resolve_commitment_from_text",
+        ) > 0,
+        # Staged interpreter: resolve_instruction must actually
+        # instantiate ResolverStepTrace (not just annotate a return
+        # type with it).
+        "staged_interpreter_executed": _count_calls_in_modules(
+            [resolver_path], "ResolverStepTrace",
+        ) > 0,
+    }
 
 
 def trace_resolver_path(
