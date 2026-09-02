@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -259,6 +260,7 @@ class InstructionRow:
     predicted_unit: str = ""
     candidate_created: bool = False
     accepted: bool = False
+    executor_accepted: bool = False
     correct_automatic_mapping: bool = False
     # Runtime failure trace
     first_runtime_stage_entered: int = 0
@@ -750,7 +752,7 @@ def _row_to_instruction(row: InstructionRow) -> AmendmentInstruction:
 
 def join_v2_output_and_trace(
     rows: list[InstructionRow],
-) -> None:
+) -> dict[str, Any]:
     """Join existing v2 output and build runtime failure trace.
 
     This runs the ACTUAL v2 resolver on each instruction, using the
@@ -758,6 +760,19 @@ def join_v2_output_and_trace(
     exactly as the production pipeline does.
 
     Modifications are made in-place on the InstructionRow objects.
+
+    Returns a dict with safety metrics computed from the actual
+    executor runs:
+      - incorrect_accepted_mutations: count of rows where the
+        executor accepted a mutation that is incorrect.  For
+        IN_SCOPE rows, "incorrect" means the mutation disagrees
+        with the independently established expected truth.  For
+        OUT_OF_SCOPE and AMBIGUOUS_SCOPE rows, ANY executor-accepted
+        mutation is incorrect (the instruction should not have
+        produced a mutation at all).
+      - false_authoritative_promotions: count of amendment steps
+        marked authoritative where an incorrect mutation was
+        applied at or before that step in the same chain.
     """
     # Group rows by chain for state-ordered processing
     dev_chains = all_v2_chains()
@@ -770,6 +785,19 @@ def join_v2_output_and_trace(
     for row in rows:
         key = (row.chain_id, row.amendment_order)
         rows_by_chain_amend.setdefault(key, []).append(row)
+
+    # Track safety metrics from actual executor runs
+    # incorrect_accepted: rows where the executor accepted a mutation
+    # that is incorrect — either IN_SCOPE rows that disagree with
+    # expected truth, or OUT_OF_SCOPE/AMBIGUOUS_SCOPE rows that should
+    # not have produced a mutation at all.
+    incorrect_accepted_rows: list[InstructionRow] = []
+    # For false authoritative promotion detection: track which
+    # (chain_id, step_idx) had incorrect accepted mutations, and
+    # which steps were authoritative (executor COMPLETE, no
+    # unresolved).
+    step_had_incorrect: dict[tuple[str, int], bool] = {}
+    step_is_authoritative: dict[tuple[str, int], bool] = {}
 
     # Process each chain in amendment order, advancing state
     for chain_id, chain_obj, _, _ in [
@@ -785,6 +813,9 @@ def join_v2_output_and_trace(
             for k, v in chain.original_state.items()
         }
 
+        # Track inherited unresolved for authority determination
+        inherited_unresolved_count = 0
+
         for step_idx, step in enumerate(chain.amendments, 1):
             if not _is_parser_based_genre(step):
                 continue
@@ -797,6 +828,10 @@ def join_v2_output_and_trace(
 
             # Collect mapped instructions for state advancement
             mapped_instructions: list[AmendmentInstruction] = []
+            # Track which rows produced mapped mutations so we can
+            # update executor_accepted after the executor runs.
+            rows_with_candidates: list[InstructionRow] = []
+            step_resolver_unresolved_count = 0
 
             for row in step_rows:
                 ins = _row_to_instruction(row)
@@ -825,11 +860,14 @@ def join_v2_output_and_trace(
                     row.predicted_new_value = str(mut.new_value or "")
                     row.predicted_unit = str(mut.unit or "")
                     row.candidate_created = True
+                    # accepted is provisional — will be confirmed
+                    # by the executor result below.
                     row.accepted = True
                     # Add to mapped instructions for state advancement
                     mapped_instructions.append(
                         mut.to_amendment_instruction(order=row.instruction_index)
                     )
+                    rows_with_candidates.append(row)
                 elif result.unresolved:
                     # Candidate was produced but unresolved
                     unr = result.unresolved[0]
@@ -842,13 +880,18 @@ def join_v2_output_and_trace(
                     )
                     row.candidate_created = False
                     row.accepted = False
+                    row.executor_accepted = False
+                    step_resolver_unresolved_count += 1
 
-                # Compute correct_automatic_mapping
+                # Compute correct_automatic_mapping (provisional —
+                # will be re-checked after executor confirms
+                # acceptance)
                 if row.independent_eligibility == "IN_SCOPE":
                     row.correct_automatic_mapping = _check_mapping_correct(row)
 
             # Advance state: execute mapped instructions through the
             # real executor, exactly as the production pipeline does.
+            exec_unresolved_count = 0
             if mapped_instructions:
                 exec_result = execute_amendment(
                     current_state, mapped_instructions,
@@ -857,6 +900,129 @@ def join_v2_output_and_trace(
                     k: v.model_copy(deep=True)
                     for k, v in exec_result.state.items()
                 }
+                exec_unresolved_count = len(exec_result.unresolved)
+
+                # Determine which rows were actually accepted by the
+                # executor.  The executor's `applied` list contains
+                # AmendmentInstructions that were successfully applied.
+                # We match by order (instruction_index) to identify
+                # which rows' candidates were accepted.
+                applied_orders = {
+                    ins.order for ins in exec_result.applied
+                }
+                for row in rows_with_candidates:
+                    if row.instruction_index in applied_orders:
+                        row.executor_accepted = True
+                    else:
+                        # Executor rejected this candidate.  The
+                        # resolver produced a mutation (terminal_outcome
+                        # was set to ACCEPTED by _record_runtime_trace),
+                        # but the executor's deterministic guards
+                        # rejected it.  This is a FAILED outcome, not
+                        # an accepted one — update terminal_outcome so
+                        # the taxonomy and failure classification treat
+                        # it as a runtime failure (VALIDATOR_REJECTION)
+                        # rather than an accepted-incorrect mutation.
+                        row.executor_accepted = False
+                        row.accepted = False
+                        row.terminal_outcome = "FAILED"
+                        row.first_runtime_failure = "VALIDATOR_REJECTION"
+                        row.first_runtime_stage_entered = 8
+                        row.failure_reason = "executor_rejection"
+                        # Re-check correctness after executor rejection
+                        if row.independent_eligibility == "IN_SCOPE":
+                            row.correct_automatic_mapping = False
+            else:
+                # No mapped instructions — nothing to accept
+                for row in rows_with_candidates:
+                    row.executor_accepted = False
+
+            # Determine if this step is authoritative (mirrors
+            # semantic_pipeline_v2.py logic):
+            # is_authoritative = execution COMPLETE and no inherited
+            # unresolved and no own unresolved (resolver + executor).
+            own_unresolved = (
+                step_resolver_unresolved_count + exec_unresolved_count
+            )
+            is_authoritative = (
+                (not mapped_instructions or exec_unresolved_count == 0)
+                and own_unresolved == 0
+                and inherited_unresolved_count == 0
+            )
+            step_is_authoritative[key] = is_authoritative
+
+            # Update inherited unresolved for next step
+            inherited_unresolved_count = (
+                inherited_unresolved_count
+                + step_resolver_unresolved_count
+                + exec_unresolved_count
+            )
+
+            # Track incorrect accepted mutations at this step.
+            #
+            # An executor-accepted mutation is "incorrect" when:
+            #   - IN_SCOPE: it disagrees with the independently
+            #     established expected truth (not correct_automatic_mapping)
+            #   - OUT_OF_SCOPE / AMBIGUOUS_SCOPE: ANY executor-accepted
+            #     mutation is incorrect.  These instructions should not
+            #     have produced a mutation at all — there is no expected
+            #     truth to agree with, so any applied mutation is an
+            #     unauthorized state change.  The safety gate
+            #     "incorrect accepted mutations = 0" has no IN_SCOPE
+            #     restriction; an OUT_OF_SCOPE mutation that the
+            #     executor applies is arguably worse than an IN_SCOPE
+            #     wrong-value mutation because it is entirely
+            #     unauthorized.
+            step_incorrect = False
+            for row in step_rows:
+                if not row.executor_accepted:
+                    continue
+                if row.independent_eligibility == "IN_SCOPE":
+                    if not row.correct_automatic_mapping:
+                        incorrect_accepted_rows.append(row)
+                        step_incorrect = True
+                else:
+                    # OUT_OF_SCOPE or AMBIGUOUS_SCOPE: any
+                    # executor-accepted mutation is incorrect.
+                    incorrect_accepted_rows.append(row)
+                    step_incorrect = True
+            step_had_incorrect[key] = step_incorrect
+
+    # Compute safety metrics from the actual executor runs
+    incorrect_accepted_count = len(incorrect_accepted_rows)
+
+    # False authoritative promotion: a step marked authoritative
+    # where an incorrect mutation was applied at or before that step
+    # in the same chain.  This mirrors the production definition: a
+    # false promotion occurs when a step is marked authoritative but
+    # an incorrect mutation was applied at or before that step.
+    false_auth_promotion_count = 0
+    # Group steps by chain for temporal ordering
+    chain_steps: dict[str, list[tuple[int, bool, bool]]] = {}
+    for (cid, sidx), had_inc in step_had_incorrect.items():
+        is_auth = step_is_authoritative.get((cid, sidx), False)
+        chain_steps.setdefault(cid, []).append((sidx, had_inc, is_auth))
+    for cid, steps in chain_steps.items():
+        steps.sort(key=lambda x: x[0])
+        incorrect_seen_in_chain = False
+        for sidx, had_inc, is_auth in steps:
+            if had_inc:
+                incorrect_seen_in_chain = True
+            # A false authoritative promotion occurs when a step is
+            # authoritative AND an incorrect mutation was applied at
+            # or before this step in the chain.
+            if is_auth and incorrect_seen_in_chain:
+                false_auth_promotion_count += 1
+
+    return {
+        "incorrect_accepted_mutations": incorrect_accepted_count,
+        "incorrect_accepted_instruction_ids": [
+            r.instruction_id for r in incorrect_accepted_rows
+        ],
+        "false_authoritative_promotions": false_auth_promotion_count,
+        "step_authoritative_count": sum(1 for v in step_is_authoritative.values() if v),
+        "total_steps": len(step_is_authoritative),
+    }
 
 
 def _record_runtime_trace(row: InstructionRow, result, trace) -> None:
@@ -905,10 +1071,17 @@ def _record_runtime_trace(row: InstructionRow, result, trace) -> None:
 def _check_mapping_correct(row: InstructionRow) -> bool:
     """Check if the automatic mapping is correct.
 
-    A mapping is correct if:
+    A mapping is correct only if its relevant represented semantic
+    components agree with the independently established expected
+    truth.  This checks:
     1. A mutation was accepted (candidate_created and accepted)
     2. The predicted commitment class matches the expected class
     3. The predicted field matches the expected field (if known)
+    4. The predicted operation matches the expected operation (if known)
+    5. The predicted new value matches the expected new value (if known
+       and not SOURCE_AMBIGUOUS)
+    6. The predicted unit matches the expected unit (if known and not
+       UNKNOWN)
     """
     if not row.accepted or not row.candidate_created:
         return False
@@ -918,7 +1091,59 @@ def _check_mapping_correct(row: InstructionRow) -> bool:
     if row.expected_field and row.expected_field != "SOURCE_AMBIGUOUS":
         if row.predicted_field and row.predicted_field != row.expected_field:
             return False
+    # Check operation if expected operation is known
+    if row.expected_operation and row.expected_operation != "SOURCE_AMBIGUOUS":
+        # Normalize: REPLACE_VALUE and REPLACE are semantically
+        # equivalent for this check.
+        pred_op = row.predicted_operation or ""
+        exp_op = row.expected_operation
+        if pred_op != exp_op:
+            # Allow REPLACE_VALUE vs REPLACE equivalence
+            if not (
+                (pred_op == "REPLACE_VALUE" and exp_op == "REPLACE")
+                or (pred_op == "REPLACE" and exp_op == "REPLACE_VALUE")
+            ):
+                return False
+    # Check new value if expected new value is known and extractable
+    if (
+        row.expected_new_value
+        and row.expected_new_value != "SOURCE_AMBIGUOUS"
+        and row.expected_new_value != "NOT_APPLICABLE"
+    ):
+        pred_val = _normalize_value_str(row.predicted_new_value)
+        exp_val = _normalize_value_str(row.expected_new_value)
+        if pred_val and exp_val and pred_val != exp_val:
+            return False
+    # Check unit if expected unit is known
+    if row.expected_unit and row.expected_unit != "UNKNOWN":
+        pred_unit = (row.predicted_unit or "").lower().strip()
+        exp_unit = row.expected_unit.lower().strip()
+        if pred_unit and exp_unit and pred_unit != exp_unit:
+            return False
     return True
+
+
+def _normalize_value_str(val: str) -> str:
+    """Normalize a value string for comparison.
+
+    Strips whitespace, removes trailing .0, removes commas from
+    numbers, and lowercases.
+    """
+    if not val:
+        return ""
+    s = str(val).strip().lower()
+    # Remove commas from numbers (e.g., "50,000,000" -> "50000000")
+    s = s.replace(",", "")
+    # Remove trailing .0 from floats (e.g., "15.0" -> "15")
+    try:
+        f = float(s)
+        if f == int(f):
+            s = str(int(f))
+        else:
+            s = str(f)
+    except ValueError:
+        pass
+    return s
 
 
 # ---------------------------------------------------------------------------
@@ -1383,13 +1608,30 @@ def build_v1_v2_comparison(
         "v2_eligible_coverage": f"{v2_eligible_coverage * 100:.1f}%",
         "v2_eligible_coverage_numeric": round(v2_eligible_coverage, 4),
         "v2_dev_parser_mapped_aggregate": v2_dev_parser_mapped,
+        "record_level_alignment_possible": False,
+        "blocked_reason": (
+            "v1 frozen results JSON does not contain per-instruction "
+            "mapping data.  The prompt requires record-level numerator "
+            "alignment ('identify which exact v1 predictions correspond "
+            "to which exact eligible instructions'), but v1 only "
+            "reports aggregate mapped/incorrect counts per chain.  "
+            "Rerunning frozen v1 is prohibited.  Therefore record-level "
+            "v1 vs v2 alignment is BLOCKED — the v1 numerator shown "
+            "here is aggregate (mapped - incorrect) and cannot be "
+            "verified to correspond to specific eligible instruction "
+            "rows.  v2 correct_mapped IS record-level (each counted "
+            "mapping is verified to belong to an IN_SCOPE row).  The "
+            "v1 number should NOT be treated as a valid record-level "
+            "numerator."
+        ),
         "note": (
             "v1 JSON does not contain per-instruction mapping data. "
             "v1 correct_mapped is aggregate (mapped - incorrect) from "
             "frozen v1 results.  Both v1 and v2 use the same "
             "independently adjudicated dev IN_SCOPE denominator.  "
             "v2 correct_mapped is record-level (each counted mapping "
-            "is verified to belong to an IN_SCOPE row)."
+            "is verified to belong to an IN_SCOPE row).  "
+            "RECORD-LEVEL ALIGNMENT IS NOT POSSIBLE for v1."
         ),
     }
 
@@ -1397,6 +1639,33 @@ def build_v1_v2_comparison(
 # ---------------------------------------------------------------------------
 # Main audit
 # ---------------------------------------------------------------------------
+
+
+def _get_repo_state() -> dict[str, str]:
+    """Get the actual repository state from git."""
+    try:
+        branch = subprocess.check_output(
+            ["git", "branch", "--show-current"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+    except Exception:
+        branch = "unknown"
+    try:
+        head = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+    except Exception:
+        head = "unknown"
+    try:
+        status = subprocess.check_output(
+            ["git", "status", "--short"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+        working_tree = "clean" if not status else "dirty"
+    except Exception:
+        working_tree = "unknown"
+    return {"branch": branch, "head": head, "working_tree": working_tree}
 
 
 def run_audit() -> dict[str, Any]:
@@ -1458,7 +1727,11 @@ def run_audit() -> dict[str, Any]:
     # Section 5/6/7: Join v2 output, build runtime trace, advance state
     # ==================================================================
     print("\nSection 5/6/7: Joining v2 output and building runtime trace...")
-    join_v2_output_and_trace(rows)
+    safety_metrics = join_v2_output_and_trace(rows)
+    print(f"  Incorrect accepted mutations (record-level): {safety_metrics['incorrect_accepted_mutations']}")
+    print(f"  False authoritative promotions: {safety_metrics['false_authoritative_promotions']}")
+    if safety_metrics["incorrect_accepted_instruction_ids"]:
+        print(f"  Incorrect accepted IDs: {safety_metrics['incorrect_accepted_instruction_ids']}")
 
     # Verify runtime trace completeness for IN_SCOPE
     in_scope_with_trace = sum(
@@ -1628,17 +1901,22 @@ def run_audit() -> dict[str, Any]:
     # GT extraction
     gt_extraction_pct = gt_coverage * 100
 
-    # Unknown genre rate (from v2 study)
+    # Unknown genre rate (from v2 study — this is a parser-level
+    # metric not derivable from the instruction ledger)
     v2_study_path = Path("results/step_21_v2_study_results.json")
     if v2_study_path.exists():
         v2_study = json.loads(v2_study_path.read_text(encoding="utf-8"))
         unknown_genre_rate = v2_study.get("unknown_genre_rate", 0.0) * 100
-        incorrect_mutations = v2_study.get("total_incorrect_mutations", 0)
-        false_auth_promotions = v2_study.get("false_authoritative_promotion_count", 0)
     else:
         unknown_genre_rate = 0.0
-        incorrect_mutations = 0
-        false_auth_promotions = 0
+
+    # Safety gates: use the AUDIT'S OWN record-level safety metrics,
+    # not stale aggregate counts from a different study.  The audit
+    # ran the actual executor and tracked which IN_SCOPE rows had
+    # incorrect accepted mutations and which steps were falsely
+    # promoted to authoritative.
+    incorrect_mutations = safety_metrics["incorrect_accepted_mutations"]
+    false_auth_promotions = safety_metrics["false_authoritative_promotions"]
 
     gates = [
         ("semantic_mapping_coverage_gte_50pct",
@@ -1748,12 +2026,9 @@ def run_audit() -> dict[str, Any]:
     # ==================================================================
     # Build output
     # ==================================================================
+    repo_state = _get_repo_state()
     output = {
-        "section_a_repository_state": {
-            "branch": "feature/semantic-mapper-v0.1",
-            "head": "81ec85d",
-            "working_tree": "clean",
-        },
+        "section_a_repository_state": repo_state,
         "section_c_frozen_population": {
             "total": total,
             "unique_ids": len(set(ids)),
@@ -1815,6 +2090,14 @@ def run_audit() -> dict[str, Any]:
             ],
         },
         "section_m_step24_candidates": step24_candidates[:5],
+        "section_safety_metrics": {
+            "incorrect_accepted_mutations": safety_metrics["incorrect_accepted_mutations"],
+            "incorrect_accepted_instruction_ids": safety_metrics["incorrect_accepted_instruction_ids"],
+            "false_authoritative_promotions": safety_metrics["false_authoritative_promotions"],
+            "step_authoritative_count": safety_metrics["step_authoritative_count"],
+            "total_steps": safety_metrics["total_steps"],
+            "source": "record-level, from audit's own executor runs",
+        },
         "instruction_ledger": [
             {
                 "instruction_id": r.instruction_id,
@@ -1846,6 +2129,7 @@ def run_audit() -> dict[str, Any]:
                 "predicted_unit": r.predicted_unit,
                 "candidate_created": r.candidate_created,
                 "accepted": r.accepted,
+                "executor_accepted": r.executor_accepted,
                 "correct_automatic_mapping": r.correct_automatic_mapping,
                 "first_runtime_stage_entered": r.first_runtime_stage_entered,
                 "first_runtime_failure": r.first_runtime_failure,

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import csv
 import json
+import re
+import subprocess
 from pathlib import Path
 
 
@@ -16,6 +18,32 @@ def write_csv(
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def _run_test_suite() -> dict[str, int]:
+    """Run the full test suite and return pass/fail/skip counts."""
+    try:
+        result = subprocess.run(
+            ["python3", "-m", "pytest", "--tb=no", "-q"],
+            capture_output=True, text=True, timeout=600,
+        )
+        output = result.stdout + result.stderr
+        # Parse the summary line, e.g. "904 passed, 14 skipped in 30s"
+        passed = 0
+        failed = 0
+        skipped = 0
+        m = re.search(r"(\d+) passed", output)
+        if m:
+            passed = int(m.group(1))
+        m = re.search(r"(\d+) failed", output)
+        if m:
+            failed = int(m.group(1))
+        m = re.search(r"(\d+) skipped", output)
+        if m:
+            skipped = int(m.group(1))
+        return {"passed": passed, "failed": failed, "skipped": skipped}
+    except Exception:
+        return {"passed": -1, "failed": -1, "skipped": -1}
 
 
 def main() -> int:
@@ -40,7 +68,8 @@ def main() -> int:
         "automatic_mapping_attempted", "predicted_commitment_class",
         "predicted_field", "predicted_operation", "predicted_old_value",
         "predicted_new_value", "predicted_unit",
-        "candidate_created", "accepted", "correct_automatic_mapping",
+        "candidate_created", "accepted", "executor_accepted",
+        "correct_automatic_mapping",
         "first_runtime_stage_entered", "first_runtime_failure",
         "terminal_outcome", "failure_family",
         "protocol_vs_interpretation", "failure_reason",
@@ -122,13 +151,14 @@ def main() -> int:
     lines.append(f"```")
     lines.append("")
 
-    # B. Tests
+    # B. Tests (run live)
+    test_counts = _run_test_suite()
     lines.append("## B. Tests")
     lines.append("")
     lines.append("```text")
-    lines.append("passed: 904")
-    lines.append("failed: 0")
-    lines.append("skipped: 14")
+    lines.append(f"passed: {test_counts['passed']}")
+    lines.append(f"failed: {test_counts['failed']}")
+    lines.append(f"skipped: {test_counts['skipped']}")
     lines.append("```")
     lines.append("")
 
@@ -259,10 +289,14 @@ def main() -> int:
     lines.append(f"v1 eligible coverage: {k['v1_eligible_coverage']}")
     lines.append(f"v2 correct mapped: {k['v2_correct_mapped']}")
     lines.append(f"v2 eligible coverage: {k['v2_eligible_coverage']}")
+    lines.append(f"record-level alignment possible: {k.get('record_level_alignment_possible', False)}")
     lines.append(f"```")
     lines.append("")
     lines.append(f"Note: {k.get('note', '')}")
     lines.append("")
+    if not k.get("record_level_alignment_possible", False):
+        lines.append(f"**BLOCKED**: {k.get('blocked_reason', '')}")
+        lines.append("")
 
     # L. Gates
     l_data = audit["section_l_gates"]
@@ -295,27 +329,77 @@ def main() -> int:
     lines.append("")
 
     # N. Step verdict
+    # The verdict is PASS only if:
+    # 1. All safety gates pass (incorrect_accepted=0, false_auth_promotions=0)
+    # 2. Record-level v1 vs v2 alignment is possible
+    # 3. The diagnostic truth set is not contaminated
+    # Otherwise it is BLOCKED.
+    safety = audit.get("section_safety_metrics", {})
+    incorrect_accepted = safety.get("incorrect_accepted_mutations", 0)
+    false_auth = safety.get("false_authoritative_promotions", 0)
+    v1_alignment_possible = k.get("record_level_alignment_possible", False)
+
+    safety_gates_pass = (incorrect_accepted == 0 and false_auth == 0)
+
     lines.append("## N. Step verdict")
     lines.append("")
     lines.append("```text")
-    lines.append("STEP 23R PASS — independent diagnostic truth established")
+    if safety_gates_pass and v1_alignment_possible:
+        lines.append("STEP 23R PASS — independent diagnostic truth established")
+    else:
+        lines.append("STEP 23R BLOCKED — diagnostic truth is still contaminated or incomplete")
     lines.append("```")
     lines.append("")
-    lines.append("### Step 24 target recommendation")
-    lines.append("")
-    lines.append("```text")
-    lines.append("PHASE VI — STEP 24 TARGET: TARGET_IDENTIFICATION")
-    lines.append("```")
-    lines.append("")
-    lines.append("Rationale: TARGET_IDENTIFICATION is the dominant interpretation")
-    lines.append(f"failure family with {m[0]['affected']} affected instructions")
-    lines.append(f"({m[0]['pct_of_failures']}% of eligible failures), all of which are")
-    lines.append(f"recoverable ({m[0]['estimated_recoverable']} cases) without protocol")
-    lines.append("changes. The existing protocol can represent these mutations —")
-    lines.append("Upsilon simply fails to identify the correct commitment class from")
-    lines.append("source text. This is the highest-leverage target for Step 24")
-    lines.append("concentrated semantic engineering.")
-    lines.append("")
+
+    if not safety_gates_pass:
+        lines.append("### Blocking reasons")
+        lines.append("")
+        if incorrect_accepted > 0:
+            lines.append(
+                f"- incorrect_accepted_mutations = {incorrect_accepted} "
+                f"(must be 0).  Affected instruction IDs: "
+                f"{safety.get('incorrect_accepted_instruction_ids', [])}"
+            )
+        if false_auth > 0:
+            lines.append(
+                f"- false_authoritative_promotions = {false_auth} "
+                f"(must be 0)"
+            )
+        lines.append("")
+
+    if not v1_alignment_possible:
+        if not safety_gates_pass:
+            pass  # already listed above
+        lines.append(
+            "- v1 vs v2 record-level alignment is not possible: "
+            "v1 frozen results lack per-instruction mapping data."
+        )
+        lines.append("")
+
+    # Step 24 target recommendation (only if PASS)
+    if safety_gates_pass and v1_alignment_possible:
+        lines.append("### Step 24 target recommendation")
+        lines.append("")
+        lines.append("```text")
+        lines.append("PHASE VI — STEP 24 TARGET: TARGET_IDENTIFICATION")
+        lines.append("```")
+        lines.append("")
+        lines.append("Rationale: TARGET_IDENTIFICATION is the dominant interpretation")
+        lines.append(f"failure family with {m[0]['affected']} affected instructions")
+        lines.append(f"({m[0]['pct_of_failures']}% of eligible failures), all of which are")
+        lines.append(f"recoverable ({m[0]['estimated_recoverable']} cases) without protocol")
+        lines.append("changes. The existing protocol can represent these mutations —")
+        lines.append("Upsilon simply fails to identify the correct commitment class from")
+        lines.append("source text. This is the highest-leverage target for Step 24")
+        lines.append("concentrated semantic engineering.")
+        lines.append("")
+    else:
+        lines.append("### Step 24 target recommendation")
+        lines.append("")
+        lines.append("Step 24 target selection is deferred until Step 23R blocking")
+        lines.append("issues are resolved.  The diagnostic truth set must be")
+        lines.append("uncontaminated before concentrating Step 24 engineering effort.")
+        lines.append("")
 
     report = "\n".join(lines)
     report_path = Path("results/STEP_23R_REPORT.md")

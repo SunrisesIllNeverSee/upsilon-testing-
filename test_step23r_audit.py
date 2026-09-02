@@ -22,6 +22,8 @@ import pytest
 from build_step23r_audit import (
     CANONICAL_CLASSES,
     CLASS_KEYWORD_PATTERNS,
+    _check_mapping_correct,
+    _normalize_value_str,
     build_failure_taxonomy,
     classify_eligibility_independent,
     classify_gt_eligibility_independent,
@@ -263,6 +265,66 @@ class TestRuntimeFailureTrace:
                 f"first_runtime_failure={r['first_runtime_failure']}"
             )
 
+    def test_executor_rejected_candidate_is_failed_not_accepted(self):
+        """Regression: when the resolver produces a candidate
+        (candidate_created=True) but the executor rejects it
+        (executor_accepted=False), the row's terminal_outcome must
+        be FAILED with first_runtime_failure=VALIDATOR_REJECTION —
+        NOT ACCEPTED.
+
+        Previously, _record_runtime_trace set terminal_outcome=
+        ACCEPTED when the resolver succeeded, and the executor
+        rejection path did not update it.  This caused executor-
+        rejected rows to be misclassified as accepted_incorrect in
+        the taxonomy rather than as failed with a VALIDATOR_REJECTION
+        first-runtime failure.
+        """
+        audit_path = Path("results/step23r_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        ledger = audit["instruction_ledger"]
+        # Find rows where the resolver produced a candidate but the
+        # executor rejected it.
+        executor_rejected = [
+            r for r in ledger
+            if r.get("candidate_created")
+            and r.get("executor_accepted") is False
+        ]
+        for r in executor_rejected:
+            assert r["terminal_outcome"] == "FAILED", (
+                f"{r['instruction_id']}: executor rejected candidate but "
+                f"terminal_outcome={r['terminal_outcome']!r} (expected FAILED)"
+            )
+            assert r["first_runtime_failure"] == "VALIDATOR_REJECTION", (
+                f"{r['instruction_id']}: executor rejected but "
+                f"first_runtime_failure={r['first_runtime_failure']!r} "
+                f"(expected VALIDATOR_REJECTION)"
+            )
+            assert r["accepted"] is False, (
+                f"{r['instruction_id']}: executor rejected but accepted=True"
+            )
+
+    def test_terminal_outcome_accepted_implies_executor_accepted(self):
+        """Every row with terminal_outcome=ACCEPTED must also have
+        executor_accepted=True.  This is the converse of the
+        executor-rejection regression: a row should never be marked
+        ACCEPTED unless the executor actually applied it."""
+        audit_path = Path("results/step23r_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        ledger = audit["instruction_ledger"]
+        accepted = [
+            r for r in ledger
+            if r["terminal_outcome"] == "ACCEPTED"
+        ]
+        for r in accepted:
+            assert r["executor_accepted"] is True, (
+                f"{r['instruction_id']}: terminal_outcome=ACCEPTED but "
+                f"executor_accepted={r['executor_accepted']} (expected True)"
+            )
+
 
 # ---------------------------------------------------------------------------
 # Section 10: Taxonomy
@@ -422,19 +484,345 @@ class TestGates:
         assert h["gates_passed_count"] == detail_passed
         assert h["gates_total"] == len(h["gate_details"])
 
-    def test_safety_gates_pass(self):
+    def test_safety_gates_use_record_level_data(self):
         """incorrect_accepted_mutations and false_authoritative_promotions
-        must be 0."""
+        must be computed from the audit's own record-level executor
+        runs, not from stale aggregate counts in a different study.
+
+        This test verifies that the safety gate values match the
+        record-level safety metrics section, ensuring the gates are
+        not pulling from a stale external study.
+        """
         audit_path = Path("results/step23r_audit.json")
         if not audit_path.exists():
             pytest.skip("Audit JSON not generated yet")
         audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        safety = audit.get("section_safety_metrics", {})
+        if not safety:
+            pytest.skip("No safety metrics in audit")
         for gate in audit["section_l_gates"]["gate_details"]:
             if "incorrect_accepted" in gate["gate"]:
-                assert gate["passed"], (
-                    f"{gate['gate']} failed: {gate['value']}"
+                # The gate value must match the record-level count
+                expected = safety["incorrect_accepted_mutations"]
+                assert gate["value"].startswith(str(expected)), (
+                    f"{gate['gate']} value '{gate['value']}' does not "
+                    f"match record-level count {expected}"
                 )
             if "false_authoritative" in gate["gate"]:
-                assert gate["passed"], (
-                    f"{gate['gate']} failed: {gate['value']}"
+                expected = safety["false_authoritative_promotions"]
+                assert gate["value"].startswith(str(expected)), (
+                    f"{gate['gate']} value '{gate['value']}' does not "
+                    f"match record-level count {expected}"
                 )
+
+    def test_incorrect_accepted_ids_are_executor_accepted(self):
+        """Every instruction ID listed as incorrect accepted must be
+        executor_accepted=True in the ledger.
+
+        An incorrect accepted mutation is any row where the executor
+        applied a mutation that should not have been applied:
+          - IN_SCOPE rows where the mutation disagrees with expected
+            truth (correct_automatic_mapping=False)
+          - OUT_OF_SCOPE / AMBIGUOUS_SCOPE rows where ANY
+            executor-accepted mutation is incorrect (the instruction
+            should not have produced a mutation at all)
+        """
+        audit_path = Path("results/step23r_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        safety = audit.get("section_safety_metrics", {})
+        if not safety:
+            pytest.skip("No safety metrics in audit")
+        incorrect_ids = set(safety.get("incorrect_accepted_instruction_ids", []))
+        if not incorrect_ids:
+            return
+        ledger = audit["instruction_ledger"]
+        by_id = {r["instruction_id"]: r for r in ledger}
+        for iid in incorrect_ids:
+            row = by_id.get(iid)
+            assert row is not None, f"{iid} not in ledger"
+            assert row["executor_accepted"] is True, (
+                f"{iid} is incorrect-accepted but not executor_accepted"
+            )
+            if row["independent_eligibility"] == "IN_SCOPE":
+                assert row["correct_automatic_mapping"] is False, (
+                    f"{iid} is IN_SCOPE incorrect-accepted but "
+                    f"correct_automatic_mapping=True"
+                )
+            # OUT_OF_SCOPE / AMBIGUOUS_SCOPE rows are incorrect by
+            # definition when executor_accepted — no
+            # correct_automatic_mapping check needed.
+
+    def test_out_of_scope_executor_accepted_counted_as_incorrect(self):
+        """OUT_OF_SCOPE rows where the executor accepted a mutation
+        MUST be counted as incorrect accepted mutations.
+
+        The safety gate 'incorrect accepted mutations = 0' has no
+        IN_SCOPE restriction.  An OUT_OF_SCOPE instruction that the
+        executor applies is an unauthorized state change — arguably
+        worse than an IN_SCOPE wrong-value mutation.  This test
+        verifies the audit does not silently exclude them.
+        """
+        audit_path = Path("results/step23r_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        safety = audit.get("section_safety_metrics", {})
+        if not safety:
+            pytest.skip("No safety metrics in audit")
+        ledger = audit["instruction_ledger"]
+        incorrect_ids = set(safety.get("incorrect_accepted_instruction_ids", []))
+        # Find all OUT_OF_SCOPE / AMBIGUOUS_SCOPE rows where
+        # executor_accepted=True
+        non_inscope_exec_accepted = [
+            r for r in ledger
+            if r["executor_accepted"]
+            and r["independent_eligibility"] != "IN_SCOPE"
+        ]
+        for r in non_inscope_exec_accepted:
+            assert r["instruction_id"] in incorrect_ids, (
+                f"{r['instruction_id']} is {r['independent_eligibility']} "
+                f"with executor_accepted=True but NOT in incorrect_accepted "
+                f"list — OUT_OF_SCOPE/AMBIGUOUS executor-accepted mutations "
+                f"must be counted as incorrect"
+            )
+
+
+# ---------------------------------------------------------------------------
+# Section 5: _check_mapping_correct checks all semantic components
+# ---------------------------------------------------------------------------
+
+
+class TestCheckMappingCorrect:
+
+    def test_wrong_commitment_class_is_incorrect(self):
+        """A mapping with the wrong commitment class is incorrect."""
+        row = _make_row(source_text="leverage ratio", ins_type="REPLACE_VALUE")
+        row.independent_eligibility = "IN_SCOPE"
+        row.expected_commitment_class = "financial_covenant.leverage_ratio"
+        row.expected_field = "threshold"
+        row.expected_operation = "REPLACE"
+        row.expected_new_value = "3.50"
+        row.expected_unit = "ratio"
+        row.candidate_created = True
+        row.accepted = True
+        row.predicted_commitment_class = "financial_covenant.current_ratio"
+        row.predicted_field = "threshold"
+        row.predicted_operation = "REPLACE_VALUE"
+        row.predicted_new_value = "3.50"
+        row.predicted_unit = "ratio"
+        assert not _check_mapping_correct(row)
+
+    def test_wrong_value_is_incorrect(self):
+        """A mapping with the right class and field but wrong value
+        is incorrect — the value check must not be skipped."""
+        row = _make_row(source_text="current ratio", ins_type="REPLACE_VALUE")
+        row.independent_eligibility = "IN_SCOPE"
+        row.expected_commitment_class = "financial_covenant.current_ratio"
+        row.expected_field = "threshold"
+        row.expected_operation = "REPLACE"
+        row.expected_new_value = "2.75"
+        row.expected_unit = "ratio"
+        row.candidate_created = True
+        row.accepted = True
+        row.predicted_commitment_class = "financial_covenant.current_ratio"
+        row.predicted_field = "threshold"
+        row.predicted_operation = "REPLACE_VALUE"
+        row.predicted_new_value = "15.0"
+        row.predicted_unit = "ratio"
+        assert not _check_mapping_correct(row)
+
+    def test_wrong_unit_is_incorrect(self):
+        """A mapping with the right class, field, and value but wrong
+        unit is incorrect."""
+        row = _make_row(source_text="term loan", ins_type="REPLACE_VALUE")
+        row.independent_eligibility = "IN_SCOPE"
+        row.expected_commitment_class = "facility.term_loan"
+        row.expected_field = "threshold"
+        row.expected_operation = "REPLACE"
+        row.expected_new_value = "50000000"
+        row.expected_unit = "USD"
+        row.candidate_created = True
+        row.accepted = True
+        row.predicted_commitment_class = "facility.term_loan"
+        row.predicted_field = "threshold"
+        row.predicted_operation = "REPLACE_VALUE"
+        row.predicted_new_value = "50000000"
+        row.predicted_unit = "ratio"
+        assert not _check_mapping_correct(row)
+
+    def test_correct_mapping_all_components_match(self):
+        """A mapping where all components match is correct."""
+        row = _make_row(source_text="leverage ratio", ins_type="REPLACE_VALUE")
+        row.independent_eligibility = "IN_SCOPE"
+        row.expected_commitment_class = "financial_covenant.leverage_ratio"
+        row.expected_field = "threshold"
+        row.expected_operation = "REPLACE"
+        row.expected_new_value = "3.50"
+        row.expected_unit = "ratio"
+        row.candidate_created = True
+        row.accepted = True
+        row.predicted_commitment_class = "financial_covenant.leverage_ratio"
+        row.predicted_field = "threshold"
+        row.predicted_operation = "REPLACE_VALUE"
+        row.predicted_new_value = "3.50"
+        row.predicted_unit = "ratio"
+        assert _check_mapping_correct(row)
+
+    def test_source_ambiguous_value_skips_value_check(self):
+        """When expected_new_value is SOURCE_AMBIGUOUS, the value
+        check is skipped (we cannot verify what we don't know)."""
+        row = _make_row(source_text="leverage ratio", ins_type="REPLACE_VALUE")
+        row.independent_eligibility = "IN_SCOPE"
+        row.expected_commitment_class = "financial_covenant.leverage_ratio"
+        row.expected_field = "threshold"
+        row.expected_operation = "REPLACE"
+        row.expected_new_value = "SOURCE_AMBIGUOUS"
+        row.expected_unit = "ratio"
+        row.candidate_created = True
+        row.accepted = True
+        row.predicted_commitment_class = "financial_covenant.leverage_ratio"
+        row.predicted_field = "threshold"
+        row.predicted_operation = "REPLACE_VALUE"
+        row.predicted_new_value = "3.50"
+        row.predicted_unit = "ratio"
+        assert _check_mapping_correct(row)
+
+    def test_replace_value_replace_equivalence(self):
+        """REPLACE_VALUE and REPLACE are semantically equivalent for
+        the operation check."""
+        row = _make_row(source_text="leverage ratio", ins_type="REPLACE_VALUE")
+        row.independent_eligibility = "IN_SCOPE"
+        row.expected_commitment_class = "financial_covenant.leverage_ratio"
+        row.expected_field = "threshold"
+        row.expected_operation = "REPLACE"
+        row.expected_new_value = "3.50"
+        row.expected_unit = "ratio"
+        row.candidate_created = True
+        row.accepted = True
+        row.predicted_commitment_class = "financial_covenant.leverage_ratio"
+        row.predicted_field = "threshold"
+        row.predicted_operation = "REPLACE_VALUE"
+        row.predicted_new_value = "3.50"
+        row.predicted_unit = "ratio"
+        assert _check_mapping_correct(row)
+
+    def test_not_accepted_is_incorrect(self):
+        """A mapping that was not accepted is incorrect."""
+        row = _make_row(source_text="leverage ratio", ins_type="REPLACE_VALUE")
+        row.independent_eligibility = "IN_SCOPE"
+        row.expected_commitment_class = "financial_covenant.leverage_ratio"
+        row.expected_field = "threshold"
+        row.candidate_created = True
+        row.accepted = False
+        row.predicted_commitment_class = "financial_covenant.leverage_ratio"
+        row.predicted_field = "threshold"
+        assert not _check_mapping_correct(row)
+
+    def test_normalize_value_str_handles_commas_and_trailing_zero(self):
+        """_normalize_value_str removes commas and trailing .0."""
+        assert _normalize_value_str("15.0") == "15"
+        assert _normalize_value_str("50,000,000") == "50000000"
+        assert _normalize_value_str("3.50") == "3.5"
+        assert _normalize_value_str("") == ""
+
+
+# ---------------------------------------------------------------------------
+# Section 14: Verdict correctness
+# ---------------------------------------------------------------------------
+
+
+class TestVerdictCorrectness:
+
+    def test_verdict_is_blocked_when_safety_gate_fails(self):
+        """The step verdict must be BLOCKED when the
+        incorrect_accepted_mutations safety gate fails."""
+        audit_path = Path("results/step23r_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        # Find the incorrect_accepted gate
+        gates = audit["section_l_gates"]["gate_details"]
+        incorrect_gate = next(
+            (g for g in gates if "incorrect_accepted" in g["gate"]),
+            None,
+        )
+        if incorrect_gate and not incorrect_gate["passed"]:
+            # The report should say BLOCKED — check the report file.
+            # Isolate the verdict line (the first ```text block under
+            # "## N. Step verdict") rather than scanning the entire
+            # post-verdict section, which contains "PASS" in gate
+            # tables and other subsections.
+            report_path = Path("results/STEP_23R_REPORT.md")
+            if report_path.exists():
+                report = report_path.read_text(encoding="utf-8")
+                verdict_section = report.split("## N. Step verdict")[1]
+                # The verdict is the first ```text block in the section
+                verdict_block = verdict_section.split("```text")[1]
+                verdict_line = verdict_block.split("```")[0].strip()
+                assert "BLOCKED" in verdict_line, (
+                    f"Safety gate failed but verdict line is not BLOCKED: "
+                    f"{verdict_line!r}"
+                )
+                assert "PASS" not in verdict_line, (
+                    f"Safety gate failed but verdict line says PASS: "
+                    f"{verdict_line!r}"
+                )
+
+    def test_verdict_blocked_when_false_auth_promotion_gate_fails(self):
+        """The step verdict must be BLOCKED when the
+        false_authoritative_promotions safety gate fails (value > 0),
+        even if incorrect_accepted_mutations is 0."""
+        audit_path = Path("results/step23r_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        gates = audit["section_l_gates"]["gate_details"]
+        false_auth_gate = next(
+            (g for g in gates if "false_authoritative" in g["gate"]),
+            None,
+        )
+        if false_auth_gate and not false_auth_gate["passed"]:
+            report_path = Path("results/STEP_23R_REPORT.md")
+            if report_path.exists():
+                report = report_path.read_text(encoding="utf-8")
+                verdict_section = report.split("## N. Step verdict")[1]
+                verdict_block = verdict_section.split("```text")[1]
+                verdict_line = verdict_block.split("```")[0].strip()
+                assert "BLOCKED" in verdict_line, (
+                    f"false_auth gate failed but verdict is not BLOCKED: "
+                    f"{verdict_line!r}"
+                )
+
+    def test_safety_gates_consistent_with_ledger(self):
+        """The safety gate values must be consistent with the ledger:
+        incorrect_accepted_mutations must equal the count of
+        executor_accepted rows that are incorrect (IN_SCOPE with
+        correct_automatic_mapping=False, OR non-IN_SCOPE with
+        executor_accepted=True).
+        """
+        audit_path = Path("results/step23r_audit.json")
+        if not audit_path.exists():
+            pytest.skip("Audit JSON not generated yet")
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        safety = audit.get("section_safety_metrics", {})
+        if not safety:
+            pytest.skip("No safety metrics in audit")
+        ledger = audit["instruction_ledger"]
+        # Recompute from the ledger
+        expected_incorrect = 0
+        for r in ledger:
+            if not r["executor_accepted"]:
+                continue
+            if r["independent_eligibility"] == "IN_SCOPE":
+                if not r["correct_automatic_mapping"]:
+                    expected_incorrect += 1
+            else:
+                # OUT_OF_SCOPE / AMBIGUOUS_SCOPE: any executor_accepted
+                expected_incorrect += 1
+        reported = safety["incorrect_accepted_mutations"]
+        assert reported == expected_incorrect, (
+            f"safety incorrect_accepted_mutations={reported} but ledger "
+            f"recomputation gives {expected_incorrect}"
+        )
