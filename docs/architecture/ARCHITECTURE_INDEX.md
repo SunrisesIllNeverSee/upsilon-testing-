@@ -30,9 +30,11 @@ not a logging utility.
 | Document | Purpose |
 |----------|---------|
 | [DEPENDENCY_DIRECTION.md](DEPENDENCY_DIRECTION.md) | Controlling semantic direction and per-layer import rules |
-| [REPOSITORY_MIGRATION_MANIFEST.md](REPOSITORY_MIGRATION_MANIFEST.md) | File-by-file migration plan (all rows `MOVE NOW: NO`) |
+| [REPOSITORY_MIGRATION_MANIFEST.md](REPOSITORY_MIGRATION_MANIFEST.md) | File-by-file migration plan (all rows `MOVE NOW: NO`); projection of machine-generated dependency graph |
+| [../../audits/repository/dependency_graph_report.md](../../audits/repository/dependency_graph_report.md) | Machine-generated dependency graph report (AST analysis) |
 | [../moses/CONFORMANCE_CONTRACT.md](../moses/CONFORMANCE_CONTRACT.md) | MO§ES™ invariant families and enforcement status |
 | [../methodology/FROZEN_ARTIFACT_POLICY.md](../methodology/FROZEN_ARTIFACT_POLICY.md) | Frozen artifact immutability rules |
+| [../../data/ground_truth/frozen/README.md](../../data/ground_truth/frozen/README.md) | Frozen ground-truth artifact inventory (inputs / reference truth) |
 | [../../.devin/rules.md](../../.devin/rules.md) | Agent governance rules |
 
 ## Current legacy architecture
@@ -58,10 +60,12 @@ migration manifest for the proposed future destinations.
 | `semantic_resolver_v2.py` | transformation + evidence re-extraction | BOUNDARY_VIOLATION |
 | `semantic_mapper.py` | transformation + identity via section heuristics | BOUNDARY_VIOLATION |
 | `semantic_pipeline_v2.py` | pipeline + authority determination | BOUNDARY_VIOLATION |
+| `semantic_pipeline.py` | legacy pipeline: orchestration + mapping + execution | BOUNDARY_VIOLATION |
 | `executor.py` | execution | CLEAN |
 | `chain_reconstruction.py` | lineage + state advancement + authority | BOUNDARY_VIOLATION |
 | `commitment_extractor.py` | parsing (shared extraction engine) | CLEAN |
 | `persistence.py` | commitment state storage | CLEAN |
+| `edgar_chains.py` | ingestion fixtures + frozen chain data + hand-extracted states | BOUNDARY_VIOLATION |
 
 ## Target architecture
 
@@ -96,6 +100,7 @@ semantic ownership details.
 
 | Surface | Location |
 |---------|----------|
+| Repository dependency graph | `audits/repository/` (machine-generated; AST analysis) |
 | Step 23R audit | `audits/step23r/` (future home); current scripts at root |
 | Failure census | `audits/failure_census/` (future home); current scripts at root |
 | Forensic Q&A | `forensic_qa/` (current); `audits/forensic_qa/` (future) |

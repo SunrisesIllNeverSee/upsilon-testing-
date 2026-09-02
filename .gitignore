@@ -13,7 +13,10 @@ __pycache__/
 .DS_Store
 
 # Local data and generated outputs
-data/
+# Use data/* (not data/) so that specific subpaths can be un-ignored
+# with ! patterns below.  git cannot re-include a file if a parent
+# directory is fully excluded.
+data/*
 results/*
 *.log
 
@@ -52,3 +55,37 @@ results/*
 # data/held_out/human_gold_handoff/ (gitignored, since data/ is
 # gitignored).  The package is reproducible by running the script.
 # Source text files are already hashed in the locked run manifest.
+
+# Step 23G exception:
+# The frozen ground-truth artifact inventory (manifest.json), its generator,
+# and the README are version-controlled so the hash set is reproducible and
+# CI can verify it.  The edgar_chain_states/ and semantic_gold/ subdirectories
+# are empty until Phase 2 externalization.
+!data/ground_truth/
+!data/ground_truth/frozen/
+!data/ground_truth/frozen/manifest.json
+!data/ground_truth/frozen/generate_manifest.py
+!data/ground_truth/frozen/README.md
+!data/ground_truth/frozen/edgar_chain_states/
+!data/ground_truth/frozen/semantic_gold/
+
+# Step 23G source-corpus exception:
+# The EDGAR chain source documents (data/edgar_chains/) are the frozen
+# inputs that the ground-truth manifest hashes.  Only the .txt source
+# documents and the chain manifest.json are version-controlled so CI can
+# verify that the source document hashes in
+# data/ground_truth/frozen/manifest.json match the actual files.
+# Derived .html and .v04.json artifacts are NOT tracked — they are
+# regenerable and would add ~22 MB of bulk to the repository.
+!data/edgar_chains/
+data/edgar_chains/*
+!data/edgar_chains/manifest.json
+!data/edgar_chains/ameresco/
+data/edgar_chains/ameresco/*
+!data/edgar_chains/ameresco/*.txt
+!data/edgar_chains/amedisys/
+data/edgar_chains/amedisys/*
+!data/edgar_chains/amedisys/*.txt
+!data/edgar_chains/bausch_lomb/
+data/edgar_chains/bausch_lomb/*
+!data/edgar_chains/bausch_lomb/*.txt

@@ -15,3 +15,26 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+
+# ---------------------------------------------------------------------------
+# Pytest configuration — staged test discovery migration
+# ---------------------------------------------------------------------------
+#
+# The report specified a staged migration of test discovery boundaries:
+#
+#   Phase 0 (current):  python_files = ["test_*.py"]   (root still has tests)
+#   Phase 1 (next):     testpaths = ["tests", "."]      (some tests moved)
+#   Phase 2 (final):    testpaths = ["tests"]           (all tests moved)
+#
+# We are at Phase 0.  The collection boundary is restricted to test_*.py
+# files so that moving a non-test file does not accidentally change test
+# discovery.  When root tests begin moving to tests/, update testpaths
+# to ["tests", "."] and verify at each migration checkpoint.
+#
+# Do NOT set testpaths = ["."] — that means "look everywhere" and defeats
+# the purpose of an explicit collection boundary.
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

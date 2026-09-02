@@ -13,10 +13,23 @@ Enforcing import rules against the current flat layout would immediately
 break the build because:
 
 - all modules are in the same directory (no package boundaries exist);
-- `commitment_registry`, `semantic_resolver_v2`, `semantic_mapper`, and
-  `semantic_pipeline_v2` are known boundary violations that would fail
-  any layer-based import check;
+- 7 modules are known boundary violations that would fail any layer-based
+  import check: `commitment_registry`, `semantic_resolver_v2`,
+  `semantic_mapper`, `semantic_pipeline_v2`, `semantic_pipeline` (legacy),
+  `chain_reconstruction`, and `edgar_chains`;
 - migration has not yet occurred.
+
+The boundary-violation set and the full reverse-dependency graph are
+**machine-generated** by `audits/repository/generate_dependency_graph.py`
+(AST analysis). The authoritative artifacts are:
+
+- `audits/repository/dependency_graph.json`
+- `audits/repository/dependency_graph.csv`
+- `audits/repository/dependency_graph_report.md`
+
+The Markdown migration manifest
+(`docs/architecture/REPOSITORY_MIGRATION_MANIFEST.md`) is a projection of
+these artifacts and must not be maintained by hand.
 
 **No static governance is enforced against the current legacy layout.**
 
