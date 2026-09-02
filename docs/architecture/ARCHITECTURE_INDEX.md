@@ -33,6 +33,16 @@ not a logging utility.
 | [REPOSITORY_MIGRATION_MANIFEST.md](REPOSITORY_MIGRATION_MANIFEST.md) | File-by-file migration plan (all rows `MOVE NOW: NO`); projection of machine-generated dependency graph |
 | [../../audits/repository/dependency_graph_report.md](../../audits/repository/dependency_graph_report.md) | Machine-generated dependency graph report (AST analysis) |
 | [../moses/CONFORMANCE_CONTRACT.md](../moses/CONFORMANCE_CONTRACT.md) | MO§ES™ invariant families and enforcement status |
+| [../moses/MOSES_RUNTIME_CONTRACT.md](../moses/MOSES_RUNTIME_CONTRACT.md) | Step 23M: governing state model, runtime sequence, layer contracts |
+| [../moses/COMMITMENT_IDENTITY.md](../moses/COMMITMENT_IDENTITY.md) | Step 23M Component 1: persistent agreement-local commitment identity |
+| [../moses/COMMITMENT_KERNEL.md](../moses/COMMITMENT_KERNEL.md) | Step 23M Component 2: canonical commitment kernel and field categories |
+| [../moses/TRANSFORMATION_ALGEBRA.md](../moses/TRANSFORMATION_ALGEBRA.md) | Step 23M Component 3: 13 transformation families and AuthorizedTransformationEngine |
+| [../moses/CONSERVATION_INVARIANTS.md](../moses/CONSERVATION_INVARIANTS.md) | Step 23M Component 4: 10 conservation invariant families and alias policy |
+| [../moses/SEMANTIC_PROOF_RECORD.md](../moses/SEMANTIC_PROOF_RECORD.md) | Step 23M Component 5: semantic transformation proof record schema |
+| [../moses/SEMANTIC_AUTHORITY_GATE.md](../moses/SEMANTIC_AUTHORITY_GATE.md) | Step 23M Component 6: semantic authority gate contract |
+| [../moses/CONFORMANCE_MATRIX.md](../moses/CONFORMANCE_MATRIX.md) | Step 23M Component 7: 18-test conformance matrix and Conformance Promotion Rule |
+| [../moses/FAILURE_RECLASSIFICATION.md](../moses/FAILURE_RECLASSIFICATION.md) | Step 23M: revised failure census (0 true protocol insufficiency, 58 engine gaps) |
+| [../moses/STEP24_CONSERVATION_FIRST_DESIGN.md](../moses/STEP24_CONSERVATION_FIRST_DESIGN.md) | Step 23M: Step 23S repair mapping and Step 24 implementation boundary |
 | [../methodology/FROZEN_ARTIFACT_POLICY.md](../methodology/FROZEN_ARTIFACT_POLICY.md) | Frozen artifact immutability rules |
 | [../../data/ground_truth/frozen/README.md](../../data/ground_truth/frozen/README.md) | Frozen ground-truth artifact inventory (inputs / reference truth) |
 | [../../.devin/rules.md](../../.devin/rules.md) | Agent governance rules |

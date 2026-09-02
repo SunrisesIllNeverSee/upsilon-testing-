@@ -17,17 +17,17 @@ Regenerate this manifest with: `python audits/repository/generate_manifest.py`. 
 ## Classification key
 
 - **kind**: `runtime` | `test` | `research` | `audit` | `results` | `config` | `docs` | `data` | `legacy`
-- **risk**: `LOW` | `MEDIUM` | `HIGH` — mechanically classified from dependent count (LOW <3, MEDIUM 3-7, HIGH >=8)
+- **risk**: `LOW` | `MEDIUM` | `HIGH` — mechanically classified from dependent count (LOW <3, MEDIUM 3-7, HIGH >=8). This is **dependency/migration exposure** (how many callers must be updated when the module moves), **not** semantic criticality. A module can be HIGH risk while being semantically simple, or LOW risk while being semantically central. Future architecture work may distinguish dependency risk from semantic risk, but this manifest does not attempt that.
 - **boundary**: `CLEAN` | `BOUNDARY_VIOLATION` — curated semantic judgement (see boundary violations section)
 - **imports**: local modules imported at top level; `deferred:` = function/class-scope imports; `ext:` = third-party
 - **dependents**: local modules that import this one; `tests:` = test modules
 
 ## Summary
 ```
-files inventoried:                119
-  Python modules (AST-analyzed):  98
+files inventoried:                121
+  Python modules (AST-analyzed):  100
   non-Python files (curated):     21
-files with proposed destinations: 119
+files with proposed destinations: 121
 boundary violations:              7
 unclassified:                     0
 ```
@@ -104,7 +104,7 @@ unclassified:                     0
 | `run_v2_study.py` | `research/` | research | research | LOW | CLEAN | chain_reconstruction, commitment_extractor, genre_adapters, gt_extractor, pattern_classifier, run_chain_study, run_chain_study_v2, run_held_out_study, s0_extractor, semantic_pipeline_v2; deferred: run_chain_study_v2 | (none) | runs v2 study | NO |
 | `v02_change_spec.py` | `archive/legacy_code/` | legacy | legacy | LOW | CLEAN | (none) | tests: test_v02_change_spec | v0.2 change spec derived from observed failures; superseded | NO |
 
-## 3. Test modules (38 files)
+## 3. Test modules (40 files)
 
 | current path | proposed destination | semantic owner | kind | risk | boundary | imports | dependents | reason | move now |
 |---|---|---|---|---|---|---|---|---|---|
@@ -123,7 +123,9 @@ unclassified:                     0
 | `test_evaluation_layers.py` | `tests/unit/` | research | test | LOW | CLEAN | evaluation_layers; ext: pytest | (none) | tests evaluation layers | NO |
 | `test_executor.py` | `tests/transformation/` | execution | test | LOW | CLEAN | models, executor | (none) | tests executor behavior | NO |
 | `test_false_authoritative_promotion.py` | `tests/authority/` | authority | test | LOW | CLEAN | models, semantic_pipeline_v2; ext: pytest | (none) | tests false authoritative promotion detection | NO |
+| `test_frozen_manifest.py` | `tests/governance/` | governance | test | LOW | CLEAN | ext: pytest | (none) | regression test proving frozen-manifest verification is idempotent | NO |
 | `test_genre_adapters.py` | `tests/unit/` | parsing | test | LOW | CLEAN | genre_adapters, models, pattern_classifier; deferred: genre_adapters; ext: pytest | (none) | tests genre adapters | NO |
+| `test_gitignore_boundary.py` | `tests/governance/` | governance | test | LOW | CLEAN | ext: pytest | (none) | verifies .gitignore frozen-source exceptions admit only .txt source evidence, not derived output | NO |
 | `test_gold_schema.py` | `tests/unit/` | evidence | test | LOW | CLEAN | gold_schema | (none) | tests gold schema | NO |
 | `test_held_out_study.py` | `tests/integration/` | research | test | LOW | CLEAN | gold_schema; deferred: create_held_out_gold, run_held_out_study, acquire_held_out_study, models, generate_step_19b_report; ext: pytest | (none) | tests held-out study | NO |
 | `test_model_assisted_candidates.py` | `tests/unit/` | research | test | LOW | CLEAN | model_assisted_candidates, models, semantic_mapper; ext: pytest | (none) | tests model-assisted candidates | NO |
@@ -202,6 +204,8 @@ Each precondition must be satisfied *before* the module is moved. These are not 
 | `semantic_resolver_v2` | transformation + evidence re-extraction (discards parser old/new values) | transformations/ (resolver) + evidence/ (value extraction) | ☐ new identity / evidence / transformation interfaces exist first<br>☐ value re-extraction moved to evidence/ layer |
 
 ## High-risk modules (mechanically classified: >= 8 dependents)
+
+Risk here means **dependency/migration exposure** — how many callers must be updated when the module moves — **not** semantic criticality. A module can be HIGH risk while being semantically simple, or LOW risk while being semantically central. Future architecture work may distinguish dependency risk from semantic risk, but this manifest does not attempt that.
 
 The following modules have the largest import surface and pose the highest migration risk. Any future move requires updating all dependents simultaneously. **Deferred imports are included** in the dependent count — they are easy to miss in a manual audit.
 

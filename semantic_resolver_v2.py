@@ -81,6 +81,9 @@ from semantic_mapper import (
     MappingResult,
     StructuredMutation,
 )
+from moses_safety import (
+    validate_safety,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -639,7 +642,64 @@ def resolve_instruction(
         return result, trace
     trace.step8_validate_candidate = "OK: validation passed"
 
+    # --- Step 8b: MOSES semantic safety proof (Step 23S) ---
+    # Build a minimal semantic proof and block execution when the
+    # proof is INVALID or INDETERMINATE.  This enforces the
+    # conservation-first safety baseline:
+    #   - target-vs-reference separation (I1)
+    #   - value-extraction compatibility (I2)
+    #   - cross-type evidence rejection (I3)
+    #   - section-alias consistency (I4)
+    #   - section corroboration for structural amendments (I5)
+    #   - old-value consistency from amendment evidence only (I6)
+    # A COMPLETE+VALID proof is required to proceed to Step 9.
+    proof, is_safe = validate_safety(
+        canonical_id=canonical_id,
+        field_name=field,
+        operation=operation,
+        old_value=old_value,
+        new_value=normalized_value,
+        source_text=source_text,
+        section_ref=section_ref,
+        current_commitment=current_commitment,
+        confidence=confidence,
+    )
+    if not is_safe:
+        reason = (
+            f"moses_safety_proof_"
+            f"{proof.proof_validity.value.lower()}: "
+            f"{proof.target_evidence_reason}"
+        )
+        trace.step8_validate_candidate = f"FAIL: {reason}"
+        trace.failed_step = 8
+        trace.failure_reason = reason
+        unresolved = StructuredMutation(
+            commitment_id=canonical_id,
+            field=field,
+            operation=operation,
+            old_value=old_value,
+            new_value=normalized_value,
+            unit=unit,
+            effective_at=parser_instruction.effective_start,
+            source_span=source_text,
+            provenance=InstructionProvenance.MANUAL,
+            confidence=0.0,
+            ambiguity_reason=AmbiguityReason.AMBIGUOUS_VALUE,
+            citation_document=citation_document,
+            citation_section=section_ref,
+            semantic_proof=proof,
+        )
+        result = MappingResult()
+        result.unresolved.append(unresolved)
+        return result, trace
+    trace.step8_validate_candidate = (
+        f"OK: moses_safety_proof_{proof.proof_validity.value.lower()}"
+    )
+
     # --- Step 9: APPLY (return mapped mutation) ---
+    # Attach the semantic proof to the candidate so the authority
+    # gate can inspect it during promotion.
+    candidate.semantic_proof = proof
     trace.step9_apply = "OK: mapped mutation produced"
     result = MappingResult()
     result.mutations.append(candidate)

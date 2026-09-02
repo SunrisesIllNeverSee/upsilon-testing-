@@ -55,8 +55,34 @@ Once externalized, CI can verify the hash set:
 
 This turns "frozen" into something enforceable instead of ceremonial.
 
-## Regenerating the manifest
+## Freeze vs. verify (Step 23G.1)
+
+The manifest generator supports two operations, kept strictly separate so
+that **verification never mutates the frozen manifest**:
 
 ```
-python data/ground_truth/frozen/generate_manifest.py
+python data/ground_truth/frozen/generate_manifest.py freeze
+python data/ground_truth/frozen/generate_manifest.py verify
 ```
+
+**freeze** creates or refreshes `manifest.json`.  If a manifest already
+exists, persisted `created_at` / `frozen_at` values are reused for every
+artifact that already appears in the manifest.  Only genuinely new
+artifacts receive fresh timestamps.  `generated_at` is updated (manifest
+metadata, not artifact identity).
+
+**verify** loads the existing manifest, recomputes SHA-256 hashes for
+every source document, and compares against the stored values.  It
+reports PASS/FAIL and **does not write to `manifest.json`**.  A
+non-authoritative `verification_at` timestamp appears only in the stdout
+report, never in the manifest itself.
+
+Required principle:
+
+```
+Verify(FrozenArtifact) must not mutate FrozenManifest
+```
+
+Running `verify` twice against unchanged inputs produces zero manifest
+changes by construction — `verify` never writes.  See
+`test_frozen_manifest.py` for the regression test proving this.

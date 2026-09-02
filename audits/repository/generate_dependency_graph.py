@@ -21,7 +21,16 @@ Each module record carries:
 - ``test_dependents``           — ``imported_by`` filtered to ``test_*`` modules
 - ``runtime_dependents``        — ``imported_by`` filtered to non-test modules
 - ``third_party_imports``      — non-local, non-stdlib imports
-- ``migration_risk``            — LOW / MEDIUM / HIGH based on dependent count
+- ``migration_risk``            — LOW / MEDIUM / HIGH based on dependent count.
+                                  This is **dependency/migration exposure**
+                                  (how many callers must be updated when the
+                                  module moves), **not** semantic criticality.
+                                  A module can be HIGH risk (many dependents)
+                                  while being semantically simple, or LOW risk
+                                  while being semantically central.  Future
+                                  architecture work may distinguish dependency
+                                  risk from semantic risk, but this graph does
+                                  not attempt that.
 - ``boundary_status``           — CLEAN / BOUNDARY_VIOLATION (from curated set)
 - ``migration_preconditions``   — list of preconditions (boundary violations only)
 
@@ -184,6 +193,13 @@ def _extract_imports(source: str) -> tuple[list[str], list[str]]:
 
 
 def _classify_risk(runtime_dependents: int, test_dependents: int) -> str:
+    """Classify migration risk from dependent count.
+
+    This is **dependency/migration exposure** — how many callers must be
+    updated when the module moves — not semantic criticality.  A module
+    can be HIGH risk (many dependents) while being semantically simple,
+    or LOW risk while being semantically central.
+    """
     total = runtime_dependents + test_dependents
     if total >= 8:
         return "HIGH"

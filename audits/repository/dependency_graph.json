@@ -1,6 +1,6 @@
 {
   "generated_at": "regenerate via: python audits/repository/generate_dependency_graph.py",
-  "module_count": 98,
+  "module_count": 100,
   "boundary_violation_count": 7,
   "modules": [
     {
@@ -2055,6 +2055,21 @@
       "migration_preconditions": []
     },
     {
+      "module": "test_frozen_manifest",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
       "module": "test_genre_adapters",
       "imports": [
         "genre_adapters",
@@ -2070,6 +2085,21 @@
       "deferred_imports": [
         "genre_adapters"
       ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_gitignore_boundary",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
       "test_dependents": [],
       "runtime_dependents": [],
       "third_party_imports": [

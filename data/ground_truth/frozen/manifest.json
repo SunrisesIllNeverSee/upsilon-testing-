@@ -1,6 +1,6 @@
 {
   "manifest_version": "1.0",
-  "generated_at": "2026-09-02T14:41:15.615690+00:00",
+  "generated_at": "2026-09-02T19:09:02.453444+00:00",
   "description": "Frozen ground-truth artifact inventory.  These are inputs / reference truth, not outputs.  See docs/methodology/FROZEN_ARTIFACT_POLICY.md for the distinction between results/frozen/ (outputs) and data/ground_truth/frozen/ (inputs).",
   "schema": {
     "artifact_path": "current location of the artifact",
@@ -10,8 +10,8 @@
     "producer": "what produced the artifact",
     "producer_commit": "git commit at which the artifact was frozen",
     "source_corpus_version": "version of the source corpus",
-    "created_at": "ISO timestamp when the artifact was created",
-    "frozen_at": "ISO timestamp when the artifact was frozen",
+    "created_at": "ISO timestamp when the artifact was created (stable; reuse on re-freeze)",
+    "frozen_at": "ISO timestamp when the artifact was frozen (stable; reuse on re-freeze)",
     "supersedes": "artifact_id this artifact supersedes (if any)",
     "superseded_by": "artifact_id that supersedes this artifact (if any)",
     "mutable": "false for all frozen artifacts"

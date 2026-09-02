@@ -72,20 +72,26 @@ results/*
 # Step 23G source-corpus exception:
 # The EDGAR chain source documents (data/edgar_chains/) are the frozen
 # inputs that the ground-truth manifest hashes.  Only the .txt source
-# documents and the chain manifest.json are version-controlled so CI can
+# evidence and the chain manifest.json are version-controlled so CI can
 # verify that the source document hashes in
 # data/ground_truth/frozen/manifest.json match the actual files.
+#
 # Derived .html and .v04.json artifacts are NOT tracked — they are
-# regenerable and would add ~22 MB of bulk to the repository.
+# regenerable parser/processing output and would add ~22 MB of bulk.
+# The distinction is:
+#   SOURCE EVIDENCE (.txt)       = version-controlled, hashed by manifest
+#   DERIVED OUTPUT (.html/.json) = gitignored, regenerable
+#
+# The pattern below is general (wildcard over chain subdirectories) so
+# new chain directories are handled without per-chain exceptions.
 !data/edgar_chains/
 data/edgar_chains/*
 !data/edgar_chains/manifest.json
-!data/edgar_chains/ameresco/
-data/edgar_chains/ameresco/*
-!data/edgar_chains/ameresco/*.txt
-!data/edgar_chains/amedisys/
-data/edgar_chains/amedisys/*
-!data/edgar_chains/amedisys/*.txt
-!data/edgar_chains/bausch_lomb/
-data/edgar_chains/bausch_lomb/*
-!data/edgar_chains/bausch_lomb/*.txt
+# Allow git to descend into chain subdirectories
+!data/edgar_chains/*/
+# Ignore everything inside chain subdirectories, then un-ignore only .txt
+data/edgar_chains/*/*
+!data/edgar_chains/*/*.txt
+# Explicitly ignore derived parser/processing output (defense in depth)
+data/edgar_chains/*/*.html
+data/edgar_chains/*/*.v04.json

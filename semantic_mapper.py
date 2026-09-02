@@ -138,6 +138,11 @@ class StructuredMutation:
     ambiguity_reason: AmbiguityReason | None = None
     citation_document: str | None = None
     citation_section: str | None = None
+    # Step 23S: Semantic proof record attached by the resolver's
+    # safety layer.  Typed as Any to avoid a hard dependency from
+    # semantic_mapper (lower-level) on moses_safety (higher-level).
+    # At runtime this is a moses_safety.SemanticProof or None.
+    semantic_proof: Any = None
 
     @property
     def is_resolved(self) -> bool:

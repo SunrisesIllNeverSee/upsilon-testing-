@@ -17,6 +17,52 @@ as `NOT YET ENFORCED` with a reference to the known gap.
 
 ---
 
+## Conformance Promotion Rule (Step 23M)
+
+This is a permanent governance rule.  See
+[CONFORMANCE_MATRIX.md](CONFORMANCE_MATRIX.md) for the full matrix.
+
+```
+ENFORCED(I)
+iff
+RuntimeGuard(I)
+AND PositiveTest(I)
+AND ViolationTest(I)
+```
+
+An invariant `I` may not be marked `ENFORCED` because documentation
+says it exists or because ordinary tests happen to pass.
+
+### Required before promotion to `ENFORCED`
+
+1. **Explicit runtime enforcement** — a runtime guard (code) that
+   checks the invariant and blocks violations.
+2. **Valid-case test** — a test that confirms the guard allows
+   legitimate transformations.
+3. **Violation/failure-path test** — a test that confirms the guard
+   blocks the prohibited behavior.
+
+### Promotion levels
+
+| Level | Meaning |
+|-------|---------|
+| `ENFORCED` | All three requirements met: runtime guard + positive test + violation test |
+| `PARTIALLY ENFORCED` | Runtime guard exists in some paths but not all, OR positive test exists but violation test does not |
+| `NOT YET ENFORCED` | No runtime guard, or guard exists but no tests prove it works |
+| `DOCUMENTED` | Invariant is specified in documentation but has no runtime guard and no tests |
+
+An invariant may not skip levels.  `DOCUMENTED` →
+`NOT YET ENFORCED` → `PARTIALLY ENFORCED` → `ENFORCED` requires the
+corresponding evidence at each step.
+
+### CI behavior
+
+A failed MO§ES™ conformance invariant must be capable of failing CI
+**even if hundreds of ordinary unit tests pass**.  Conformance tests
+are not advisory.  They are gating.
+
+---
+
 ## Invariant families
 
 ### 1. Identity persistence

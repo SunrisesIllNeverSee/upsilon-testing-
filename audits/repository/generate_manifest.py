@@ -127,6 +127,9 @@ MODULE_META: dict[str, dict] = {
     "test_step_22b_incorrect_mutation_fix": {"dest": "tests/conservation/", "owner": "conservation", "kind": "test", "reason": "tests incorrect mutation fix"},
     "test_v02_change_spec": {"dest": "tests/regression/", "owner": "legacy", "kind": "test", "reason": "tests v02 change spec"},
     "test_v02_regression": {"dest": "tests/regression/", "owner": "legacy", "kind": "test", "reason": "v02 regression tests"},
+    # --- Step 23G.1 governance tests ---
+    "test_frozen_manifest": {"dest": "tests/governance/", "owner": "governance", "kind": "test", "reason": "regression test proving frozen-manifest verification is idempotent"},
+    "test_gitignore_boundary": {"dest": "tests/governance/", "owner": "governance", "kind": "test", "reason": "verifies .gitignore frozen-source exceptions admit only .txt source evidence, not derived output"},
 }
 
 # Non-Python files (curated, not in the dependency graph)
@@ -232,7 +235,7 @@ def generate_manifest() -> str:
     lines.append("## Classification key")
     lines.append("")
     lines.append("- **kind**: `runtime` | `test` | `research` | `audit` | `results` | `config` | `docs` | `data` | `legacy`")
-    lines.append("- **risk**: `LOW` | `MEDIUM` | `HIGH` — mechanically classified from dependent count (LOW <3, MEDIUM 3-7, HIGH >=8)")
+    lines.append("- **risk**: `LOW` | `MEDIUM` | `HIGH` — mechanically classified from dependent count (LOW <3, MEDIUM 3-7, HIGH >=8). This is **dependency/migration exposure** (how many callers must be updated when the module moves), **not** semantic criticality. A module can be HIGH risk while being semantically simple, or LOW risk while being semantically central. Future architecture work may distinguish dependency risk from semantic risk, but this manifest does not attempt that.")
     lines.append("- **boundary**: `CLEAN` | `BOUNDARY_VIOLATION` — curated semantic judgement (see boundary violations section)")
     lines.append("- **imports**: local modules imported at top level; `deferred:` = function/class-scope imports; `ext:` = third-party")
     lines.append("- **dependents**: local modules that import this one; `tests:` = test modules")
@@ -400,6 +403,15 @@ def generate_manifest() -> str:
         key=lambda r: -(len(r["imported_by"]))
     )
     lines.append("## High-risk modules (mechanically classified: >= 8 dependents)")
+    lines.append("")
+    lines.append(
+        "Risk here means **dependency/migration exposure** — how many callers "
+        "must be updated when the module moves — **not** semantic criticality. "
+        "A module can be HIGH risk while being semantically simple, or LOW "
+        "risk while being semantically central. Future architecture work may "
+        "distinguish dependency risk from semantic risk, but this manifest "
+        "does not attempt that."
+    )
     lines.append("")
     lines.append(
         "The following modules have the largest import surface and pose the "

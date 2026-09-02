@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 
 from amendment_parser import parse_v04
@@ -122,6 +123,130 @@ class SemanticPipelineResultV2:
     # authoritative at index N is a false promotion only if an
     # incorrect mutation was applied at step <= N.
     incorrect_pair_steps: list[tuple[tuple[str, str | None], int]] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Step 23S: Semantic authority gate
+# ---------------------------------------------------------------------------
+
+
+class AuthorityDecision(str, Enum):
+    """Authority promotion decision for one amendment step.
+
+    Per ``SEMANTIC_AUTHORITY_GATE.md`` §3, the authority gate extends
+    the existing chain-aware authority model with semantic proof and
+    conservation preconditions.  The existing model
+    (``chain_reconstruction.py``) determines authority from execution
+    completeness and unresolved state; the semantic gate adds the
+    proof-record and conservation-check requirements.
+    """
+
+    AUTHORITY_GRANTED = "AUTHORITY_GRANTED"
+    AUTHORITY_BLOCKED = "AUTHORITY_BLOCKED"
+    VALIDATION_REQUIRED = "VALIDATION_REQUIRED"
+    PARTIAL = "PARTIAL"
+    UNRESOLVED = "UNRESOLVED"
+
+
+def assess_authority(
+    execution_status: ExecutionStatus,
+    proofs: list,
+    inherited_unresolved_count: int,
+    own_unresolved_count: int,
+) -> AuthorityDecision:
+    """Determine whether an amendment step may be promoted to authoritative.
+
+    This implements the authority gate contract from
+    ``SEMANTIC_AUTHORITY_GATE.md`` §5.  It consumes:
+
+    - the execution result status (COMPLETE / PARTIAL / UNRESOLVED);
+    - the semantic proof records attached to each candidate mutation;
+    - the inherited unresolved count from prior steps;
+    - the own unresolved count from this step.
+
+    The decision logic is:
+
+    ```
+    IF execution == UNRESOLVED: → UNRESOLVED
+    IF execution == PARTIAL:   → PARTIAL
+    IF execution == COMPLETE:
+        IF any proof is INCOMPLETE:        → AUTHORITY_BLOCKED
+        IF any proof is INVALID:           → AUTHORITY_BLOCKED
+        IF any proof is INDETERMINATE:     → VALIDATION_REQUIRED
+        IF any proof has INSUFFICIENT
+           target evidence:                → AUTHORITY_BLOCKED
+        IF any proof has WEAK
+           target evidence:                → VALIDATION_REQUIRED
+        IF inherited_unresolved > 0:       → AUTHORITY_BLOCKED
+        IF own_unresolved > 0:             → AUTHORITY_BLOCKED
+        ELSE:                              → AUTHORITY_GRANTED
+    ```
+
+    Ground-truth labels never participate in this decision (Constraint #4).
+    Only operational evidence (proof records, execution results, unresolved
+    state) is consumed.
+
+    When no proofs are present (e.g., a no-op step with no candidates),
+    the gate falls back to the existing chain-aware authority model:
+    authority is granted iff execution is COMPLETE and no unresolved
+    state exists.  This preserves the existing contract for steps that
+    do not produce mutations.
+    """
+    # Execution status gates (existing behavior).
+    if execution_status == ExecutionStatus.UNRESOLVED:
+        return AuthorityDecision.UNRESOLVED
+    if execution_status == ExecutionStatus.PARTIAL:
+        return AuthorityDecision.PARTIAL
+
+    # COMPLETE execution — apply semantic proof preconditions.
+    # When proofs are present, each must be COMPLETE and VALID.
+    # An INCOMPLETE or INVALID proof blocks authority.  An
+    # INDETERMINATE proof routes to VALIDATION_REQUIRED.
+    #
+    # When no proofs are present (no-op step), fall back to the
+    # existing chain-aware authority model.
+    if proofs:
+        for proof in proofs:
+            # proof is a moses_safety.SemanticProof (typed as Any to
+            # avoid a hard import cycle; the fields are accessed by
+            # attribute name).
+            completeness = getattr(proof, "proof_completeness", None)
+            validity = getattr(proof, "proof_validity", None)
+            evidence_level = getattr(proof, "target_evidence_level", None)
+
+            # Completeness is structural.  An INCOMPLETE proof means
+            # the proof record could not be fully populated — there
+            # is not enough structure to justify authority.
+            if completeness is not None and completeness.value == "INCOMPLETE":
+                return AuthorityDecision.AUTHORITY_BLOCKED
+
+            # Validity is semantic.  An INVALID proof means the
+            # evidence contradicts the transformation.
+            if validity is not None and validity.value == "INVALID":
+                return AuthorityDecision.AUTHORITY_BLOCKED
+
+            # INSUFFICIENT target evidence blocks authority — the
+            # engine could not establish what the amendment targets.
+            if evidence_level is not None and evidence_level.value == "INSUFFICIENT":
+                return AuthorityDecision.AUTHORITY_BLOCKED
+
+            # WEAK target evidence routes to VALIDATION_REQUIRED —
+            # the step is not auto-promoted but is not definitively
+            # blocked either.
+            if evidence_level is not None and evidence_level.value == "WEAK":
+                return AuthorityDecision.VALIDATION_REQUIRED
+
+            # INDETERMINATE validity routes to VALIDATION_REQUIRED.
+            if validity is not None and validity.value == "INDETERMINATE":
+                return AuthorityDecision.VALIDATION_REQUIRED
+
+    # Chain-aware authority: inherited or own unresolved state blocks.
+    if inherited_unresolved_count > 0:
+        return AuthorityDecision.AUTHORITY_BLOCKED
+    if own_unresolved_count > 0:
+        return AuthorityDecision.AUTHORITY_BLOCKED
+
+    return AuthorityDecision.AUTHORITY_GRANTED
 
 
 # ---------------------------------------------------------------------------
@@ -239,15 +364,38 @@ def run_semantic_pipeline_v2(
         # after the full chain runs by comparing the final state to
         # ground truth (see below).
 
-        # 6. Chain-aware authority
+        # 6. Chain-aware authority + semantic authority gate (Step 23S)
+        # The authority gate extends the existing chain-aware model
+        # (execution complete + no unresolved) with semantic proof
+        # and conservation preconditions.  See SEMANTIC_AUTHORITY_GATE.md
+        # §5 for the full decision logic.
         still_inherited = inherited_unresolved
         own_unresolved_count = (
             len(unresolved_mutations) + len(execution_result.unresolved)
         )
+        # Collect semantic proofs from all candidates (mapped + unresolved).
+        # Mapped mutations carry VALID proofs (the resolver only maps
+        # candidates with COMPLETE+VALID proofs).  Unresolved mutations
+        # may carry INVALID/INDETERMINATE proofs (the resolver routed
+        # them to unresolved because the proof failed).  Both are
+        # consumed by the authority gate: an INVALID proof on an
+        # unresolved candidate blocks authority just as it would on a
+        # mapped one.
+        step_proofs = [
+            c.semantic_proof for c in adapter_result.candidates
+            if c.semantic_proof is not None
+        ]
+        authority_decision = assess_authority(
+            execution_status=execution_result.status,
+            proofs=step_proofs,
+            inherited_unresolved_count=len(still_inherited),
+            own_unresolved_count=own_unresolved_count,
+        )
+        # The step is authoritative only when the authority gate
+        # grants authority.  VALIDATION_REQUIRED and AUTHORITY_BLOCKED
+        # both prevent promotion.
         is_authoritative = (
-            execution_result.status == ExecutionStatus.COMPLETE
-            and not still_inherited
-            and own_unresolved_count == 0
+            authority_decision == AuthorityDecision.AUTHORITY_GRANTED
         )
 
         # Update inherited for next step

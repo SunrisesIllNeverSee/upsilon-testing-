@@ -31,6 +31,17 @@ The Markdown migration manifest
 (`docs/architecture/REPOSITORY_MIGRATION_MANIFEST.md`) is a projection of
 these artifacts and must not be maintained by hand.
 
+### Risk classification clarification
+
+The `LOW` / `MEDIUM` / `HIGH` risk field in the dependency graph and
+migration manifest means **dependency/migration exposure only** — how
+many callers must be updated when the module moves. It must **not** be
+interpreted as semantic criticality. A module can be `HIGH` risk (many
+dependents) while being semantically simple, or `LOW` risk while being
+semantically central. Future architecture work may distinguish
+dependency risk from semantic risk, but Step 23G does not add a second
+scoring framework.
+
 **No static governance is enforced against the current legacy layout.**
 
 ## Target enforced layout
