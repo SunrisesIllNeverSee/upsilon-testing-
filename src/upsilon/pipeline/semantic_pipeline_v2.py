@@ -137,6 +137,12 @@ class SemanticPipelineResultV2:
     # authoritative at index N is a false promotion only if an
     # incorrect mutation was applied at step <= N.
     incorrect_pair_steps: list[tuple[tuple[str, str | None], int]] = field(default_factory=list)
+    # Step 24B-R Phase 7: false authoritative promotions, computed
+    # execution-path-neutral (includes both legacy and spine-applied
+    # incorrect mutations).  A false authoritative promotion occurs
+    # when a step is marked authoritative AND an incorrect mutation
+    # was applied at or before that step in the same chain.
+    false_authoritative_promotions: int = 0
     # Step 24B conservation-first spine aggregate tracking.
     spine_total_promoted: int = 0
     spine_total_rejected: int = 0
@@ -742,6 +748,24 @@ def run_semantic_pipeline_v2(
     )
     final_state_agreement = matched / total_gt if total_gt > 0 else 1.0
 
+    # Step 24B-R Phase 7: Compute false_authoritative_promotions.
+    # A false authoritative promotion occurs when a step is marked
+    # authoritative AND an incorrect mutation was applied at or before
+    # that step in the chain.  This is execution-path-neutral: the
+    # incorrect_pair_steps tracking includes both legacy-executor-
+    # applied and spine-applied mutations (Phase 7 added spine
+    # mutations to applied_pairs).
+    incorrect_steps_in_chain: set[int] = set()
+    for _pair, step_idx in incorrect_pair_steps:
+        incorrect_steps_in_chain.add(step_idx)
+    false_authoritative_promotions = 0
+    for step_idx, step_result in enumerate(steps):
+        if step_result.is_authoritative:
+            # Check if any incorrect mutation was applied at or before
+            # this step.
+            if any(s <= step_idx for s in incorrect_steps_in_chain):
+                false_authoritative_promotions += 1
+
     return SemanticPipelineResultV2(
         chain_id=chain.chain_id,
         issuer_name=chain.issuer_name,
@@ -761,6 +785,7 @@ def run_semantic_pipeline_v2(
         incorrect_mutations=incorrect_mutations,
         state_mismatches=state_mismatches,
         incorrect_pair_steps=incorrect_pair_steps,
+        false_authoritative_promotions=false_authoritative_promotions,
         spine_total_promoted=spine_total_promoted,
         spine_total_rejected=spine_total_rejected,
         spine_total_routed_away=spine_total_routed_away,

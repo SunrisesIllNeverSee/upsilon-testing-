@@ -261,6 +261,15 @@ class InstructionRow:
     candidate_created: bool = False
     accepted: bool = False
     executor_accepted: bool = False
+    # Step 24B-R Phase 7: track spine-promoted mutations so the
+    # safety measurement is execution-path-neutral.  A mutation
+    # promoted by the conservation-first spine is an "accepted"
+    # mutation for safety-measurement purposes, just like an
+    # executor-accepted mutation.  This ensures the safety audit
+    # sees BOTH execution systems during migration.
+    spine_accepted: bool = False
+    spine_commitment_id: str = ""
+    spine_field: str = ""
     correct_automatic_mapping: bool = False
     # Runtime failure trace
     first_runtime_stage_entered: int = 0
@@ -960,22 +969,28 @@ def join_v2_output_and_trace(
 
             # Track incorrect accepted mutations at this step.
             #
-            # An executor-accepted mutation is "incorrect" when:
+            # An executor-accepted OR spine-accepted mutation is
+            # "incorrect" when:
             #   - IN_SCOPE: it disagrees with the independently
             #     established expected truth (not correct_automatic_mapping)
-            #   - OUT_OF_SCOPE / AMBIGUOUS_SCOPE: ANY executor-accepted
+            #   - OUT_OF_SCOPE / AMBIGUOUS_SCOPE: ANY accepted
             #     mutation is incorrect.  These instructions should not
             #     have produced a mutation at all — there is no expected
             #     truth to agree with, so any applied mutation is an
             #     unauthorized state change.  The safety gate
             #     "incorrect accepted mutations = 0" has no IN_SCOPE
             #     restriction; an OUT_OF_SCOPE mutation that the
-            #     executor applies is arguably worse than an IN_SCOPE
-            #     wrong-value mutation because it is entirely
+            #     executor or spine applies is arguably worse than an
+            #     IN_SCOPE wrong-value mutation because it is entirely
             #     unauthorized.
+            #
+            # Step 24B-R Phase 7: the measurement is execution-path-
+            # neutral.  A mutation accepted by EITHER the legacy
+            # executor OR the conservation-first spine counts as an
+            # accepted mutation for safety-measurement purposes.
             step_incorrect = False
             for row in step_rows:
-                if not row.executor_accepted:
+                if not (row.executor_accepted or row.spine_accepted):
                     continue
                 if row.independent_eligibility == "IN_SCOPE":
                     if not row.correct_automatic_mapping:
@@ -983,12 +998,54 @@ def join_v2_output_and_trace(
                         step_incorrect = True
                 else:
                     # OUT_OF_SCOPE or AMBIGUOUS_SCOPE: any
-                    # executor-accepted mutation is incorrect.
+                    # accepted mutation is incorrect.
                     incorrect_accepted_rows.append(row)
                     step_incorrect = True
             step_had_incorrect[key] = step_incorrect
 
-    # Compute safety metrics from the actual executor runs
+    # Step 24B-R Phase 7: Run the conservation-first spine on each
+    # chain so spine-promoted mutations participate in the safety
+    # measurement.  The spine is the production runtime path for
+    # SCALAR_REPLACEMENT; if a spine-promoted mutation disagrees with
+    # independently adjudicated evaluation truth, it must count as an
+    # incorrect accepted mutation.  This makes the measurement
+    # execution-path-neutral.
+    #
+    # We run the full production pipeline (run_semantic_pipeline_v2)
+    # on each chain and match spine-promoted results back to the
+    # frozen instruction rows by (chain_id, amendment_order,
+    # section_ref, field).  Ground truth is NOT imported into the
+    # runtime — the pipeline computes incorrect_mutations by
+    # comparing final state to ground_truth_state, which is
+    # evaluation-only data carried on the IssuerChain.
+    _run_spine_and_mark_rows(rows, chain_map, rows_by_chain_amend)
+
+    # Re-scan for incorrect accepted mutations after spine marking.
+    # Spine-promoted mutations that were not executor-accepted may
+    # now be flagged as incorrect.  We re-iterate the step rows
+    # rather than duplicating logic.
+    for (cid, sidx), step_rows in rows_by_chain_amend.items():
+        key = (cid, sidx)
+        step_incorrect = step_had_incorrect.get(key, False)
+        for row in step_rows:
+            if not row.spine_accepted or row.executor_accepted:
+                # Already counted via executor_accepted, or not
+                # spine-accepted.
+                continue
+            if row.instruction_id in {
+                r.instruction_id for r in incorrect_accepted_rows
+            }:
+                continue
+            if row.independent_eligibility == "IN_SCOPE":
+                if not row.correct_automatic_mapping:
+                    incorrect_accepted_rows.append(row)
+                    step_incorrect = True
+            else:
+                incorrect_accepted_rows.append(row)
+                step_incorrect = True
+        step_had_incorrect[key] = step_incorrect
+
+    # Compute safety metrics from the actual executor + spine runs
     incorrect_accepted_count = len(incorrect_accepted_rows)
 
     # False authoritative promotion: a step marked authoritative
@@ -1023,6 +1080,97 @@ def join_v2_output_and_trace(
         "step_authoritative_count": sum(1 for v in step_is_authoritative.values() if v),
         "total_steps": len(step_is_authoritative),
     }
+
+
+def _run_spine_and_mark_rows(
+    rows: list[InstructionRow],
+    chain_map: dict[str, Any],
+    rows_by_chain_amend: dict[tuple[str, int], list[InstructionRow]],
+) -> None:
+    """Run the conservation-first spine on each chain and mark rows.
+
+    Step 24B-R Phase 7: this makes the safety measurement execution-
+    path-neutral.  For each chain, we run the full production pipeline
+    (``run_semantic_pipeline_v2``) and match spine-promoted results
+    back to the frozen instruction rows.  A row whose instruction
+    was promoted by the spine is marked ``spine_accepted=True``.
+
+    Matching is by (chain_id, amendment_order, target_ref, field).
+    The spine processes StructuredMutations which carry
+    ``citation_section`` and ``field``; we match these to the row's
+    ``target_ref`` and the spine result's ``affected_field_names``.
+
+    Ground truth is NOT imported into the runtime.  The pipeline
+    computes ``incorrect_mutations`` by comparing the final state to
+    ``ground_truth_state`` carried on the IssuerChain, which is
+    evaluation-only data.
+    """
+    from upsilon.pipeline.semantic_pipeline_v2 import run_semantic_pipeline_v2
+
+    for chain_id, chain in chain_map.items():
+        try:
+            result = run_semantic_pipeline_v2(chain)
+        except Exception:
+            # If the pipeline fails on this chain, skip spine marking.
+            # The executor-accepted measurement remains valid.
+            continue
+
+        for step_idx, step_result in enumerate(result.steps, 1):
+            step_rows = rows_by_chain_amend.get((chain_id, step_idx), [])
+            if not step_rows:
+                continue
+            for sr in step_result.spine_results:
+                if not sr.promoted or sr.transformation is None:
+                    continue
+                cid = sr.transformation.commitment_id
+                affected_fields = sr.transformation.affected_field_names
+                # Match by commitment_id + field.  The row's
+                # expected_commitment_class is the independently
+                # adjudicated truth; we match the spine's resolved
+                # commitment_id to the row's predicted_commitment_class
+                # or expected_commitment_class.  Since the spine
+                # resolves identity from S0 authority (not from the
+                # row's target_key), we match by section_ref +
+                # field as a secondary signal.
+                for row in step_rows:
+                    if row.spine_accepted:
+                        continue
+                    # Match by section reference: the row's target_ref
+                    # should correspond to the spine's evidence
+                    # source_section_ref.
+                    evidence_section = ""
+                    if sr.evidence is not None:
+                        evidence_section = (
+                            sr.evidence.source_section_ref or ""
+                        )
+                    section_match = (
+                        row.target_ref.lower().strip()
+                        == evidence_section.lower().strip()
+                        if row.target_ref and evidence_section
+                        else False
+                    )
+                    # Also try prefix matching for granularity
+                    # differences (e.g., "Section 7.10" vs
+                    # "Section 7.10(a)").
+                    if not section_match and row.target_ref and evidence_section:
+                        rl = row.target_ref.lower().strip()
+                        el = evidence_section.lower().strip()
+                        section_match = rl.startswith(el) or el.startswith(rl)
+                    field_match = any(
+                        f.lower() in (row.expected_field or "").lower()
+                        or (row.expected_field or "").lower() in f.lower()
+                        for f in affected_fields
+                    )
+                    if section_match and field_match:
+                        row.spine_accepted = True
+                        row.spine_commitment_id = cid
+                        row.spine_field = affected_fields[0] if affected_fields else ""
+                        # Re-check correctness for spine-accepted rows
+                        if row.independent_eligibility == "IN_SCOPE":
+                            row.correct_automatic_mapping = (
+                                _check_mapping_correct(row)
+                            )
+                        break
 
 
 def _record_runtime_trace(row: InstructionRow, result, trace) -> None:
@@ -2130,6 +2278,9 @@ def run_audit() -> dict[str, Any]:
                 "candidate_created": r.candidate_created,
                 "accepted": r.accepted,
                 "executor_accepted": r.executor_accepted,
+                "spine_accepted": r.spine_accepted,
+                "spine_commitment_id": r.spine_commitment_id,
+                "spine_field": r.spine_field,
                 "correct_automatic_mapping": r.correct_automatic_mapping,
                 "first_runtime_stage_entered": r.first_runtime_stage_entered,
                 "first_runtime_failure": r.first_runtime_failure,

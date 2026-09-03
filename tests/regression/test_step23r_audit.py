@@ -517,15 +517,20 @@ class TestGates:
 
     def test_incorrect_accepted_ids_are_executor_accepted(self):
         """Every instruction ID listed as incorrect accepted must be
-        executor_accepted=True in the ledger.
+        executor_accepted=True OR spine_accepted=True in the ledger.
 
         An incorrect accepted mutation is any row where the executor
-        applied a mutation that should not have been applied:
+        or the conservation-first spine applied a mutation that should
+        not have been applied:
           - IN_SCOPE rows where the mutation disagrees with expected
             truth (correct_automatic_mapping=False)
           - OUT_OF_SCOPE / AMBIGUOUS_SCOPE rows where ANY
-            executor-accepted mutation is incorrect (the instruction
+            accepted mutation is incorrect (the instruction
             should not have produced a mutation at all)
+
+        Step 24B-R Phase 7: the safety measurement is execution-path-
+        neutral.  A mutation accepted by EITHER the legacy executor
+        OR the spine counts as an accepted mutation.
         """
         audit_path = Path("results/step23r_audit.json")
         if not audit_path.exists():
@@ -542,8 +547,10 @@ class TestGates:
         for iid in incorrect_ids:
             row = by_id.get(iid)
             assert row is not None, f"{iid} not in ledger"
-            assert row["executor_accepted"] is True, (
-                f"{iid} is incorrect-accepted but not executor_accepted"
+            assert row["executor_accepted"] is True or \
+                row.get("spine_accepted") is True, (
+                f"{iid} is incorrect-accepted but neither "
+                f"executor_accepted nor spine_accepted"
             )
             if row["independent_eligibility"] == "IN_SCOPE":
                 assert row["correct_automatic_mapping"] is False, (
@@ -551,18 +558,20 @@ class TestGates:
                     f"correct_automatic_mapping=True"
                 )
             # OUT_OF_SCOPE / AMBIGUOUS_SCOPE rows are incorrect by
-            # definition when executor_accepted — no
+            # definition when accepted — no
             # correct_automatic_mapping check needed.
 
     def test_out_of_scope_executor_accepted_counted_as_incorrect(self):
-        """OUT_OF_SCOPE rows where the executor accepted a mutation
-        MUST be counted as incorrect accepted mutations.
+        """OUT_OF_SCOPE rows where the executor OR spine accepted a
+        mutation MUST be counted as incorrect accepted mutations.
 
         The safety gate 'incorrect accepted mutations = 0' has no
         IN_SCOPE restriction.  An OUT_OF_SCOPE instruction that the
-        executor applies is an unauthorized state change — arguably
-        worse than an IN_SCOPE wrong-value mutation.  This test
-        verifies the audit does not silently exclude them.
+        executor or spine applies is an unauthorized state change —
+        arguably worse than an IN_SCOPE wrong-value mutation.  This
+        test verifies the audit does not silently exclude them.
+
+        Step 24B-R Phase 7: the measurement is execution-path-neutral.
         """
         audit_path = Path("results/step23r_audit.json")
         if not audit_path.exists():
@@ -574,18 +583,19 @@ class TestGates:
         ledger = audit["instruction_ledger"]
         incorrect_ids = set(safety.get("incorrect_accepted_instruction_ids", []))
         # Find all OUT_OF_SCOPE / AMBIGUOUS_SCOPE rows where
-        # executor_accepted=True
-        non_inscope_exec_accepted = [
+        # executor_accepted=True OR spine_accepted=True
+        non_inscope_accepted = [
             r for r in ledger
-            if r["executor_accepted"]
+            if (r["executor_accepted"] or r.get("spine_accepted"))
             and r["independent_eligibility"] != "IN_SCOPE"
         ]
-        for r in non_inscope_exec_accepted:
+        for r in non_inscope_accepted:
             assert r["instruction_id"] in incorrect_ids, (
                 f"{r['instruction_id']} is {r['independent_eligibility']} "
-                f"with executor_accepted=True but NOT in incorrect_accepted "
-                f"list — OUT_OF_SCOPE/AMBIGUOUS executor-accepted mutations "
-                f"must be counted as incorrect"
+                f"with executor_accepted={r['executor_accepted']} "
+                f"spine_accepted={r.get('spine_accepted')} but NOT in "
+                f"incorrect_accepted list — OUT_OF_SCOPE/AMBIGUOUS "
+                f"accepted mutations must be counted as incorrect"
             )
 
 

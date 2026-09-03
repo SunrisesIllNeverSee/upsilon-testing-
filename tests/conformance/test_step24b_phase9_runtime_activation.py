@@ -269,6 +269,307 @@ class TestStep24BRuntimeActivation:
                 )
 
 
+# ---------------------------------------------------------------------------
+# Phase 1: Violation test — corrupt curated target_key
+# ---------------------------------------------------------------------------
+
+
+class TestPhase1CuratedTargetKeyCorruption:
+    """Phase 1 violation test.
+
+    Take the manually curated ``target_key`` and change it to the
+    wrong commitment while leaving the raw amendment text unchanged.
+    The runtime result must remain driven by source/parser evidence.
+    Changing the diagnostic answer must NOT change production
+    interpretation.
+    """
+
+    def test_corrupting_curated_target_key_does_not_redirect_production(self):
+        """Corrupt the curated target_key in the Ameresco chain's
+        AmendmentInstruction objects.  The production pipeline must
+        still resolve identity from S0 authority + parser evidence,
+        NOT from the corrupted curated target_key.
+
+        This proves the spine receives parser-extracted evidence
+        (StructuredMutation from the semantic mapper), not curated
+        commitment-level answers.  Curated instructions are
+        test/diagnostic oracles only.
+        """
+        import copy
+        chain = chain_ameresco()
+
+        # Corrupt ALL curated target_keys in the chain's instructions.
+        # Change leverage_ratio instructions to target a completely
+        # different commitment (debt_service_coverage).  If the
+        # production runtime used these curated target_keys, the
+        # spine would resolve to the wrong commitment.
+        chain = copy.deepcopy(chain)
+        for step in chain.amendments:
+            for ins in step.instructions:
+                if ins.target_key == "financial_covenant.leverage_ratio":
+                    ins.target_key = "financial_covenant.debt_service_coverage"
+
+        # Run the production pipeline on the corrupted chain.
+        result = run_semantic_pipeline_v2(chain)
+
+        # The spine must still promote the leverage ratio transformations
+        # (A1 and A2), because identity comes from S0 authority +
+        # parser evidence, NOT from the corrupted curated target_key.
+        assert result.spine_total_promoted == 2, (
+            f"Corrupting curated target_key must not change production "
+            f"interpretation.  Expected 2 spine promotions, "
+            f"got {result.spine_total_promoted}"
+        )
+
+        # The promoted transformations must target leverage_ratio,
+        # NOT debt_service_coverage (the corrupted target_key).
+        for step in result.steps[:2]:
+            for sr in step.spine_results:
+                if sr.promoted:
+                    assert sr.transformation.commitment_id == (
+                        "financial_covenant.leverage_ratio"
+                    ), (
+                        f"Spine must resolve to leverage_ratio from S0 "
+                        f"authority, not to corrupted target_key. "
+                        f"Got: {sr.transformation.commitment_id}"
+                    )
+
+        # The final state must still show the leverage ratio changed
+        # correctly (same as the uncorrupted runtime).
+        lr = result.reconstructed_state["financial_covenant.leverage_ratio"]
+        sched = lr.applicability["step_down_schedule"]
+        assert len(sched) == 1, (
+            f"Leverage ratio step_down_schedule must have 1 entry "
+            f"after A2, got {len(sched)}"
+        )
+        assert sched[0]["period_end"] == "2023-12-31"
+        assert sched[0]["threshold"] == 3.75
+
+        # Safety metrics must be unchanged
+        assert len(result.incorrect_mutations) == 0
+        assert result.false_authoritative_promotions == 0
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: Violation tests — S0 address identity
+# ---------------------------------------------------------------------------
+
+
+class TestPhase2S0AddressIdentity:
+    """Phase 2 violation tests.
+
+    Agreement-local address identity must be established from the
+    source agreement / authoritative S0 representation, NOT from
+    amendment target labels being evaluated.
+
+    Required violation tests:
+    - corrupt amendment target_key does not alter S0 address map
+    - same section number in two agreements can map differently
+    - unknown local address fails closed
+    - global section heuristic alone cannot establish identity
+    """
+
+    def test_corrupt_amendment_target_key_does_not_alter_s0_address_map(self):
+        """Corrupting the amendment's target_key must NOT change the
+        S0 address map.  The address map is seeded from
+        ``IssuerChain.s0_section_refs`` (S0 authority), not from
+        amendment target labels.
+        """
+        from upsilon.commitments.kernel_bridge import (
+            establish_authoritative_kernel,
+        )
+        from upsilon.commitments.identity import IdentityResolver
+        from upsilon.models.legacy_models import CommitmentState
+
+        original_state = {
+            "financial_covenant.leverage_ratio": CommitmentState(
+                canonical_key="financial_covenant.leverage_ratio",
+                commitment_type="financial_covenant",
+                threshold=3.50,
+                unit="ratio",
+                status="ACTIVE",
+            ),
+            "financial_covenant.debt_service_coverage": CommitmentState(
+                canonical_key="financial_covenant.debt_service_coverage",
+                commitment_type="financial_covenant",
+                threshold=1.50,
+                unit="ratio",
+                status="ACTIVE",
+            ),
+        }
+        # S0 establishes: Section 7.10(a) → leverage_ratio
+        s0_section_refs = {
+            "financial_covenant.leverage_ratio": "Section 7.10(a)",
+            "financial_covenant.debt_service_coverage": "Section 7.10(b)",
+        }
+        _, address_map, _ = establish_authoritative_kernel(
+            original_state, "TEST-AGREEMENT", s0_section_refs,
+        )
+
+        # The address map must resolve Section 7.10(a) to leverage_ratio
+        resolver = IdentityResolver(address_map)
+        result = resolver.resolve(section_ref="Section 7.10(a)")
+        assert result.resolved
+        assert result.identity.commitment_id == (
+            "financial_covenant.leverage_ratio"
+        )
+
+        # Now simulate a corrupted amendment target_key by passing
+        # canonical_key_hint="financial_covenant.debt_service_coverage"
+        # (the wrong commitment).  The resolver must NOT use this
+        # hint to override the S0-established address map.
+        result_corrupt = resolver.resolve(
+            section_ref="Section 7.10(a)",
+            canonical_key_hint="financial_covenant.debt_service_coverage",
+        )
+        assert result_corrupt.resolved
+        # Identity must still be leverage_ratio (from S0 address map),
+        # NOT debt_service_coverage (the corrupted hint).
+        assert result_corrupt.identity.commitment_id == (
+            "financial_covenant.leverage_ratio"
+        ), (
+            f"Corrupted canonical_key_hint must not override S0 "
+            f"address map.  Got: "
+            f"{result_corrupt.identity.commitment_id}"
+        )
+
+    def test_same_section_number_maps_differently_in_two_agreements(self):
+        """The same section number (e.g., Section 7.10(a)) must be
+        able to map to different commitments in different agreements.
+
+        This proves the address map is agreement-local, not a global
+        section heuristic.
+        """
+        from upsilon.commitments.kernel_bridge import (
+            establish_authoritative_kernel,
+        )
+        from upsilon.commitments.identity import IdentityResolver
+        from upsilon.models.legacy_models import CommitmentState
+
+        original_state = {
+            "financial_covenant.leverage_ratio": CommitmentState(
+                canonical_key="financial_covenant.leverage_ratio",
+                commitment_type="financial_covenant",
+                threshold=3.50,
+                unit="ratio",
+                status="ACTIVE",
+            ),
+        }
+
+        # Agreement A: Section 7.10(a) → leverage_ratio
+        s0_a = {"financial_covenant.leverage_ratio": "Section 7.10(a)"}
+        _, addr_map_a, _ = establish_authoritative_kernel(
+            original_state, "AGREEMENT-A", s0_a,
+        )
+        resolver_a = IdentityResolver(addr_map_a)
+        result_a = resolver_a.resolve(section_ref="Section 7.10(a)")
+        assert result_a.resolved
+        assert result_a.identity.commitment_id == (
+            "financial_covenant.leverage_ratio"
+        )
+
+        # Agreement B: Section 7.10(a) → a DIFFERENT commitment
+        # (e.g., interest_coverage).  Same section number, different
+        # agreement, different mapping.
+        original_state_b = {
+            "financial_covenant.interest_coverage": CommitmentState(
+                canonical_key="financial_covenant.interest_coverage",
+                commitment_type="financial_covenant",
+                threshold=3.0,
+                unit="ratio",
+                status="ACTIVE",
+            ),
+        }
+        s0_b = {"financial_covenant.interest_coverage": "Section 7.10(a)"}
+        _, addr_map_b, _ = establish_authoritative_kernel(
+            original_state_b, "AGREEMENT-B", s0_b,
+        )
+        resolver_b = IdentityResolver(addr_map_b)
+        result_b = resolver_b.resolve(section_ref="Section 7.10(a)")
+        assert result_b.resolved
+        assert result_b.identity.commitment_id == (
+            "financial_covenant.interest_coverage"
+        ), (
+            f"Same section number must map differently in different "
+            f"agreements.  Agreement B should map to "
+            f"interest_coverage, got: "
+            f"{result_b.identity.commitment_id}"
+        )
+
+        # The two agreements map the same section to different commitments
+        assert result_a.identity.commitment_id != (
+            result_b.identity.commitment_id
+        )
+
+    def test_unknown_local_address_fails_closed(self):
+        """An unknown local address (section not in the S0 address
+        map) must fail closed — identity cannot be established."""
+        from upsilon.commitments.kernel_bridge import (
+            establish_authoritative_kernel,
+        )
+        from upsilon.commitments.identity import IdentityResolver
+        from upsilon.models.legacy_models import CommitmentState
+
+        original_state = {
+            "financial_covenant.leverage_ratio": CommitmentState(
+                canonical_key="financial_covenant.leverage_ratio",
+                commitment_type="financial_covenant",
+                threshold=3.50,
+                unit="ratio",
+                status="ACTIVE",
+            ),
+        }
+        s0_refs = {"financial_covenant.leverage_ratio": "Section 7.10(a)"}
+        _, address_map, _ = establish_authoritative_kernel(
+            original_state, "TEST-AGREEMENT", s0_refs,
+        )
+        resolver = IdentityResolver(address_map)
+
+        # Section 99.99 is not in the S0 address map
+        result = resolver.resolve(section_ref="Section 99.99")
+        assert not result.resolved
+        assert result.fail_closed
+        assert result.identity is None
+
+    def test_global_section_heuristic_alone_cannot_establish_identity(self):
+        """A canonical_key_hint alone (without S0 address map
+        corroboration) must NOT establish identity.  This prevents
+        the circular dependency where the caller pre-selects the
+        target and the resolver merely certifies that pre-selection.
+        """
+        from upsilon.commitments.kernel_bridge import (
+            establish_authoritative_kernel,
+        )
+        from upsilon.commitments.identity import IdentityResolver
+        from upsilon.models.legacy_models import CommitmentState
+
+        original_state = {
+            "financial_covenant.leverage_ratio": CommitmentState(
+                canonical_key="financial_covenant.leverage_ratio",
+                commitment_type="financial_covenant",
+                threshold=3.50,
+                unit="ratio",
+                status="ACTIVE",
+            ),
+        }
+        # S0 address map is EMPTY — no section→commitment mapping.
+        # The resolver must NOT use canonical_key_hint alone to
+        # establish identity.
+        _, address_map, _ = establish_authoritative_kernel(
+            original_state, "TEST-AGREEMENT", {},
+        )
+        resolver = IdentityResolver(address_map)
+
+        result = resolver.resolve(
+            canonical_key_hint="financial_covenant.leverage_ratio",
+        )
+        assert not result.resolved
+        assert result.fail_closed, (
+            "canonical_key_hint alone must NOT establish identity — "
+            "global section heuristic cannot be the sole authority"
+        )
+
+
 class TestStep24BSpineFailClosed:
     """Verify the spine fail-closed behavior on the production path."""
 
@@ -519,6 +820,10 @@ class TestIntegratedSafetyMeasurement:
             f"got {len(result.incorrect_mutations)}: "
             f"{result.incorrect_mutations}"
         )
+        assert result.false_authoritative_promotions == 0, (
+            f"Expected 0 false authoritative promotions, "
+            f"got {result.false_authoritative_promotions}"
+        )
 
     def test_spine_mutations_participate_in_safety_measurement(self):
         """Phase 7: spine-applied mutations must be included in the
@@ -684,19 +989,172 @@ class TestIntegratedSafetyMeasurement:
             result = run_semantic_pipeline_v2(chain)
 
             # The spine should have promoted the mutation (changing
-            # the applicability).  The safety audit should detect
+            # the applicability).  The safety audit must detect
             # that the resulting state disagrees with ground truth.
-            # The incorrect_accepted_mutations should be > 0 because
-            # the spine changed the state in a way that disagrees
-            # with ground truth.
-            # Note: the exact value depends on how the mismatch is
-            # classified, but it must be > 0 if the spine mutation
-            # is included in the safety measurement.
-            assert len(result.incorrect_mutations) > 0 or \
-                result.final_state_agreement < 1.0, (
-                f"Bad spine mutation must be detected: "
-                f"incorrect={len(result.incorrect_mutations)}, "
-                f"agreement={result.final_state_agreement}"
+            #
+            # Phase 7 requires specifically that
+            # incorrect_accepted_mutations (reported as
+            # result.incorrect_mutations) becomes non-zero — NOT
+            # merely that final_state_agreement < 1.0.  A
+            # disjunction would let the metric pass on state
+            # disagreement alone, which does NOT prove the
+            # measurement system can detect a bad spine mutation.
+            assert len(result.incorrect_mutations) > 0, (
+                f"Bad spine mutation must be detected as an "
+                f"incorrect accepted mutation: "
+                f"incorrect_mutations={result.incorrect_mutations}, "
+                f"final_state_agreement={result.final_state_agreement}"
             )
         finally:
             Path(source_path).unlink(missing_ok=True)
+
+
+# ---------------------------------------------------------------------------
+# Phase 8: Reproducible activation artifact
+# ---------------------------------------------------------------------------
+
+
+class TestActivationArtifact:
+    """Phase 8: the activation artifact must be generated from the
+    actual runtime, with all required fields, and no hand-entered
+    PASS statuses.
+
+    The artifact is generated by
+    ``audits.step24b.generate_activation_artifact.generate_artifact()``
+    which runs ``run_semantic_pipeline_v2`` on the Ameresco chain
+    and extracts all fields from runtime result objects.
+    """
+
+    def test_artifact_generated_from_runtime(self):
+        """The artifact must be generated from the actual runtime,
+        not hand-authored."""
+        from audits.step24b.generate_activation_artifact import (
+            generate_artifact,
+        )
+        artifact = generate_artifact()
+        assert artifact["chain_id"] == "EDGAR-AMERESCO"
+        assert artifact["spine_total_promoted"] == 2
+        assert artifact["spine_total_rejected"] == 0
+        assert artifact["spine_total_routed_away"] == 1
+
+    def test_artifact_has_required_per_transformation_fields(self):
+        """Each promoted spine result must carry all required Phase 8
+        fields from the runtime."""
+        from audits.step24b.generate_activation_artifact import (
+            generate_artifact,
+        )
+        artifact = generate_artifact()
+        for step in artifact["steps"]:
+            for sr in step["spine_results"]:
+                if sr["promoted"]:
+                    # Required fields per the prompt
+                    assert "evidence" in sr, "Missing evidence"
+                    assert "identity_result" in sr, "Missing identity_result"
+                    assert "transformation" in sr, "Missing transformation"
+                    assert "validation" in sr, "Missing validation"
+                    assert "proof" in sr, "Missing proof"
+                    assert "lineage_edge" in sr, "Missing lineage_edge"
+                    assert "authority_decision" in sr, "Missing authority_decision"
+                    assert "successor_version" in sr, "Missing successor_version"
+                    assert "predecessor_version" in sr, "Missing predecessor_version"
+                    assert "authoritative_current_before" in sr, (
+                        "Missing authoritative_current_before"
+                    )
+                    assert "authoritative_current_after" in sr, (
+                        "Missing authoritative_current_after"
+                    )
+                    # Evidence sub-fields
+                    ev = sr["evidence"]
+                    assert "source_text_hash" in ev, "Missing source_text_hash"
+                    assert "value_provenance" in ev, "Missing value_provenance"
+                    assert "declared_old_value" in ev, (
+                        "Missing declared_old_value"
+                    )
+                    # Transformation sub-fields
+                    tr = sr["transformation"]
+                    for af in tr["affected_fields"]:
+                        assert "amendment_declared_old_value" in af, (
+                            "Missing amendment_declared_old_value"
+                        )
+                        assert "old_value" in af, "Missing old_value"
+                        assert "new_value" in af, "Missing new_value"
+
+    def test_artifact_has_required_aggregate_fields(self):
+        """The artifact must carry all required aggregate metrics."""
+        from audits.step24b.generate_activation_artifact import (
+            generate_artifact,
+        )
+        artifact = generate_artifact()
+        sm = artifact["safety_metrics"]
+        assert "incorrect_accepted_mutations" in sm
+        assert "false_authoritative_promotions" in sm
+        assert "final_state_agreement" in sm
+        assert artifact["spine_total_promoted"] is not None
+        assert artifact["spine_total_rejected"] is not None
+        assert artifact["spine_total_routed_away"] is not None
+        assert "legacy_applied" in artifact
+
+    def test_artifact_gates_derived_from_runtime_not_hand_entered(self):
+        """All acceptance gate values must be derived from runtime
+        evidence, not hand-entered PASS statuses."""
+        from audits.step24b.generate_activation_artifact import (
+            generate_artifact,
+        )
+        artifact = generate_artifact()
+        gates = artifact["acceptance_gates"]
+        # Every gate must be a boolean (not a string "PASS" or hand-set)
+        for gate_name, gate_value in gates.items():
+            assert isinstance(gate_value, bool), (
+                f"Gate {gate_name} must be a boolean, "
+                f"got {type(gate_value).__name__}: {gate_value}"
+            )
+        # The correct Ameresco runtime must pass all gates
+        assert all(gates.values()), (
+            f"All gates must pass for correct Ameresco runtime, "
+            f"failed: {[k for k, v in gates.items() if not v]}"
+        )
+
+    def test_artifact_safety_metrics_match_pipeline(self):
+        """The artifact's safety metrics must match the pipeline's
+        runtime results."""
+        from audits.step24b.generate_activation_artifact import (
+            generate_artifact,
+        )
+        artifact = generate_artifact()
+        result = run_semantic_pipeline_v2(chain_ameresco())
+        assert artifact["safety_metrics"]["incorrect_accepted_mutations"] == \
+            len(result.incorrect_mutations)
+        assert artifact["safety_metrics"]["false_authoritative_promotions"] == \
+            result.false_authoritative_promotions
+        assert artifact["safety_metrics"]["final_state_agreement"] == \
+            result.final_state_agreement
+
+    def test_artifact_reproducible(self):
+        """Generating the artifact twice must produce the same
+        structural output (ignoring random IDs and timestamps)."""
+        import json
+        from audits.step24b.generate_activation_artifact import (
+            generate_artifact,
+        )
+
+        def strip_ids(d):
+            if isinstance(d, dict):
+                return {
+                    k: strip_ids(v) for k, v in d.items()
+                    if k not in (
+                        "edge_id", "lineage_reference", "proof_id",
+                        "generated_at",
+                    )
+                }
+            if isinstance(d, list):
+                return [strip_ids(x) for x in d]
+            return d
+
+        a1 = generate_artifact()
+        a2 = generate_artifact()
+        s1 = json.dumps(strip_ids(a1), sort_keys=True)
+        s2 = json.dumps(strip_ids(a2), sort_keys=True)
+        assert s1 == s2, (
+            "Artifact must be reproducible (ignoring random IDs "
+            "and timestamps)"
+        )
