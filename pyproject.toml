@@ -50,3 +50,8 @@ testpaths = ["tests", "."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+# src/upsilon uses a src-layout.  Add src/ to sys.path so `import upsilon`
+# resolves without requiring an external PYTHONPATH or an editable install.
+# This keeps `pytest -q` (and `make test`) working in the transitional state
+# where target tests live under tests/unit/ and legacy tests remain at root.
+pythonpath = ["src"]

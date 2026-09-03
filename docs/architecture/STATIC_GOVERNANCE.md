@@ -72,6 +72,7 @@ layers =
     upsilon.execution
     upsilon.lineage
     upsilon.authority
+    upsilon.propagation
     upsilon.pipeline
 ```
 

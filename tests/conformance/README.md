@@ -6,7 +6,14 @@ commitment model invariants defined in
 
 ## Current state
 
-**No conformance tests are implemented in Step 23G.**
+**No conformance tests are implemented yet.**
+
+As of Step 23G-R, the target runtime under `src/upsilon/` implements the
+conservation invariants (§2.1–§2.10) and lineage graph (L1–L7 support
+structures), but conformance tests asserting these invariants against the
+real runtime have not yet been written. The 72 unit tests in
+`tests/unit/test_upsilonsrc.py` test the runtime directly but are not
+formal conformance tests.
 
 This directory is a structural scaffold. It must not contain fake passing
 tests or meaningless placeholders.

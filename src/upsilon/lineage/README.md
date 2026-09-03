@@ -1,7 +1,10 @@
-# src/upsilon/lineage/ — Commitment Lineage (First-Class Semantic Domain)
+# src/upsilon/lineage/ — Commitment Lineage Graph (First-Class Semantic Domain)
 
-Lineage is a **first-class semantic domain** in the Upsilon/MO§ES™ commitment
-model, not a logging utility.
+**STATUS: TARGET_ACTIVE**
+
+## PURPOSE
+
+Lineage is a first-class semantic domain, not a logging utility. It owns the append-only authoritative history of transformations applied to persistent commitment identities. Every accepted transformation produces a lineage edge recording what changed, why it changed, what authorized it, and what survived.
 
 ## Conceptual model
 
@@ -12,46 +15,77 @@ FC-001
   └── Amendment 3 → threshold change
 ```
 
-The intended model is stronger than "remember which commitment this was."
-It is:
+The intended model is stronger than "remember which commitment this was." It is:
 
-> maintain an append-only authoritative history of transformations applied
-> to a persistent commitment identity
+> maintain an append-only authoritative history of transformations applied to a persistent commitment identity
+
+## OWNS
+
+- `CommitmentLineageGraph` — append-only graph of lineage edges
+- `LineageEdge` records (predecessor, successor, amendment authority, transformation type, affected fields, old/new values, proof reference, validation status)
+- Lineage queries (history, amendments affecting, affected fields history)
+- Trace-to-origin and reachability-from-origin checks
+
+## DOES NOT OWN
+
+- Transformation interpretation (transformations domain)
+- Authority decisions (authority domain)
+- Kernel state storage (commitments domain)
+- Execution (execution domain)
+
+## ALLOWED INPUTS
+
+- `LineageEdge` objects (from the transformation/execution pipeline)
+
+## ALLOWED OUTPUTS
+
+- Lineage edge retrieval and query results
+- Trace-to-origin chains
+- Reachability-from-origin boolean
+
+## ALLOWED DEPENDENCIES
+
+- `upsilon.models` (shared value objects, `LineageEdge`, `TransformationFamily`, `ValidationStatus`, `EdgeClass`)
+
+## FORBIDDEN DEPENDENCIES
+
+- `upsilon.authority` (lineage records edges; authority consumes the result)
+- `upsilon.execution` (execution produces the successor state; lineage records the edge)
+- `upsilon.transformations` (transformation interpretation)
+- Any root-level legacy module
+- `audits/`, `research/`, `results/`
+
+## CURRENT LEGACY SOURCES
+
+- `chain_reconstruction.py` (root) — combines lineage graph with execution state advancement and authority propagation; BOUNDARY_VIOLATION; migration precondition: authority and execution responsibilities extracted first; lineage graph retained as pure graph structure
+
+## CURRENT IMPLEMENTED TARGET MODULES
+
+- `__init__.py` — exports `CommitmentLineageGraph`, `LineageQueries`
+- `graph.py` — `CommitmentLineageGraph` (append-only, validate/reject edges, trace-to-origin, reachability)
+- `queries.py` — `LineageQueries` (history, transformations-by-type, amendments-affecting, validated-history, affected-fields-history)
+
+## CONFORMANCE INVARIANTS TOUCHED
+
+- Lineage continuity (CONSERVATION_INVARIANTS.md §2.7): every accepted successor traces to predecessor + amendment evidence
+- L1–L7 lineage conformance invariants (CONFORMANCE_CONTRACT.md)
+
+## OPERATING STATUS
+
+TARGET_ACTIVE — runtime implemented, 72 tests pass, not yet wired into the legacy pipeline.
+
+## MIGRATION PRECONDITIONS
+
+- Legacy `chain_reconstruction.py` must be decomposed: lineage graph logic → `src/upsilon/lineage/`; execution state advancement → `src/upsilon/execution/`; authority propagation → `src/upsilon/authority/`.
+- Conformance tests for L1–L7 must be added under `tests/conformance/`.
 
 ## Suggested future modules
 
 ```
 src/upsilon/lineage/
-├── graph.py        # commitment lineage graph
-├── nodes.py        # commitment identity nodes
-├── edges.py        # authorized transformation edges
-├── authority.py    # authority/source linkage on edges
-└── queries.py      # commitment history queries
+├── graph.py        # commitment lineage graph (IMPLEMENTED)
+├── nodes.py        # commitment identity nodes (future)
+├── edges.py        # authorized transformation edges (future)
+├── authority.py    # authority/source linkage on edges (future)
+└── queries.py      # commitment history queries (IMPLEMENTED)
 ```
-
-**No runtime code is implemented here during Step 23G.**
-
-## Lineage integrity
-
-> Can the current commitment be traced through valid authorized transformations?
-
-This is one of the three integrity domains. See `src/upsilon/README.md`.
-
-## Conformance invariants (future)
-
-See `docs/moses/CONFORMANCE_CONTRACT.md` for the lineage invariants that
-future conformance tests must enforce, including:
-
-- each accepted transformation creates one traceable lineage edge
-- lineage edge references predecessor and successor commitment identity
-- lineage edge carries amendment authority/source
-- lineage edge carries transformation proof
-- current authoritative state is reachable from origin kernel
-- no authoritative version exists without a validated lineage path
-- downstream state cannot become canonical merely by differing from current kernel
-
-## Existing modules with lineage/state/version logic
-
-The migration manifest identifies `chain_reconstruction.py` as a current
-module containing lineage-relevant state advancement logic. It is flagged
-as a candidate for migration toward this domain. No move occurs in Step 23G.

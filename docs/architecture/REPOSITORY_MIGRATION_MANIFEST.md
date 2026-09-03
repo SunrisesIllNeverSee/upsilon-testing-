@@ -24,17 +24,17 @@ Regenerate this manifest with: `python audits/repository/generate_manifest.py`. 
 
 ## Summary
 ```
-files inventoried:                121
-  Python modules (AST-analyzed):  100
+files inventoried:                123
+  Python modules (AST-analyzed):  102
   non-Python files (curated):     21
-files with proposed destinations: 121
+files with proposed destinations: 123
 boundary violations:              7
 unclassified:                     0
 ```
 
 ---
 
-## 1. Runtime engine modules (20 files)
+## 1. Runtime engine modules (21 files)
 
 | current path | proposed destination | semantic owner | kind | risk | boundary | imports | dependents | reason | move now |
 |---|---|---|---|---|---|---|---|---|---|
@@ -42,22 +42,23 @@ unclassified:                     0
 | `amendment_parser.py` | `src/upsilon/parsing/` | parsing | runtime | HIGH | CLEAN | (none) | analyze_held_out_mutations, build_step23_audit, build_step23r_audit, build_unresolved_corpus, classify_development_corpus, diagnose_17b_defects, genre_adapters, produce_census_tables, semantic_pipeline, semantic_pipeline_v2; tests: test_parser_v03, test_parser_v04_regression, test_semantic_regression | parser producing structured instructions; core pipeline dependency | NO |
 | `chain_reconstruction.py` | `src/upsilon/lineage/` | lineage | runtime | HIGH | BOUNDARY_VIOLATION | models, executor, persistence | analyze_held_out_mutations, chain_study_chains, edgar_chains, run_chain_study, run_chain_study_v2, run_edgar_smoke_test, run_held_out_study, run_operational_preflight, run_smoke_test, run_v2_study, semantic_pipeline, semantic_pipeline_v2, synthetic_chains; tests: test_chain_reconstruction, test_chain_study_v2, test_edgar_chains, test_step_22b_incorrect_mutation_fix | combines lineage graph with execution state advancement and authority propagation; lineage and execution layers are entangled | NO |
 | `commitment_extractor.py` | `src/upsilon/parsing/` | parsing | runtime | HIGH | CLEAN | models | genre_adapters, gt_extractor, run_chain_study_v2, run_held_out_study, run_operational_preflight, run_v2_study, s0_extractor; tests: test_chain_study_v2, test_commitment_extractor, test_v02_regression | shared extraction engine used by S0 and GT extractors | NO |
-| `commitment_registry.py` | `src/upsilon/commitments/` | commitments | runtime | HIGH | BOUNDARY_VIOLATION | models | agreement_context, build_step23_audit, build_unresolved_corpus, genre_adapters, model_assisted_candidates, semantic_resolver_v2; tests: test_agreement_context, test_commitment_registry | combines commitment identity with evidence alias matching and section-reference resolution; identity and evidence layers are entangled | NO |
+| `commitment_registry.py` | `src/upsilon/commitments/` | commitments | runtime | HIGH | BOUNDARY_VIOLATION | models | agreement_context, build_step23_audit, build_unresolved_corpus, genre_adapters, model_assisted_candidates, moses_safety, semantic_resolver_v2; tests: test_agreement_context, test_commitment_registry | combines commitment identity with evidence alias matching and section-reference resolution; identity and evidence layers are entangled | NO |
 | `discovery_validation.py` | `src/upsilon/ingestion/document_discovery/` | ingestion | runtime | LOW | CLEAN | (none) | run_operational_preflight; tests: test_v02_regression | validates acquired S0/GT documents are correct type | NO |
 | `edgar_chains.py` | `src/upsilon/ingestion/edgar/` | ingestion | runtime | MEDIUM | BOUNDARY_VIOLATION | models, chain_reconstruction | chain_study_chains, run_edgar_smoke_test, semantic_pipeline; tests: test_edgar_chains, test_semantic_pipeline | combines ingestion fixtures with frozen chain data and hand-extracted states; ingestion and data layers are entangled | NO |
 | `executor.py` | `src/upsilon/execution/` | execution | runtime | HIGH | CLEAN | models | analyze_held_out_mutations, build_step23r_audit, chain_reconstruction, run_operational_preflight, semantic_pipeline, semantic_pipeline_v2; tests: test_executor, test_persistence_plan, test_semantic_mapper_v01 | applies structured mutations to commitment state; deep-copies state before amendment | NO |
 | `genre_adapters.py` | `src/upsilon/parsing/` | parsing | runtime | MEDIUM | CLEAN | amendment_parser, commitment_extractor, commitment_registry, models, pattern_classifier, semantic_mapper, semantic_resolver_v2 | build_step23_audit, build_step23r_audit, run_v2_study, semantic_pipeline_v2; tests: test_genre_adapters | genre-specific parsing adapters | NO |
 | `gold_schema.py` | `src/upsilon/evidence/` | evidence | runtime | MEDIUM | CLEAN | (none) | create_held_out_gold, run_held_out_study; tests: test_gold_schema, test_held_out_study | independent human-verifiable gold schema definitions | NO |
 | `gt_extractor.py` | `src/upsilon/evidence/` | evidence | runtime | MEDIUM | CLEAN | commitment_extractor | classify_gold_scope, run_chain_study_v2, run_held_out_study, run_v2_study; tests: test_chain_study_v2, test_commitment_extractor | independent authoritative ground-truth extractor | NO |
-| `models.py` | `src/upsilon/models/` | models | runtime | HIGH | CLEAN | ext: pydantic | agreement_context, analyze_held_out_mutations, build_step23_audit, build_step23r_audit, build_unresolved_corpus, chain_reconstruction, commitment_extractor, commitment_registry, edgar_chains, executor, genre_adapters, model_assisted_candidates, persistence, run_operational_preflight, semantic_gold, semantic_mapper, semantic_pipeline, semantic_pipeline_v2, semantic_resolver_v2, synthetic_chains; tests: test_agreement_context, test_chain_reconstruction, test_chain_study, test_chain_study_v2, test_commitment_registry, test_edgar_chains, test_executor, test_false_authoritative_promotion, test_genre_adapters, test_held_out_study, test_model_assisted_candidates, test_operational_preflight, test_parser_v03, test_persistence_plan, test_semantic_mapper, test_semantic_mapper_v01, test_semantic_pipeline, test_semantic_resolver_v2, test_step22f_staged_interpreter, test_step23_audit, test_step_22b_incorrect_mutation_fix | CommitmentState and shared data models; many dependents | NO |
+| `models.py` | `src/upsilon/models/` | models | runtime | HIGH | CLEAN | ext: pydantic | agreement_context, analyze_held_out_mutations, build_step23_audit, build_step23r_audit, build_unresolved_corpus, chain_reconstruction, commitment_extractor, commitment_registry, edgar_chains, executor, genre_adapters, model_assisted_candidates, moses_safety, persistence, run_operational_preflight, semantic_gold, semantic_mapper, semantic_pipeline, semantic_pipeline_v2, semantic_resolver_v2, synthetic_chains; tests: test_agreement_context, test_chain_reconstruction, test_chain_study, test_chain_study_v2, test_commitment_registry, test_edgar_chains, test_executor, test_false_authoritative_promotion, test_genre_adapters, test_held_out_study, test_model_assisted_candidates, test_moses_safety, test_operational_preflight, test_parser_v03, test_persistence_plan, test_semantic_mapper, test_semantic_mapper_v01, test_semantic_pipeline, test_semantic_resolver_v2, test_step22f_staged_interpreter, test_step23_audit, test_step_22b_incorrect_mutation_fix | CommitmentState and shared data models; many dependents | NO |
+| `moses_safety.py` | `src/upsilon/conservation/` | conservation | runtime | LOW | CLEAN | commitment_registry, models | semantic_resolver_v2; tests: test_moses_safety | MOSES safety enforcement logic; partially overlaps with target conservation invariants | NO |
 | `pattern_classifier.py` | `src/upsilon/parsing/` | parsing | runtime | HIGH | CLEAN | (none) | build_unresolved_corpus, chain_study_chains, genre_adapters, run_chain_study_v2, run_held_out_study, run_v2_study, semantic_pipeline_v2; tests: test_genre_adapters, test_pattern_classifier | amendment pattern classification (INCREMENTAL, FULL_RESTATEMENT, etc.) | NO |
 | `persistence.py` | `src/upsilon/commitments/` | commitments | runtime | MEDIUM | CLEAN | models; ext: psycopg | chain_reconstruction, run_operational_preflight, run_step_17b; tests: test_operational_preflight, test_persistence_plan | commitment state storage and persistence planning | NO |
 | `s0_extractor.py` | `src/upsilon/evidence/` | evidence | runtime | MEDIUM | CLEAN | commitment_extractor | classify_gold_scope, run_chain_study_v2, run_held_out_study, run_v2_study; tests: test_chain_study_v2, test_commitment_extractor, test_v02_regression | S0 commitment extractor producing origin state | NO |
 | `sec_ingest.py` | `src/upsilon/ingestion/edgar/` | ingestion | runtime | LOW | CLEAN | ext: httpx, bs4 | (none) | SEC EDGAR ingestion logic | NO |
 | `semantic_mapper.py` | `src/upsilon/transformations/` | transformations | runtime | HIGH | BOUNDARY_VIOLATION | models | analyze_held_out_mutations, build_unresolved_corpus, genre_adapters, model_assisted_candidates, semantic_gold, semantic_pipeline, semantic_pipeline_v2, semantic_resolver_v2; tests: test_model_assisted_candidates, test_semantic_mapper, test_semantic_mapper_v01 | resolves commitment identity via section-number heuristics (_section_to_commitment_id); transformation layer performs identity resolution | NO |
 | `semantic_pipeline.py` | `src/upsilon/pipeline/` | pipeline | runtime | HIGH | BOUNDARY_VIOLATION | amendment_parser, chain_reconstruction, executor, models, semantic_mapper; deferred: edgar_chains | analyze_held_out_mutations, diagnose_17b_defects, run_chain_study, run_chain_study_v2, run_held_out_study, run_operational_preflight, run_step_17b; tests: test_chain_study, test_chain_study_v2, test_semantic_pipeline | legacy v1 pipeline combining orchestration + mapping + execution; superseded by v2 but still referenced by many study runners | NO |
-| `semantic_pipeline_v2.py` | `src/upsilon/pipeline/` | pipeline | runtime | MEDIUM | BOUNDARY_VIOLATION | amendment_parser, chain_reconstruction, executor, genre_adapters, models, pattern_classifier, semantic_mapper, semantic_resolver_v2 | run_v2_study; tests: test_false_authoritative_promotion, test_step_22b_incorrect_mutation_fix | combines pipeline orchestration with authority determination; pipeline layer performs authority logic | NO |
-| `semantic_resolver_v2.py` | `src/upsilon/transformations/` | transformations | runtime | MEDIUM | BOUNDARY_VIOLATION | commitment_registry, models, semantic_mapper | build_step23_audit, build_step23r_audit, genre_adapters, model_assisted_candidates, semantic_pipeline_v2; tests: test_semantic_resolver_v2, test_step22f_staged_interpreter | re-extracts values from source text, discarding parser-provided old/new values; transformation layer performs evidence extraction | NO |
+| `semantic_pipeline_v2.py` | `src/upsilon/pipeline/` | pipeline | runtime | MEDIUM | BOUNDARY_VIOLATION | amendment_parser, chain_reconstruction, executor, genre_adapters, models, pattern_classifier, semantic_mapper, semantic_resolver_v2 | run_v2_study; tests: test_false_authoritative_promotion, test_moses_safety, test_step_22b_incorrect_mutation_fix | combines pipeline orchestration with authority determination; pipeline layer performs authority logic | NO |
+| `semantic_resolver_v2.py` | `src/upsilon/transformations/` | transformations | runtime | HIGH | BOUNDARY_VIOLATION | commitment_registry, models, semantic_mapper, moses_safety | build_step23_audit, build_step23r_audit, genre_adapters, model_assisted_candidates, semantic_pipeline_v2; tests: test_moses_safety, test_semantic_resolver_v2, test_step22f_staged_interpreter | re-extracts values from source text, discarding parser-provided old/new values; transformation layer performs evidence extraction | NO |
 
 ## 2. Audit and study tooling (40 files)
 
@@ -104,7 +105,7 @@ unclassified:                     0
 | `run_v2_study.py` | `research/` | research | research | LOW | CLEAN | chain_reconstruction, commitment_extractor, genre_adapters, gt_extractor, pattern_classifier, run_chain_study, run_chain_study_v2, run_held_out_study, s0_extractor, semantic_pipeline_v2; deferred: run_chain_study_v2 | (none) | runs v2 study | NO |
 | `v02_change_spec.py` | `archive/legacy_code/` | legacy | legacy | LOW | CLEAN | (none) | tests: test_v02_change_spec | v0.2 change spec derived from observed failures; superseded | NO |
 
-## 3. Test modules (40 files)
+## 3. Test modules (41 files)
 
 | current path | proposed destination | semantic owner | kind | risk | boundary | imports | dependents | reason | move now |
 |---|---|---|---|---|---|---|---|---|---|
@@ -129,6 +130,7 @@ unclassified:                     0
 | `test_gold_schema.py` | `tests/unit/` | evidence | test | LOW | CLEAN | gold_schema | (none) | tests gold schema | NO |
 | `test_held_out_study.py` | `tests/integration/` | research | test | LOW | CLEAN | gold_schema; deferred: create_held_out_gold, run_held_out_study, acquire_held_out_study, models, generate_step_19b_report; ext: pytest | (none) | tests held-out study | NO |
 | `test_model_assisted_candidates.py` | `tests/unit/` | research | test | LOW | CLEAN | model_assisted_candidates, models, semantic_mapper; ext: pytest | (none) | tests model-assisted candidates | NO |
+| `test_moses_safety.py` | `tests/conservation/` | conservation | test | LOW | CLEAN | models, moses_safety, semantic_pipeline_v2, semantic_resolver_v2; deferred: models; ext: pytest | (none) | tests MOSES safety enforcement | NO |
 | `test_operational_preflight.py` | `tests/integration/` | results | test | LOW | CLEAN | deferred: persistence, models, run_operational_preflight; ext: pytest | (none) | tests operational preflight | NO |
 | `test_parser_v03.py` | `tests/unit/` | parsing | test | LOW | CLEAN | amendment_parser; deferred: models; ext: pytest | (none) | tests parser v03 | NO |
 | `test_parser_v04_regression.py` | `tests/regression/` | parsing | test | LOW | CLEAN | amendment_parser; ext: pytest | (none) | parser v04 regression tests | NO |
@@ -211,16 +213,17 @@ The following modules have the largest import surface and pose the highest migra
 
 | module | runtime deps | test deps | total | deferred imports |
 |---|---:|---:|---:|---|
-| `models` | 20 | 21 | 41 | (none) |
+| `models` | 21 | 22 | 43 | (none) |
 | `chain_reconstruction` | 13 | 4 | 17 | (none) |
 | `amendment_parser` | 10 | 3 | 13 | (none) |
 | `semantic_mapper` | 8 | 3 | 11 | (none) |
 | `commitment_extractor` | 7 | 3 | 10 | (none) |
 | `semantic_pipeline` | 7 | 3 | 10 | edgar_chains |
+| `commitment_registry` | 7 | 2 | 9 | (none) |
 | `executor` | 6 | 3 | 9 | (none) |
 | `pattern_classifier` | 7 | 2 | 9 | (none) |
 | `run_chain_study_v2` | 8 | 1 | 9 | pattern_classifier |
-| `commitment_registry` | 6 | 2 | 8 | (none) |
+| `semantic_resolver_v2` | 5 | 3 | 8 | (none) |
 
 ## Migration execution order (future, not now)
 

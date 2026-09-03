@@ -51,6 +51,7 @@ MODULE_META: dict[str, dict] = {
     "sec_ingest": {"dest": "src/upsilon/ingestion/edgar/", "owner": "ingestion", "kind": "runtime", "reason": "SEC EDGAR ingestion logic"},
     "discovery_validation": {"dest": "src/upsilon/ingestion/document_discovery/", "owner": "ingestion", "kind": "runtime", "reason": "validates acquired S0/GT documents are correct type"},
     "synthetic_chains": {"dest": "tests/corpus/", "owner": "evidence", "kind": "test", "reason": "synthetic oracle fixtures; test data, not runtime"},
+    "moses_safety": {"dest": "src/upsilon/conservation/", "owner": "conservation", "kind": "runtime", "reason": "MOSES safety enforcement logic; partially overlaps with target conservation invariants"},
     # --- audit and study tooling ---
     "acquire_chain_study": {"dest": "src/upsilon/ingestion/", "owner": "ingestion", "kind": "research", "reason": "acquires EDGAR chain data for development study"},
     "acquire_comparison_sources": {"dest": "src/upsilon/ingestion/", "owner": "ingestion", "kind": "research", "reason": "acquires comparison source documents"},
@@ -108,6 +109,7 @@ MODULE_META: dict[str, dict] = {
     "test_gold_schema": {"dest": "tests/unit/", "owner": "evidence", "kind": "test", "reason": "tests gold schema"},
     "test_held_out_study": {"dest": "tests/integration/", "owner": "research", "kind": "test", "reason": "tests held-out study"},
     "test_model_assisted_candidates": {"dest": "tests/unit/", "owner": "research", "kind": "test", "reason": "tests model-assisted candidates"},
+    "test_moses_safety": {"dest": "tests/conservation/", "owner": "conservation", "kind": "test", "reason": "tests MOSES safety enforcement"},
     "test_operational_preflight": {"dest": "tests/integration/", "owner": "results", "kind": "test", "reason": "tests operational preflight"},
     "test_parser_v03": {"dest": "tests/unit/", "owner": "parsing", "kind": "test", "reason": "tests parser v03"},
     "test_parser_v04_regression": {"dest": "tests/regression/", "owner": "parsing", "kind": "test", "reason": "parser v04 regression tests"},

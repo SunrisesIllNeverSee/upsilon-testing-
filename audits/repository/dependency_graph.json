@@ -1,6 +1,6 @@
 {
   "generated_at": "regenerate via: python audits/repository/generate_dependency_graph.py",
-  "module_count": 100,
+  "module_count": 102,
   "boundary_violation_count": 7,
   "modules": [
     {
@@ -525,6 +525,7 @@
         "build_unresolved_corpus",
         "genre_adapters",
         "model_assisted_candidates",
+        "moses_safety",
         "semantic_resolver_v2",
         "test_agreement_context",
         "test_commitment_registry"
@@ -543,6 +544,7 @@
         "build_unresolved_corpus",
         "genre_adapters",
         "model_assisted_candidates",
+        "moses_safety",
         "semantic_resolver_v2"
       ],
       "third_party_imports": [],
@@ -1002,6 +1004,7 @@
         "executor",
         "genre_adapters",
         "model_assisted_candidates",
+        "moses_safety",
         "persistence",
         "run_operational_preflight",
         "semantic_gold",
@@ -1021,6 +1024,7 @@
         "test_genre_adapters",
         "test_held_out_study",
         "test_model_assisted_candidates",
+        "test_moses_safety",
         "test_operational_preflight",
         "test_parser_v03",
         "test_persistence_plan",
@@ -1046,6 +1050,7 @@
         "test_genre_adapters",
         "test_held_out_study",
         "test_model_assisted_candidates",
+        "test_moses_safety",
         "test_operational_preflight",
         "test_parser_v03",
         "test_persistence_plan",
@@ -1070,6 +1075,7 @@
         "executor",
         "genre_adapters",
         "model_assisted_candidates",
+        "moses_safety",
         "persistence",
         "run_operational_preflight",
         "semantic_gold",
@@ -1083,6 +1089,32 @@
         "pydantic"
       ],
       "migration_risk": "HIGH",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "moses_safety",
+      "imports": [
+        "commitment_registry",
+        "models"
+      ],
+      "imported_by": [
+        "semantic_resolver_v2",
+        "test_moses_safety"
+      ],
+      "top_level_imports": [
+        "commitment_registry",
+        "models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_moses_safety"
+      ],
+      "runtime_dependents": [
+        "semantic_resolver_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
       "boundary_status": "CLEAN",
       "migration_preconditions": []
     },
@@ -1663,6 +1695,7 @@
       "imported_by": [
         "run_v2_study",
         "test_false_authoritative_promotion",
+        "test_moses_safety",
         "test_step_22b_incorrect_mutation_fix"
       ],
       "top_level_imports": [
@@ -1678,6 +1711,7 @@
       "deferred_imports": [],
       "test_dependents": [
         "test_false_authoritative_promotion",
+        "test_moses_safety",
         "test_step_22b_incorrect_mutation_fix"
       ],
       "runtime_dependents": [
@@ -1698,6 +1732,7 @@
       "imports": [
         "commitment_registry",
         "models",
+        "moses_safety",
         "semantic_mapper"
       ],
       "imported_by": [
@@ -1706,16 +1741,19 @@
         "genre_adapters",
         "model_assisted_candidates",
         "semantic_pipeline_v2",
+        "test_moses_safety",
         "test_semantic_resolver_v2",
         "test_step22f_staged_interpreter"
       ],
       "top_level_imports": [
         "commitment_registry",
         "models",
-        "semantic_mapper"
+        "semantic_mapper",
+        "moses_safety"
       ],
       "deferred_imports": [],
       "test_dependents": [
+        "test_moses_safety",
         "test_semantic_resolver_v2",
         "test_step22f_staged_interpreter"
       ],
@@ -1727,7 +1765,7 @@
         "semantic_pipeline_v2"
       ],
       "third_party_imports": [],
-      "migration_risk": "MEDIUM",
+      "migration_risk": "HIGH",
       "boundary_status": "BOUNDARY_VIOLATION",
       "migration_preconditions": [
         "new identity / evidence / transformation interfaces exist first",
@@ -2170,6 +2208,33 @@
         "semantic_mapper"
       ],
       "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_moses_safety",
+      "imports": [
+        "models",
+        "moses_safety",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "models",
+        "moses_safety",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [
+        "models"
+      ],
       "test_dependents": [],
       "runtime_dependents": [],
       "third_party_imports": [

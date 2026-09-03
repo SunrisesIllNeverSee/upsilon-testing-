@@ -92,6 +92,7 @@ src/upsilon/
 ├── authority/       # consume execution+proof+conservation
 ├── lineage/         # commitment history graph (first-class domain)
 ├── pipeline/        # orchestration
+├── propagation/     # downstream representation comparison (third integrity domain)
 └── models/          # shared data models
 ```
 
@@ -102,9 +103,9 @@ semantic ownership details.
 
 | Domain | Question | Current status |
 |--------|----------|----------------|
-| Transformation Integrity | Did authorized amendment evidence produce the correct successor state? | Primary focus |
-| Lineage Integrity | Can the current commitment be traced through valid authorized transformations? | Scaffolded, not implemented |
-| Propagation Integrity | Do downstream representations match the current authoritative kernel? | Not yet addressed |
+| Transformation Integrity | Did authorized amendment evidence produce the correct successor state? | TARGET_ACTIVE (implemented in `src/upsilon/`, not yet wired into legacy pipeline) |
+| Lineage Integrity | Can the current commitment be traced through valid authorized transformations? | TARGET_ACTIVE (implemented in `src/upsilon/lineage/`, not yet wired into legacy pipeline) |
+| Propagation Integrity | Do downstream representations match the current authoritative kernel? | TARGET_SCAFFOLD (domain created at `src/upsilon/propagation/`, no runtime code) |
 
 ## Audit surfaces
 
@@ -113,20 +114,20 @@ semantic ownership details.
 | Repository dependency graph | `audits/repository/` (machine-generated; AST analysis) |
 | Step 23R audit | `audits/step23r/` (future home); current scripts at root |
 | Failure census | `audits/failure_census/` (future home); current scripts at root |
-| Forensic Q&A | `forensic_qa/` (current); `audits/forensic_qa/` (future) |
+| Forensic Q&A | `forensic_qa/` (canonical, active); `audits/forensic_qa/` (empty placeholder for future migration) |
 
 ## Test surfaces
 
-| Surface | Location |
-|---------|----------|
-| Unit tests | `tests/unit/` (future); current tests at root |
-| Integration tests | `tests/integration/` (future) |
-| Conservation tests | `tests/conservation/` (future) |
-| Transformation tests | `tests/transformation/` (future) |
-| Authority tests | `tests/authority/` (future) |
-| Regression tests | `tests/regression/` (future) |
-| Corpus tests | `tests/corpus/` (future) |
-| Conformance tests | `tests/conformance/` (future) |
+| Surface | Location | Status |
+|---------|----------|--------|
+| Unit tests | `tests/unit/` | TARGET_ACTIVE (`test_upsilonsrc.py`, 72 tests); legacy tests still at root |
+| Integration tests | `tests/integration/` | TARGET_SCAFFOLD |
+| Conservation tests | `tests/conservation/` | TARGET_SCAFFOLD |
+| Transformation tests | `tests/transformation/` | TARGET_SCAFFOLD |
+| Authority tests | `tests/authority/` | TARGET_SCAFFOLD |
+| Regression tests | `tests/regression/` | TARGET_SCAFFOLD |
+| Corpus tests | `tests/corpus/` | TARGET_SCAFFOLD |
+| Conformance tests | `tests/conformance/` | TARGET_SCAFFOLD (README documents L1-L7 invariants) |
 
 ## Static governance
 
