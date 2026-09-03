@@ -1,3 +1,19 @@
+## Repository truth — Step 23G-R post-commit
+Date: 2026-09-03T15:13:01Z
+
+### pwd
+/Users/dericmchenry/Developer/_7_testing/upsilon_financial_integrity
+
+### git rev-parse --show-toplevel
+/Users/dericmchenry/Developer/_7_testing/upsilon_financial_integrity
+
+### git rev-parse HEAD
+ef44c847d0259ed502ab61d35c8c208d69b90402
+
+### git status --short
+ M audits/repository/STEP23G_R_ACTUAL_TREE_AFTER.txt
+
+### find tree (maxdepth 5, excluding .git/.venv)
 .
 ./.devin
 ./.devin/prompts

@@ -1,9 +1,15 @@
 # Step 23G-R — Prior Claim Reconciliation
 
-**Date:** 2026-09-02
+**Date:** 2026-09-03
 **Baseline commit:** `035daeb` (Step 24: restore Upsilon conservation-first commitment architecture)
 **Prior scaffold commit:** `fad715c` (Step 23G: repository governance + MOSES structural scaffold)
+**Step 23G-R commit:** `ef44c84` (Step 23G-R: repository architecture activation and current-state reconciliation)
 **Method:** Direct filesystem inspection + Git history (`git log`, `git ls-tree -r --name-only HEAD`)
+
+> **Post-correction note:** Claims 2, 3, 4, 6 described artifacts that did not
+> exist at the baseline (`035daeb`). All corrections listed under "CORRECTION
+> REQUIRED" have been applied in commit `ef44c84`. The "ACTUAL STATUS" values
+> below reflect the baseline state, not the post-correction state.
 
 ---
 

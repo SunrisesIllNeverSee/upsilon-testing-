@@ -1,7 +1,8 @@
 # Target Runtime Inventory — Step 23G-R
 
-**Date:** 2026-09-02
+**Date:** 2026-09-03
 **Baseline commit:** `035daeb`
+**Step 23G-R commit:** `ef44c84`
 
 This inventory documents every runtime `.py` file under `src/upsilon/` that contains real implementation (not `.gitkeep` or empty `__init__.py` re-exports).
 
