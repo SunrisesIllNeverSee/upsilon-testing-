@@ -13,8 +13,8 @@ This tuple makes the checkpoint independently interpretable without reconstructi
 |-------|-------|
 | pre-migration commit | `0217213` |
 | migration commit | `e908eb6` |
-| comparison implementation commit | `(pending — set after commit 1)` |
-| checkpoint documentation commit | `(pending — set after commit 2)` |
+| comparison implementation commit | `a311687` |
+| checkpoint documentation commit | `(pending — set after this commit)` |
 | metrics compared | 54 |
 | matched | 54 |
 | mismatched | 0 |
