@@ -1,0 +1,456 @@
+{
+  "phase": 9,
+  "chain_id": "EDGAR-AMERESCO",
+  "issuer_name": "Ameresco, Inc.",
+  "generated_at": "2026-09-03T22:55:44.271234+00:00",
+  "generator": "audits.step24b.generate_activation_artifact",
+  "runtime_path": "raw EDGAR -> parser -> semantic_mapper (StructuredMutation) -> mutation_to_evidence -> S0-established identity -> AuthorizedTransformationEngine -> delta -> candidate -> conservation -> proof (pre-execution) -> KernelStore.stage (provisional) -> lineage -> ProofAssembler.update_post_execution -> AuthorityGate -> promote/discard",
+  "s0_section_refs": {
+    "financial_covenant.leverage_ratio": "Section 7.10(a)",
+    "financial_covenant.debt_service_coverage": "Section 7.10(b)"
+  },
+  "steps": [
+    {
+      "amendment_number": 1,
+      "effective_at": "2023-08-24T00:00:00",
+      "pattern": "incremental",
+      "genre": "incremental",
+      "parser_instruction_count": 5,
+      "mapped_count": 1,
+      "unresolved_count": 4,
+      "is_authoritative": false,
+      "spine_promoted": 1,
+      "spine_rejected": 0,
+      "spine_routed_away": 0,
+      "spine_results": [
+        {
+          "promoted": true,
+          "rejected": false,
+          "routed_away": false,
+          "evidence": {
+            "source_text": "ment thereto, a \u201cNon-SOFR Successor Rate\u201d, and  collectively with the SOFR Successor Rate, each a \u201cSuccessor Rate\u201d), and any such  amendment shall become effective at 5:00 p.m. on the fifth Business Day after the  Administrative Agent shall have posted such proposed amendment to all Lenders and the  Borrower unless, prior to such time, Lenders comprising the Required Lenders have\n6    delivered to the Administrative Agent written notice that such Required Lenders object to  such amendment.  (g) ",
+            "source_text_hash": "d7515dbb8cc39e1b",
+            "source_section_ref": "Section 7.10",
+            "source_document": "Amendment No. 3 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio step-down schedule. Also amends Maturity Date, SOFR definitions, Section 2.12, Section 3.03.  Parser found 5 section-level instructions.",
+            "source_authority": "Amendment No. 3 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio step-down schedule. Also amends Maturity Date, SOFR definitions, Section 2.12, Section 3.03.  Parser found 5 section-level instructions., Section 7.10",
+            "amendment_id": "",
+            "effective_date": null,
+            "instruction_type": "REPLACE_VALUE",
+            "target_field": "applicability",
+            "new_value": {
+              "step_down_schedule": [
+                {
+                  "period_end": "2023-06-30",
+                  "threshold": 4.0
+                },
+                {
+                  "period_end": "2023-09-30",
+                  "threshold": 4.25
+                }
+              ],
+              "steady_state_threshold": 3.5
+            },
+            "declared_old_value": null,
+            "alias_match": "leverage_ratio",
+            "text_match": "ment thereto, a \u201cNon-SOFR Successor Rate\u201d, and  collectively with the SOFR Successor Rate, each a \u201cSuccessor Rate\u201d), and any such  amendment shall become effective at 5:00 p.m. on the fifth Business D",
+            "canonical_key_hint": "financial_covenant.leverage_ratio",
+            "value_provenance": "PARSER_EXTRACTED"
+          },
+          "identity_result": {
+            "confidence": 0.95,
+            "evidence_level": "SUFFICIENT",
+            "signals": [
+              "address_map(Section 7.10 -> financial_covenant.leverage_ratio)",
+              "alias_match(leverage_ratio)",
+              "text_match(ment thereto, a \u201cNon-SOFR Successor Rate\u201d, and  collectively with the SOFR Successor Rate, each a \u201cSuccessor Rate\u201d), and any such  amendment shall become effective at 5:00 p.m. on the fifth Business D)",
+              "canonical_key_hint(financial_covenant.leverage_ratio, corroborated)"
+            ],
+            "fail_closed": false,
+            "failure_reason": "",
+            "identity": {
+              "commitment_id": "financial_covenant.leverage_ratio",
+              "agreement_identity": "EDGAR-AMERESCO",
+              "canonical_key": "financial_covenant.leverage_ratio",
+              "provenance": "s0_origin",
+              "confidence": 0.95,
+              "local_address": {
+                "section_ref": "Section 7.10(a)",
+                "established_at_version": "S0"
+              }
+            }
+          },
+          "transformation": {
+            "transformation_type": "SCALAR_REPLACEMENT",
+            "commitment_id": "financial_covenant.leverage_ratio",
+            "agreement_identity": "EDGAR-AMERESCO",
+            "affected_fields": [
+              {
+                "field_name": "applicability",
+                "old_value": {
+                  "step_down_schedule": [
+                    {
+                      "period_end": "2022-03-31",
+                      "threshold": 4.5
+                    },
+                    {
+                      "period_end": "2022-06-30",
+                      "threshold": 4.25
+                    },
+                    {
+                      "period_end": "2022-09-30",
+                      "threshold": 4.0
+                    },
+                    {
+                      "period_end": "2022-12-31",
+                      "threshold": 4.0
+                    }
+                  ],
+                  "steady_state_threshold": 3.5
+                },
+                "new_value": {
+                  "step_down_schedule": [
+                    {
+                      "period_end": "2023-06-30",
+                      "threshold": 4.0
+                    },
+                    {
+                      "period_end": "2023-09-30",
+                      "threshold": 4.25
+                    }
+                  ],
+                  "steady_state_threshold": 3.5
+                },
+                "amendment_declared_old_value": null,
+                "evidence_span": "ment thereto, a \u201cNon-SOFR Successor Rate\u201d, and  collectively with the SOFR Successor Rate, each a \u201cSuccessor Rate\u201d), and any such  amendment shall become effective at 5:00 p.m. on the fifth Business D"
+              }
+            ],
+            "preserved_fields": [
+              "threshold",
+              "operator",
+              "unit",
+              "frequency",
+              "scope",
+              "exceptions",
+              "trigger",
+              "cure",
+              "rate",
+              "deadline",
+              "party",
+              "action",
+              "subject",
+              "modality",
+              "valid_from",
+              "valid_to",
+              "status",
+              "grace_period",
+              "application_order"
+            ],
+            "source_document": "Amendment No. 3 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio step-down schedule. Also amends Maturity Date, SOFR definitions, Section 2.12, Section 3.03.  Parser found 5 section-level instructions.",
+            "source_span": "ment thereto, a \u201cNon-SOFR Successor Rate\u201d, and  collectively with the SOFR Successor Rate, each a \u201cSuccessor Rate\u201d), and any such  amendment shall become effective at 5:00 p.m. on the fifth Business Day after the  Administrative Agent shall have posted such proposed amendment to all Lenders and the  Borrower unless, prior to such time, Lenders comprising the Required Lenders have\n6    delivered to the Administrative Agent written notice that such Required Lenders object to  such amendment.  (g) ",
+            "source_authority": "Amendment No. 3 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio step-down schedule. Also amends Maturity Date, SOFR definitions, Section 2.12, Section 3.03.  Parser found 5 section-level instructions., Section 7.10",
+            "effective_date": null,
+            "proof_id": "",
+            "old_value_consistency_verified": true
+          },
+          "validation": {
+            "passed": true,
+            "failed_invariants": []
+          },
+          "proof": {
+            "proof_id": "PRF-ab5374151d69",
+            "proof_completeness": "COMPLETE",
+            "proof_validity": "VALID",
+            "predecessor_version": 0,
+            "successor_version": 1,
+            "has_execution_result": true,
+            "has_lineage_reference": true,
+            "lineage_reference": "LE-be282299c765"
+          },
+          "lineage_edge": {
+            "edge_id": "LE-be282299c765",
+            "edge_class": "MODIFIES",
+            "predecessor_commitment_id": "financial_covenant.leverage_ratio",
+            "successor_commitment_id": "financial_covenant.leverage_ratio",
+            "amendment_id": "Amendment No. 3 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio step-down schedule. Also amends Maturity Date, SOFR definitions, Section 2.12, Section 3.03.  Parser found 5 section-level instructions.",
+            "authority_source": "Amendment No. 3 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio step-down schedule. Also amends Maturity Date, SOFR definitions, Section 2.12, Section 3.03.  Parser found 5 section-level instructions., Section 7.10",
+            "affected_fields": [
+              "applicability"
+            ],
+            "proof_id": "PRF-ab5374151d69"
+          },
+          "authority_decision": {
+            "decision": "AUTHORITY_GRANTED",
+            "is_authoritative": true,
+            "reason": "All authority conditions satisfied"
+          },
+          "successor_version": 1,
+          "predecessor_version": 2,
+          "authoritative_current_before": {
+            "threshold": 3.5,
+            "applicability": {
+              "step_down_schedule": [
+                {
+                  "period_end": "2023-12-31",
+                  "threshold": 3.75
+                }
+              ],
+              "steady_state_threshold": 3.5
+            }
+          },
+          "authoritative_current_after": {
+            "threshold": 3.5,
+            "applicability": {
+              "step_down_schedule": [
+                {
+                  "period_end": "2023-12-31",
+                  "threshold": 3.75
+                }
+              ],
+              "steady_state_threshold": 3.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "amendment_number": 2,
+      "effective_at": "2023-12-11T00:00:00",
+      "pattern": "incremental",
+      "genre": "incremental",
+      "parser_instruction_count": 4,
+      "mapped_count": 1,
+      "unresolved_count": 3,
+      "is_authoritative": false,
+      "spine_promoted": 1,
+      "spine_rejected": 0,
+      "spine_routed_away": 0,
+      "spine_results": [
+        {
+          "promoted": true,
+          "rejected": false,
+          "routed_away": false,
+          "evidence": {
+            "source_text": "le  capacity under the Revolving Loan..  (b) Until the Delayed Draw Term A Facility has been paid in full, the Borrower  shall provide to the Administrative Agent a weekly update to its liquidity forecast in the  form previously provided to the Administrative Agent or in such other form as is  reasonably satisfactory to the Administrative Agent.  (g) Section 7.04(c)(xiii) is hereby amended to replace the term \u201cNet Cash Proceeds\u201d in  the first line thereof with the term \u201cNet Cash Payments.\u201d  (h) ",
+            "source_text_hash": "dcbba63f6207a28b",
+            "source_section_ref": "Section 7.10",
+            "source_document": "Amendment No. 4 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio threshold again. Also amends Section 7.04(c)(xiii), Section 8.01(c). Parser found 4 section-level instructions.",
+            "source_authority": "Amendment No. 4 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio threshold again. Also amends Section 7.04(c)(xiii), Section 8.01(c). Parser found 4 section-level instructions., Section 7.10",
+            "amendment_id": "",
+            "effective_date": null,
+            "instruction_type": "REPLACE_VALUE",
+            "target_field": "applicability",
+            "new_value": {
+              "step_down_schedule": [
+                {
+                  "period_end": "2023-12-31",
+                  "threshold": 3.75
+                }
+              ],
+              "steady_state_threshold": 3.5
+            },
+            "declared_old_value": null,
+            "alias_match": "leverage_ratio",
+            "text_match": "le  capacity under the Revolving Loan..  (b) Until the Delayed Draw Term A Facility has been paid in full, the Borrower  shall provide to the Administrative Agent a weekly update to its liquidity fore",
+            "canonical_key_hint": "financial_covenant.leverage_ratio",
+            "value_provenance": "PARSER_EXTRACTED"
+          },
+          "identity_result": {
+            "confidence": 0.95,
+            "evidence_level": "SUFFICIENT",
+            "signals": [
+              "address_map(Section 7.10 -> financial_covenant.leverage_ratio)",
+              "alias_match(leverage_ratio)",
+              "text_match(le  capacity under the Revolving Loan..  (b) Until the Delayed Draw Term A Facility has been paid in full, the Borrower  shall provide to the Administrative Agent a weekly update to its liquidity fore)",
+              "canonical_key_hint(financial_covenant.leverage_ratio, corroborated)"
+            ],
+            "fail_closed": false,
+            "failure_reason": "",
+            "identity": {
+              "commitment_id": "financial_covenant.leverage_ratio",
+              "agreement_identity": "EDGAR-AMERESCO",
+              "canonical_key": "financial_covenant.leverage_ratio",
+              "provenance": "s0_origin",
+              "confidence": 0.95,
+              "local_address": {
+                "section_ref": "Section 7.10(a)",
+                "established_at_version": "S0"
+              }
+            }
+          },
+          "transformation": {
+            "transformation_type": "SCALAR_REPLACEMENT",
+            "commitment_id": "financial_covenant.leverage_ratio",
+            "agreement_identity": "EDGAR-AMERESCO",
+            "affected_fields": [
+              {
+                "field_name": "applicability",
+                "old_value": {
+                  "step_down_schedule": [
+                    {
+                      "period_end": "2023-06-30",
+                      "threshold": 4.0
+                    },
+                    {
+                      "period_end": "2023-09-30",
+                      "threshold": 4.25
+                    }
+                  ],
+                  "steady_state_threshold": 3.5
+                },
+                "new_value": {
+                  "step_down_schedule": [
+                    {
+                      "period_end": "2023-12-31",
+                      "threshold": 3.75
+                    }
+                  ],
+                  "steady_state_threshold": 3.5
+                },
+                "amendment_declared_old_value": null,
+                "evidence_span": "le  capacity under the Revolving Loan..  (b) Until the Delayed Draw Term A Facility has been paid in full, the Borrower  shall provide to the Administrative Agent a weekly update to its liquidity fore"
+              }
+            ],
+            "preserved_fields": [
+              "threshold",
+              "operator",
+              "unit",
+              "frequency",
+              "scope",
+              "exceptions",
+              "trigger",
+              "cure",
+              "rate",
+              "deadline",
+              "party",
+              "action",
+              "subject",
+              "modality",
+              "valid_from",
+              "valid_to",
+              "status",
+              "grace_period",
+              "application_order"
+            ],
+            "source_document": "Amendment No. 4 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio threshold again. Also amends Section 7.04(c)(xiii), Section 8.01(c). Parser found 4 section-level instructions.",
+            "source_span": "le  capacity under the Revolving Loan..  (b) Until the Delayed Draw Term A Facility has been paid in full, the Borrower  shall provide to the Administrative Agent a weekly update to its liquidity forecast in the  form previously provided to the Administrative Agent or in such other form as is  reasonably satisfactory to the Administrative Agent.  (g) Section 7.04(c)(xiii) is hereby amended to replace the term \u201cNet Cash Proceeds\u201d in  the first line thereof with the term \u201cNet Cash Payments.\u201d  (h) ",
+            "source_authority": "Amendment No. 4 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio threshold again. Also amends Section 7.04(c)(xiii), Section 8.01(c). Parser found 4 section-level instructions., Section 7.10",
+            "effective_date": null,
+            "proof_id": "",
+            "old_value_consistency_verified": true
+          },
+          "validation": {
+            "passed": true,
+            "failed_invariants": []
+          },
+          "proof": {
+            "proof_id": "PRF-d5a40d65a6af",
+            "proof_completeness": "COMPLETE",
+            "proof_validity": "VALID",
+            "predecessor_version": 1,
+            "successor_version": 2,
+            "has_execution_result": true,
+            "has_lineage_reference": true,
+            "lineage_reference": "LE-528f3f1c8f6e"
+          },
+          "lineage_edge": {
+            "edge_id": "LE-528f3f1c8f6e",
+            "edge_class": "MODIFIES",
+            "predecessor_commitment_id": "financial_covenant.leverage_ratio",
+            "successor_commitment_id": "financial_covenant.leverage_ratio",
+            "amendment_id": "Amendment No. 4 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio threshold again. Also amends Section 7.04(c)(xiii), Section 8.01(c). Parser found 4 section-level instructions.",
+            "authority_source": "Amendment No. 4 to Fifth A&R Credit Agreement. Replaces Section 7.10(a) leverage ratio threshold again. Also amends Section 7.04(c)(xiii), Section 8.01(c). Parser found 4 section-level instructions., Section 7.10",
+            "affected_fields": [
+              "applicability"
+            ],
+            "proof_id": "PRF-d5a40d65a6af"
+          },
+          "authority_decision": {
+            "decision": "AUTHORITY_GRANTED",
+            "is_authoritative": true,
+            "reason": "All authority conditions satisfied"
+          },
+          "successor_version": 2,
+          "predecessor_version": 2,
+          "authoritative_current_before": {
+            "threshold": 3.5,
+            "applicability": {
+              "step_down_schedule": [
+                {
+                  "period_end": "2023-12-31",
+                  "threshold": 3.75
+                }
+              ],
+              "steady_state_threshold": 3.5
+            }
+          },
+          "authoritative_current_after": {
+            "threshold": 3.5,
+            "applicability": {
+              "step_down_schedule": [
+                {
+                  "period_end": "2023-12-31",
+                  "threshold": 3.75
+                }
+              ],
+              "steady_state_threshold": 3.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "amendment_number": 3,
+      "effective_at": "2024-06-28T00:00:00",
+      "pattern": "incremental",
+      "genre": "incremental",
+      "parser_instruction_count": 5,
+      "mapped_count": 1,
+      "unresolved_count": 4,
+      "is_authoritative": false,
+      "spine_promoted": 0,
+      "spine_rejected": 0,
+      "spine_routed_away": 1,
+      "spine_results": [
+        {
+          "promoted": false,
+          "rejected": false,
+          "routed_away": true,
+          "successor_version": null,
+          "predecessor_version": null,
+          "authoritative_current_before": null,
+          "authoritative_current_after": null
+        }
+      ]
+    }
+  ],
+  "spine_total_promoted": 2,
+  "spine_total_rejected": 0,
+  "spine_total_routed_away": 1,
+  "legacy_applied": 1,
+  "safety_metrics": {
+    "incorrect_accepted_mutations": 0,
+    "incorrect_mutations": [],
+    "false_authoritative_promotions": 0,
+    "final_state_agreement": 1.0,
+    "mapping_accuracy": 0.2143
+  },
+  "acceptance_gates": {
+    "runtime_reaches_spine": true,
+    "scalar_replacement_activated": true,
+    "evidence_separated_from_interpretation": true,
+    "s0_identity_not_amendment_labels": true,
+    "parser_evidence_drives_spine": true,
+    "conservation_before_execution": true,
+    "proof_required_before_execution": true,
+    "proof_updated_post_execution": true,
+    "lineage_required": true,
+    "authority_gate_only_promotion_path": true,
+    "staging_before_promotion": true,
+    "fail_closed_on_conservation_failure": true,
+    "no_incorrect_mutations": true,
+    "no_false_authoritative_promotions": true,
+    "spine_mutations_in_safety_measurement": true,
+    "value_provenance_enforced": true,
+    "amendment_declared_old_value_distinct": true
+  }
+}

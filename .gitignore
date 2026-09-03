@@ -49,6 +49,14 @@ results/*
 !results/step_19b_defect_safety_record.md
 !results/held_out_study_results.json
 
+# Step 24B-R activation artifact (formal evaluation output):
+!results/current/
+!results/current/step24b_runtime_activation.json
+
+# Step 25A post-MOSES re-run artifacts (formal evaluation output):
+!results/step25a_post_moses_rerun.json
+!results/step25a_post_moses_rerun.md
+
 # Post-migration baseline freeze (Step 23G-R rebaseline):
 # The canonical baseline record and comparison script are version-controlled
 # so the post-migration empirical equivalence is auditable.
