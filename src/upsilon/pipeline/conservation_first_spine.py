@@ -67,7 +67,7 @@ from upsilon.commitments.kernel_bridge import (
     store_to_state_dict,
 )
 from upsilon.conservation.validator import ConservationValidator, ValidationResult
-from upsilon.evidence.evidence_extractor import instruction_to_evidence
+from upsilon.evidence.evidence_extractor import instruction_to_evidence, mutation_to_evidence
 from upsilon.lineage.graph import CommitmentLineageGraph
 from upsilon.models import (
     AuthorizedTransformation,
@@ -93,6 +93,7 @@ from upsilon.transformations.authorized_change import (
     AuthorizedTransformationEngine,
     TransformationResult,
 )
+from upsilon.transformations.semantic_mapper import StructuredMutation
 
 
 # Transformation families that the spine currently controls.
@@ -200,6 +201,37 @@ class ConservationFirstSpine:
             return instruction.field is not None
         return False
 
+    def process_mutation(
+        self,
+        mut: StructuredMutation,
+        citation_document: str | None = None,
+        inherited_unresolved: int = 0,
+    ) -> SpineResult:
+        """Process a parser-extracted StructuredMutation through the spine.
+
+        This is the production evidence path.  The StructuredMutation
+        is produced by the semantic mapper from parser-extracted
+        section-level instructions — it is genuine parser/source
+        evidence, not manually curated commitment-level answers.
+
+        The mutation's ``commitment_id`` is treated as a weak hint
+        (canonical_key_hint), NOT as authoritative identity.  The
+        engine resolves identity from the section_ref → S0 address map.
+        """
+        # Check if this mutation's family is activated.
+        # REPLACE_VALUE/REPLACE_TEXT with a field → SCALAR_REPLACEMENT.
+        if mut.operation not in (
+            InstructionType.REPLACE_VALUE, InstructionType.REPLACE_TEXT,
+        ) or mut.field is None:
+            return SpineResult(routed_away=True)
+
+        evidence = mutation_to_evidence(
+            mut, citation_document=citation_document,
+        )
+        return self._process_evidence(
+            evidence, inherited_unresolved=inherited_unresolved,
+        )
+
     def process_instruction(
         self,
         instruction: AmendmentInstruction,
@@ -227,13 +259,37 @@ class ConservationFirstSpine:
         evidence = instruction_to_evidence(
             instruction, citation_document=citation_document,
         )
+        return self._process_evidence(
+            evidence, inherited_unresolved=inherited_unresolved,
+        )
 
+    def _process_evidence(
+        self,
+        evidence: AmendmentEvidence,
+        inherited_unresolved: int = 0,
+    ) -> SpineResult:
+        """Process AmendmentEvidence through Layers B–G of the spine.
+
+        This is the shared core for both ``process_instruction`` and
+        ``process_mutation``.  It implements:
+
+        Layer B: AuthorizedTransformationEngine (identity + delta)
+        Layer C: apply_transformation (candidate successor)
+        Layer D: ConservationValidator
+        Layer E: ProofAssembler (pre-execution precondition)
+        Layer F: KernelStore.stage (provisional execution — does NOT
+                 change authoritative current)
+        Lineage: CommitmentLineageGraph.add_edge
+        Layer E2: ProofAssembler.update_post_execution
+        Layer G: AuthorityGate.evaluate
+                 → promote() if AUTHORITY_GRANTED
+                 → discard() if AUTHORITY_BLOCKED
+
+        The authoritative-current store is NOT changed until the
+        authority gate grants authority.  This separates provisional
+        execution from authority promotion.
+        """
         # --- Layer B: AuthorizedTransformationEngine ---
-        # Pass ALL predecessor kernels to the engine so it can select
-        # the correct predecessor AFTER resolving identity from
-        # evidence signals.  This breaks the circular dependency
-        # where the caller pre-selects the predecessor using
-        # canonical_key_hint.
         authority = AuthorityContext(
             predecessor_kernels=dict(self.store.get_all_current()),
             predecessor_commitment_ids=list(self.store.get_all_current().keys()),
@@ -266,8 +322,6 @@ class ConservationFirstSpine:
             )
 
         # The engine resolved identity and selected the predecessor.
-        # Fetch the predecessor for downstream layers (conservation,
-        # proof, execution).
         commitment_id = delta.commitment_id
         predecessor = self.store.get_predecessor(commitment_id)
         if predecessor is None:
@@ -283,11 +337,7 @@ class ConservationFirstSpine:
             )
 
         # Re-resolve identity to obtain the IdentityResolutionResult
-        # the proof assembler needs.  The engine already resolved
-        # identity internally; we re-resolve here to obtain the
-        # result object.  This is NOT a second identity determination
-        # — it uses the same signals and address map, so it produces
-        # the same result.
+        # the proof assembler needs.
         identity_result = self.identity_resolver.resolve(
             section_ref=evidence.source_section_ref,
             alias_match=evidence.alias_match,
@@ -343,18 +393,12 @@ class ConservationFirstSpine:
                 proof=proof,
             )
 
-        # --- Layer F: KernelStore.advance (thin executor) ---
-        # The thin executor commits the validated candidate successor.
-        # It does NOT reinterpret text, resolve identity, or derive
-        # values.  It commits exactly the validated transformation or
-        # fails closed on state/version conflict.
-        #
-        # The expected_predecessor_version is carried in the proof.
-        # The executor verifies that the current predecessor version
-        # matches the version the candidate was computed against.
-        # This prevents stale-version execution.
+        # --- Layer F: KernelStore.stage (provisional execution) ---
+        # Stage the candidate WITHOUT changing authoritative current.
+        # The authoritative _current remains the predecessor until
+        # promote() is called after authority grants permission.
         try:
-            new_version = self.store.advance(
+            staged_version = self.store.stage(
                 commitment_id=delta.commitment_id,
                 successor=candidate,
                 proof_id=proof.proof_id,
@@ -363,7 +407,7 @@ class ConservationFirstSpine:
         except ValueError as exc:
             return SpineResult(
                 rejected=True,
-                rejection_reason=f"Kernel execution failed: {exc}",
+                rejection_reason=f"Kernel staging failed: {exc}",
                 rejection_layer="execution",
                 evidence=evidence,
                 transformation=delta,
@@ -398,12 +442,20 @@ class ConservationFirstSpine:
             delta.commitment_id,
         )
 
-        # --- Layer G: AuthorityGate.evaluate ---
+        # --- Layer E2: ProofAssembler.update_post_execution ---
+        # Complete the proof record with execution result and lineage.
         execution_summary = ExecutionResultSummary(
             applied=True,
             status="COMPLETE",
             state_changed=True,
         )
+        proof = self.proof_assembler.update_post_execution(
+            proof=proof,
+            execution_result=execution_summary,
+            lineage_reference=edge_id,
+        )
+
+        # --- Layer G: AuthorityGate.evaluate ---
         authority_decision = self.gate.evaluate(
             execution_result=execution_summary,
             proof=proof,
@@ -412,12 +464,10 @@ class ConservationFirstSpine:
         )
 
         if not authority_decision.is_authoritative:
-            # Authority blocked: the candidate was executed into the
-            # kernel store (a provisional successor exists) but it must
-            # NOT be promoted to authoritative current state.  We
-            # roll back the kernel store to the predecessor so the
-            # authoritative current state remains the predecessor.
-            self.store.rollback(delta.commitment_id, predecessor)
+            # Authority blocked: discard the staged successor.
+            # Authoritative current was NEVER changed — it remains
+            # the predecessor throughout.
+            self.store.discard(delta.commitment_id)
             return SpineResult(
                 rejected=True,
                 rejection_reason=(
@@ -436,6 +486,12 @@ class ConservationFirstSpine:
                 authority_decision=authority_decision,
             )
 
+        # Authority granted: promote the staged successor to
+        # authoritative current.  This is the ONLY place authoritative
+        # current changes.
+        promoted_version = self.store.promote(delta.commitment_id)
+        final_version = promoted_version or staged_version
+
         return SpineResult(
             promoted=True,
             evidence=evidence,
@@ -446,5 +502,5 @@ class ConservationFirstSpine:
             proof=proof,
             lineage_edge=edge,
             authority_decision=authority_decision,
-            successor_version=new_version.version_number,
+            successor_version=final_version.version_number,
         )

@@ -260,6 +260,15 @@ class AuthorizedTransformationEngine:
                         rejection_step="value_extraction",
                     )
 
+        # Step 4b: Enforce value provenance (Phase 3).
+        # CURATOR_PROVIDED values must be corroborated against source
+        # text or predecessor state.  UNKNOWN required values fail closed.
+        provenance_result = self._enforce_value_provenance(
+            evidence, new_values, affected_fields, transform_type,
+        )
+        if provenance_result is not None:
+            return provenance_result
+
         # Step 5: Verify old-value consistency (Constraint #3)
         # This is a CONSERVATION CHECK, not interpretation evidence.
         # It runs AFTER target/transformation evidence is established.
@@ -286,9 +295,17 @@ class AuthorizedTransformationEngine:
         affected = [
             AffectedField(
                 field_name=f,
-                old_value=old_values.get(f),
+                old_value=old_values.get(f),  # predecessor actual value
                 new_value=new_values.get(f),
                 evidence_span=evidence.source_text[:200] if evidence.source_text else "",
+                # Preserve the amendment-declared old value independently
+                # from the predecessor actual value.  The conservation
+                # validator compares these two values.
+                amendment_declared_old_value=(
+                    evidence.declared_old_value
+                    if evidence.target_field == f
+                    else None
+                ),
             )
             for f in affected_fields
         ]
@@ -573,3 +590,186 @@ class AuthorizedTransformationEngine:
             f for f in all_semantic_fields
             if f not in affected_fields
         ]
+
+    def _enforce_value_provenance(
+        self,
+        evidence: AmendmentEvidence,
+        new_values: dict[str, Any],
+        affected_fields: list[str],
+        transform_type: TransformationFamily,
+    ) -> TransformationResult | None:
+        """Enforce value provenance policy (Phase 3).
+
+        PARSER_EXTRACTED: values from automated parser/mapper extraction.
+            May be treated as automated evidence when source span is
+            traceable to amendment text.
+
+        CURATOR_PROVIDED: values from human curation.  Must be
+            corroborated against source text or predecessor state
+            before authorization.  If corroboration fails, reject.
+
+        UNKNOWN: fail closed where the value is required for execution.
+
+        Returns None if provenance is acceptable, or a TransformationResult
+        with rejection if provenance enforcement fails.
+        """
+        # Skip provenance enforcement for transformation families that
+        # don't carry extracted values (waiver, reinstate, terminate, renumber).
+        if transform_type in (
+            TransformationFamily.WAIVER,
+            TransformationFamily.REINSTATEMENT,
+            TransformationFamily.TERMINATE,
+            TransformationFamily.RENUMBER,
+        ):
+            return None
+
+        provenance = evidence.value_provenance
+
+        if provenance == "PARSER_EXTRACTED":
+            # Parser-extracted values are automated evidence.
+            # Verify source span is non-empty (traceable to amendment text).
+            if not evidence.source_text:
+                return TransformationResult(
+                    rejected=True,
+                    rejection_reason=(
+                        "PARSER_EXTRACTED value has no source text span — "
+                        "provenance is not traceable to amendment text"
+                    ),
+                    rejection_step="value_provenance",
+                )
+            return None
+
+        if provenance == "UNKNOWN":
+            # Unknown provenance for required values: fail closed.
+            for field_name in affected_fields:
+                if new_values.get(field_name) is not None:
+                    return TransformationResult(
+                        rejected=True,
+                        rejection_reason=(
+                            f"UNKNOWN value provenance for field "
+                            f"'{field_name}' with a non-None new value — "
+                            f"cannot authorize without provenance"
+                        ),
+                        rejection_step="value_provenance",
+                    )
+            return None
+
+        if provenance == "CURATOR_PROVIDED":
+            # Curator-provided values require independent corroboration.
+            # Corroboration means: the source text contains evidence
+            # that supports the declared new value.  For scalar values,
+            # we check that the value appears in the source text.  For
+            # complex values (dicts/lists), we check that the source
+            # text contains textual signals consistent with the value.
+            if not evidence.source_text:
+                return TransformationResult(
+                    rejected=True,
+                    rejection_reason=(
+                        "CURATOR_PROVIDED value has no source text for "
+                        "corroboration — cannot verify against amendment"
+                    ),
+                    rejection_step="value_provenance",
+                )
+
+            if not self._corroborate_curator_value(
+                evidence.source_text, evidence.new_value,
+            ):
+                return TransformationResult(
+                    rejected=True,
+                    rejection_reason=(
+                        "CURATOR_PROVIDED new value could not be "
+                        "corroborated against source text — the value "
+                        "does not match evidence in the amendment text"
+                    ),
+                    rejection_step="value_provenance",
+                )
+            return None
+
+        # Unrecognized provenance: fail closed.
+        return TransformationResult(
+            rejected=True,
+            rejection_reason=(
+                f"Unrecognized value_provenance: {provenance!r}"
+            ),
+            rejection_step="value_provenance",
+        )
+
+    def _corroborate_curator_value(
+        self,
+        source_text: str,
+        declared_value: Any,
+    ) -> bool:
+        """Check whether a curator-provided value is corroborated by source text.
+
+        For scalar numeric values: check that the value (or its string
+        representation) appears in the source text.
+
+        For dict values (e.g., step_down_schedule): check that key
+        numeric components appear in the source text.
+
+        For string values: check that the value appears as a substring.
+
+        Returns True if corroborated, False otherwise.
+        """
+        if declared_value is None:
+            return True  # None is trivially corroborated
+
+        if isinstance(declared_value, (int, float)):
+            # Check the numeric value appears in the source text
+            val_str = str(declared_value)
+            # Also check common formats: "4.00", "4.0", "4"
+            if val_str in source_text:
+                return True
+            # Try with trailing zeros (e.g., 4.5 → "4.50")
+            if "." in val_str:
+                base = val_str.rstrip("0").rstrip(".")
+                if base in source_text:
+                    return True
+                # Try padding: 4.5 → "4.50"
+                padded = val_str
+                if len(padded.split(".")[1]) < 2:
+                    padded = f"{declared_value:.2f}"
+                    if padded in source_text:
+                        return True
+            else:
+                # Integer: try with .00 suffix
+                if f"{declared_value}.00" in source_text or \
+                   f"{declared_value}.0" in source_text:
+                    return True
+            return False
+
+        if isinstance(declared_value, str):
+            return declared_value in source_text
+
+        if isinstance(declared_value, dict):
+            # For dict values (e.g., step_down_schedule), check that
+            # numeric values within the dict appear in the source text.
+            # This is a corroboration check, not a full extraction.
+            text_lower = source_text.lower()
+            for key, val in declared_value.items():
+                if isinstance(val, list):
+                    # List of dicts (e.g., step_down_schedule entries)
+                    for item in val:
+                        if isinstance(item, dict):
+                            for sub_val in item.values():
+                                if isinstance(sub_val, (int, float)):
+                                    if str(sub_val) not in source_text and \
+                                       f"{sub_val:.2f}" not in source_text and \
+                                       f"{sub_val:.1f}" not in source_text:
+                                        return False
+                elif isinstance(val, (int, float)):
+                    if str(val) not in source_text and \
+                       f"{val:.2f}" not in source_text:
+                        return False
+            return True
+
+        if isinstance(declared_value, list):
+            for item in declared_value:
+                if isinstance(item, (int, float)):
+                    if str(item) not in source_text and \
+                       f"{item:.2f}" not in source_text:
+                        return False
+            return True
+
+        # Unknown type: be conservative
+        return False

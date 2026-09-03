@@ -397,6 +397,7 @@ class TestEngineRejections:
             target_field="threshold",
             new_value=3.00,
             declared_old_value=99.99,  # wrong — predecessor has 3.50
+            value_provenance="PARSER_EXTRACTED",
         )
         predecessor = store.get_predecessor(
             "financial_covenant.leverage_ratio"
@@ -671,3 +672,123 @@ class TestAmerescoA1EngineAuthorization:
             "financial_covenant.leverage_ratio"
         assert result.transformation.commitment_id != \
             "financial_covenant.debt_service_coverage"
+
+
+# ---------------------------------------------------------------------------
+# Phase 3: Value provenance enforcement
+# ---------------------------------------------------------------------------
+
+
+class TestValueProvenanceEnforcement:
+    """Phase 3: value_provenance must be operational, not merely recorded.
+
+    CURATOR_PROVIDED values require independent corroboration against
+    source text.  An intentionally incorrect curator-provided new_value
+    must fail closed.
+    """
+
+    def test_curator_provided_value_with_corroboration_succeeds(self):
+        """Positive: a CURATOR_PROVIDED value that is corroborated by
+        source text is accepted."""
+        store, _, engine = _setup_engine()
+        evidence = AmendmentEvidence(
+            source_text=(
+                "Section 7.10 is amended to exceed 3.25 to 1.00."
+            ),
+            source_section_ref="Section 7.10(a)",
+            instruction_type="REPLACE_VALUE",
+            target_field="threshold",
+            new_value=3.25,
+            declared_old_value=3.50,
+            value_provenance="CURATOR_PROVIDED",
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        authority = AuthorityContext(
+            predecessor_kernel=predecessor,
+            predecessor_commitment_ids=list(store.get_all_current().keys()),
+        )
+        result = engine.authorize(evidence, authority)
+        assert result.authorized, (
+            f"Corroborated CURATOR_PROVIDED value should be accepted, "
+            f"got rejected: {result.rejection_reason}"
+        )
+
+    def test_incorrect_curator_provided_new_value_fails_closed(self):
+        """Phase 3 negative: an intentionally incorrect curator-provided
+        new_value that does NOT appear in the source text must fail
+        closed at value_provenance enforcement.
+
+        This proves the runtime does not accept curator-provided values
+        solely because they match a fixture or target instruction.
+        """
+        store, _, engine = _setup_engine()
+        evidence = AmendmentEvidence(
+            source_text=(
+                "Section 7.10 is amended to exceed 3.25 to 1.00."
+            ),
+            source_section_ref="Section 7.10(a)",
+            instruction_type="REPLACE_VALUE",
+            target_field="threshold",
+            new_value=9.99,  # wrong — does not appear in source text
+            declared_old_value=3.50,
+            value_provenance="CURATOR_PROVIDED",
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        authority = AuthorityContext(
+            predecessor_kernel=predecessor,
+            predecessor_commitment_ids=list(store.get_all_current().keys()),
+        )
+        result = engine.authorize(evidence, authority)
+        assert result.rejected
+        assert result.rejection_step == "value_provenance"
+
+    def test_parser_extracted_value_succeeds(self):
+        """Positive: a PARSER_EXTRACTED value with source text is
+        accepted as automated evidence."""
+        store, _, engine = _setup_engine()
+        evidence = AmendmentEvidence(
+            source_text="Section 7.10 amended to 3.25 to 1.00",
+            source_section_ref="Section 7.10(a)",
+            instruction_type="REPLACE_VALUE",
+            target_field="threshold",
+            new_value=3.25,
+            declared_old_value=3.50,
+            value_provenance="PARSER_EXTRACTED",
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        authority = AuthorityContext(
+            predecessor_kernel=predecessor,
+            predecessor_commitment_ids=list(store.get_all_current().keys()),
+        )
+        result = engine.authorize(evidence, authority)
+        assert result.authorized
+
+    def test_unknown_provenance_with_value_fails_closed(self):
+        """Phase 3 negative: UNKNOWN provenance with a non-None new
+        value must fail closed."""
+        store, _, engine = _setup_engine()
+        evidence = AmendmentEvidence(
+            source_text="Some text",
+            source_section_ref="Section 7.10(a)",
+            instruction_type="REPLACE_VALUE",
+            target_field="threshold",
+            new_value=3.25,
+            declared_old_value=3.50,
+            value_provenance="UNKNOWN",
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        authority = AuthorityContext(
+            predecessor_kernel=predecessor,
+            predecessor_commitment_ids=list(store.get_all_current().keys()),
+        )
+        result = engine.authorize(evidence, authority)
+        assert result.rejected
+        assert result.rejection_step == "value_provenance"

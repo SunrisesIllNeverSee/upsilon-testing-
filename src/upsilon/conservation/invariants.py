@@ -139,24 +139,33 @@ class IdentityPersistence(ConservationInvariant):
 
 
 class OldValueConsistency(ConservationInvariant):
-    """2.2: declared_old_value == C_{t-1}[field] (conservation check, not evidence).
+    """2.2: amendment_declared_old_value == C_{t-1}[field] (conservation check).
 
-    This invariant independently verifies that the declared old value
-    in each affected field matches the predecessor's current value for
-    that field.  It does NOT trust the engine's
-    ``old_value_consistency_verified`` flag — it performs the
-    comparison itself.
+    This invariant independently verifies that the amendment-declared
+    old value matches the predecessor's actual value.  It preserves two
+    distinct concepts:
 
-    If no old value is declared for an affected field (old_value is
-    None), the invariant passes for that field (the engine may not
-    require old-value consistency for all transformations).  If an
-    old value IS declared, it must match the predecessor's value.
+    - ``amendment_declared_old_value``: the old value stated in the
+      amendment text (what the amendment claims is being replaced).
+    - ``old_value`` (predecessor actual): the actual value in the
+      predecessor kernel C_{t-1}[field].
+
+    The invariant compares the amendment-declared old value against the
+    predecessor actual value.  It does NOT compare the predecessor
+    value against itself (which would be tautological x == x).
+
+    If the amendment does not declare an old value
+    (amendment_declared_old_value is None), the check is NOT_APPLICABLE
+    and passes — the amendment does not claim a specific old value.
+
+    The invariant also verifies the engine's
+    ``old_value_consistency_verified`` flag as a secondary check.
     """
 
     def __init__(self) -> None:
         super().__init__(
             name=InvariantNames.OLD_VALUE_CONSISTENCY,
-            description="declared_old_value == C_{t-1}[field] (conservation check)",
+            description="amendment_declared_old_value == C_{t-1}[field] (conservation check)",
             applies_to={
                 TransformationFamily.SCALAR_REPLACEMENT,
                 TransformationFamily.MULTI_FIELD_REPLACEMENT,
@@ -178,27 +187,42 @@ class OldValueConsistency(ConservationInvariant):
         if not delta.old_value_consistency_verified:
             return False, "Old-value consistency was not verified by the engine"
 
-        # Then, independently verify: for each affected field with a
-        # declared old_value, compare against the predecessor's value.
-        # This is the key fix — the invariant does NOT trust the flag
-        # alone.  It performs the actual comparison.
         if predecessor is None:
-            # No predecessor — cannot verify.  This is acceptable
-            # only for CREATE (which is not in applies_to).
             return True, ""
+
         for affected in delta.affected_fields:
-            if affected.old_value is None:
-                # No declared old value — skip (not all transformations
-                # require old-value consistency).
+            # Use the amendment-declared old value, NOT the predecessor
+            # actual value (which is in affected.old_value).  The
+            # amendment-declared old value is what the amendment claims
+            # is being replaced.  The predecessor actual value is what
+            # is actually in the predecessor state.
+            declared_old = affected.amendment_declared_old_value
+
+            if declared_old is None:
+                # No amendment-declared old value — NOT_APPLICABLE.
+                # The amendment does not claim a specific old value,
+                # so there is nothing to verify.
                 continue
+
             pred_val = predecessor.field_value(affected.field_name)
-            if pred_val != affected.old_value:
+
+            # Normalize numeric comparison
+            if isinstance(pred_val, (int, float)) and isinstance(declared_old, (int, float)):
+                if float(pred_val) != float(declared_old):
+                    return False, (
+                        f"Old-value consistency failed for field "
+                        f"'{affected.field_name}': amendment-declared "
+                        f"old value {declared_old!r} does not match "
+                        f"predecessor actual value {pred_val!r}"
+                    )
+            elif pred_val != declared_old:
                 return False, (
                     f"Old-value consistency failed for field "
-                    f"'{affected.field_name}': declared old value "
-                    f"{affected.old_value!r} does not match predecessor "
-                    f"value {pred_val!r}"
+                    f"'{affected.field_name}': amendment-declared "
+                    f"old value {declared_old!r} does not match "
+                    f"predecessor actual value {pred_val!r}"
                 )
+
         return True, ""
 
 

@@ -53,12 +53,23 @@ class TransformationFamily(str, Enum):
 
 
 class AffectedField(BaseModel):
-    """One field affected by a transformation, with old and new values."""
+    """One field affected by a transformation, with old and new values.
+
+    ``old_value`` is the predecessor's actual value (C_{t-1}[field]),
+    used for conservation validation (unchanged-field preservation).
+
+    ``amendment_declared_old_value`` is the old value stated in the
+    amendment text, if any.  When present, the conservation validator
+    independently compares it against the predecessor's actual value.
+    When absent (the amendment does not state an old value), it is
+    None and the old-value consistency check is NOT_APPLICABLE.
+    """
 
     field_name: str
-    old_value: Any = None
+    old_value: Any = None  # predecessor actual value
     new_value: Any = None
     evidence_span: str = ""
+    amendment_declared_old_value: Any = None  # old value stated in amendment
 
 
 class AuthorizedTransformation(BaseModel):

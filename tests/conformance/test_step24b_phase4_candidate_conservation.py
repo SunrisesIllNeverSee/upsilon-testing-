@@ -385,16 +385,22 @@ class TestConservationViolations:
 
         Even if the engine's ``old_value_consistency_verified`` flag
         is True, the invariant must independently detect a mismatch
-        between the declared old_value and the predecessor's actual
-        value.  This proves the invariant does NOT trust the engine
-        flag alone.
+        between the amendment-declared old value and the predecessor's
+        actual value.  This proves the invariant does NOT trust the
+        engine flag alone and does NOT perform a tautological x == x
+        check.
         """
         store, predecessor, delta = _setup_and_authorize()
         candidate = apply_transformation(predecessor, delta)
 
-        # Corrupt the old_value in the affected field — set it to
-        # a value that does NOT match the predecessor.
-        delta.affected_fields[0].old_value = {"steady_state_threshold": 99.99}
+        # Corrupt the amendment_declared_old_value in the affected
+        # field — set it to a value that does NOT match the
+        # predecessor's actual value.  The invariant must
+        # independently compare amendment_declared_old_value against
+        # predecessor.field_value(field_name) and detect the mismatch.
+        delta.affected_fields[0].amendment_declared_old_value = {
+            "steady_state_threshold": 99.99,
+        }
         # Leave the engine flag set to True (the engine "verified" it)
         delta.old_value_consistency_verified = True
 

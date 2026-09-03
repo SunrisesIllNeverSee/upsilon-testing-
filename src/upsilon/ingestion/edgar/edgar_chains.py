@@ -392,6 +392,14 @@ def chain_ameresco() -> IssuerChain:
             "Junior Credit Agreement added by A3."
         ),
         is_synthetic=False,
+        # S0 source authority: section→commitment mappings established
+        # from the Fifth A&R Credit Agreement (S0), NOT from amendment
+        # target labels.  These are facts about the source agreement's
+        # structure, documented in the S0 source document.
+        s0_section_refs={
+            "financial_covenant.leverage_ratio": "Section 7.10(a)",
+            "financial_covenant.debt_service_coverage": "Section 7.10(b)",
+        },
     )
 
 

@@ -47,6 +47,7 @@ from upsilon.models.legacy_models import (
     InstructionType,
 )
 from upsilon.transformations.authorized_change import AmendmentEvidence
+from upsilon.transformations.semantic_mapper import StructuredMutation
 
 
 # ---------------------------------------------------------------------------
@@ -251,3 +252,83 @@ def _extract_alias_signal(source_text: str) -> str | None:
         if pattern.search(source_text):
             return alias
     return None
+
+
+# ---------------------------------------------------------------------------
+# Parser-extracted evidence (from StructuredMutation)
+# ---------------------------------------------------------------------------
+
+
+def mutation_to_evidence(
+    mut: StructuredMutation,
+    citation_document: str | None = None,
+) -> AmendmentEvidence:
+    """Convert a parser-extracted StructuredMutation to AmendmentEvidence.
+
+    This is the production evidence path for the conservation-first
+    spine.  The StructuredMutation is produced by the semantic mapper
+    from parser-extracted section-level instructions — it is genuine
+    parser/source evidence, not manually curated commitment-level
+    answers.
+
+    The mutation's ``commitment_id`` is treated as a canonical_key_hint
+    (weak corroboration), NOT as authoritative identity.  The engine
+    resolves identity from the section_ref → S0 address map.
+
+    The mutation's ``field`` is treated as a target_field hint.
+
+    The mutation's ``new_value`` is treated as parser-extracted evidence
+    (provenance = PARSER_EXTRACTED) when the mutation's provenance is
+    SEMANTIC_MAPPER, or as curator-provided evidence when MANUAL.
+
+    The mutation's ``old_value`` is treated as the amendment-declared
+    old value (if stated in the source text).
+
+    Args:
+        mut: the StructuredMutation from the semantic mapper.
+        citation_document: the citation document name (optional).
+
+    Returns:
+        An AmendmentEvidence object carrying parser-extracted signals.
+    """
+    source_text = mut.source_span or ""
+    section_ref = mut.citation_section
+
+    # The mapper's commitment_id is a hint, not authoritative identity.
+    # The engine resolves identity from section_ref → S0 address map.
+    canonical_key_hint = mut.commitment_id
+
+    target_field = mut.field
+    new_value = mut.new_value
+    declared_old_value = mut.old_value
+
+    alias_match = _extract_alias_signal(source_text)
+    text_match = source_text[:200] if source_text else None
+
+    source_authority = ""
+    if citation_document:
+        source_authority = citation_document
+        if section_ref:
+            source_authority += f", {section_ref}"
+    elif section_ref:
+        source_authority = section_ref
+
+    value_provenance = _determine_value_provenance(mut.provenance)
+
+    return AmendmentEvidence(
+        source_text=source_text,
+        source_section_ref=section_ref,
+        source_document=citation_document or "",
+        source_authority=source_authority,
+        amendment_id="",
+        effective_date=mut.effective_at,
+        instruction_type=mut.operation.value,
+        target_field=target_field,
+        new_value=new_value,
+        declared_old_value=declared_old_value,
+        exception_text=None,
+        alias_match=alias_match,
+        text_match=text_match,
+        canonical_key_hint=canonical_key_hint,
+        value_provenance=value_provenance,
+    )

@@ -532,3 +532,212 @@ class TestAmerescoA1KernelExecution:
             "financial_covenant.debt_service_coverage"
         )
         assert len(dsc_history) == 1
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: Staging / promotion separation
+# ---------------------------------------------------------------------------
+
+
+class TestStagingPromotionSeparation:
+    """Phase 5: provisional execution must be separable from authority
+    promotion.
+
+    stage() stages a successor WITHOUT changing authoritative current.
+    promote() is the ONLY mechanism that changes authoritative current.
+    discard() removes a staged successor without promoting it.
+    """
+
+    def test_stage_does_not_change_authoritative_current(self):
+        """stage() places the successor in a staging area but
+        authoritative _current remains the predecessor."""
+        store, pred, cand, proof, _ = _setup_and_execute()
+        # Reset: re-establish predecessor as current
+        store.rollback("financial_covenant.leverage_ratio", pred)
+
+        # Stage the candidate
+        staged_version = store.stage(
+            "financial_covenant.leverage_ratio", cand, proof.proof_id,
+        )
+        assert staged_version.version_number == 1
+
+        # Authoritative current must still be the predecessor
+        current = store.get_predecessor("financial_covenant.leverage_ratio")
+        assert current.threshold == 3.50
+        assert len(current.applicability["step_down_schedule"]) == 4
+
+        # The staged successor is accessible via get_staged
+        staged = store.get_staged("financial_covenant.leverage_ratio")
+        assert staged is not None
+        assert len(staged.applicability["step_down_schedule"]) == 2
+
+    def test_promote_changes_authoritative_current(self):
+        """promote() moves the staged successor to authoritative
+        current."""
+        store, pred, cand, proof, _ = _setup_and_execute()
+        store.rollback("financial_covenant.leverage_ratio", pred)
+
+        store.stage("financial_covenant.leverage_ratio", cand, proof.proof_id)
+        version = store.promote("financial_covenant.leverage_ratio")
+
+        assert version is not None
+        assert version.version_number == 1
+
+        # Authoritative current is now the successor
+        current = store.get_predecessor("financial_covenant.leverage_ratio")
+        assert len(current.applicability["step_down_schedule"]) == 2
+
+        # Staging area is empty
+        assert store.get_staged("financial_covenant.leverage_ratio") is None
+
+    def test_discard_keeps_predecessor(self):
+        """discard() removes the staged successor without changing
+        authoritative current."""
+        store, pred, cand, proof, _ = _setup_and_execute()
+        store.rollback("financial_covenant.leverage_ratio", pred)
+
+        store.stage("financial_covenant.leverage_ratio", cand, proof.proof_id)
+        store.discard("financial_covenant.leverage_ratio")
+
+        # Authoritative current is still the predecessor
+        current = store.get_predecessor("financial_covenant.leverage_ratio")
+        assert current.threshold == 3.50
+        assert len(current.applicability["step_down_schedule"]) == 4
+
+        # Staging area is empty
+        assert store.get_staged("financial_covenant.leverage_ratio") is None
+
+        # Version history has only the origin
+        history = store.get_version_history("financial_covenant.leverage_ratio")
+        assert len(history) == 1
+        assert history[0].version_number == 0
+
+    def test_stale_version_stage_fails_closed(self):
+        """stage() with a stale expected_predecessor_version fails."""
+        store, pred, cand, proof, _ = _setup_and_execute()
+        store.rollback("financial_covenant.leverage_ratio", pred)
+
+        # Expected version 99 but actual is 0
+        with pytest.raises(ValueError, match="Predecessor version mismatch"):
+            store.stage(
+                "financial_covenant.leverage_ratio",
+                cand,
+                proof.proof_id,
+                expected_predecessor_version=99,
+            )
+
+
+# ---------------------------------------------------------------------------
+# Phase 6: Proof lifecycle
+# ---------------------------------------------------------------------------
+
+
+class TestProofLifecycle:
+    """Phase 6: proof lifecycle must be completed after execution and
+    lineage.
+
+    The proof must:
+    1. Gate execution (pre-execution precondition).
+    2. Be updated after execution with execution_result and
+       lineage_reference.
+    3. The completed proof must be used in authority evaluation.
+    """
+
+    def test_update_post_execution_attaches_execution_and_lineage(self):
+        """update_post_execution attaches execution_result and
+        lineage_reference to the proof."""
+        from upsilon.proof.transformation_proof import ProofAssembler
+        from upsilon.authority.promotion_gate import ExecutionResultSummary
+        from upsilon.conservation.validator import ValidationResult
+        from upsilon.models import (
+            ConservationChecks,
+            CheckResult,
+            CommitmentIdentity,
+            AddressBinding,
+            IdentityProvenance,
+            AuthorizedTransformation,
+            AffectedField,
+            ValidatorResults,
+        )
+        from upsilon.commitments.identity import IdentityResolutionResult
+
+        store, pred, cand, proof, _ = _setup_and_execute()
+
+        # Create a minimal identity result for the proof assembler
+        identity_result = IdentityResolutionResult(
+            identity=CommitmentIdentity(
+                commitment_id="financial_covenant.leverage_ratio",
+                agreement_identity="test",
+                canonical_key="financial_covenant.leverage_ratio",
+                local_address=AddressBinding(
+                    section_ref="Section 7.10(a)",
+                    established_at_version="S0",
+                ),
+                provenance=IdentityProvenance.S0_ORIGIN,
+                confidence=0.9,
+            ),
+            confidence=0.9,
+            evidence_level="SUFFICIENT",
+            signals=["address_map"],
+        )
+
+        assembler = ProofAssembler()
+        check_result = CheckResult(
+            invariant_name="identity_persistence",
+            passed=True,
+            failure_reason="",
+        )
+        validation = ValidationResult(
+            passed=True,
+            checks=ConservationChecks(
+                identity_persistence=check_result,
+            ),
+            validator_results=ValidatorResults(
+                checks=[check_result],
+                summary="1 check, 0 failed",
+            ),
+            failed_invariants=[],
+        )
+
+        # Create a minimal delta for the proof assembler
+        delta = AuthorizedTransformation(
+            transformation_type=TransformationFamily.SCALAR_REPLACEMENT,
+            commitment_id="financial_covenant.leverage_ratio",
+            agreement_identity="test",
+            affected_fields=[
+                AffectedField(
+                    field_name="applicability",
+                    old_value={"steady_state_threshold": 3.50},
+                    new_value={"steady_state_threshold": 4.00},
+                ),
+            ],
+            preserved_fields=["threshold", "operator", "unit"],
+            source_authority="Amendment No. 3",
+            old_value_consistency_verified=True,
+        )
+
+        pre_proof = assembler.assemble_pre_execution(
+            delta=delta,
+            identity_result=identity_result,
+            validation=validation,
+            predecessor_version=0,
+            successor_version=1,
+        )
+
+        # Pre-execution proof must gate execution
+        assert pre_proof.may_proceed_to_execution()
+
+        # Update post-execution
+        exec_summary = ExecutionResultSummary(
+            applied=True, status="COMPLETE", state_changed=True,
+        )
+        completed = assembler.update_post_execution(
+            proof=pre_proof,
+            execution_result=exec_summary,
+            lineage_reference="LE-test123",
+        )
+
+        # The completed proof must have execution result and lineage
+        assert completed.execution_result is not None
+        assert completed.lineage_reference == "LE-test123"
+        assert completed.proof_completeness == ProofCompleteness.COMPLETE

@@ -148,6 +148,13 @@ class IssuerChain:
     ground_truth_state: dict[str, CommitmentState] | None = None
     ground_truth_label: str | None = None
     is_synthetic: bool = True
+    # S0 source authority: section_ref → commitment_id mapping established
+    # from the source agreement (S0), NOT from amendment target labels.
+    # This is the authoritative address map seed for the conservation-
+    # first spine.  When None, the spine has no S0-established identity
+    # and must fail closed for amendments that rely on section-based
+    # identity resolution.
+    s0_section_refs: dict[str, str] | None = None
 
 
 @dataclass

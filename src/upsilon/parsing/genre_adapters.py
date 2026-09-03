@@ -75,6 +75,7 @@ from upsilon.transformations.semantic_mapper import (
     AmbiguityReason,
     MappingResult,
     StructuredMutation,
+    map_instruction,
 )
 from upsilon.transformations.semantic_resolver_v2 import resolve_instruction
 
@@ -142,14 +143,33 @@ def process_incremental(
             provenance=InstructionProvenance.PARSER,
         ))
 
-    # Resolve each instruction through the v2 resolver
+    # Resolve each instruction: try the semantic mapper first (which
+    # has deterministic rules for high-confidence patterns like
+    # leverage ratio step-down schedules), then fall back to the
+    # v2 resolver for other patterns.  The mapper produces
+    # SEMANTIC_MAPPER-provenance mutations with correct field
+    # identification (e.g., applicability for step-down schedules);
+    # the resolver handles broader patterns but may produce
+    # threshold-level mappings for covenant changes.
     candidates: list[StructuredMutation] = []
     for ins in instructions:
-        result, _ = resolve_instruction(
-            ins, current_state, citation_document=citation_document,
+        mapper_result = map_instruction(
+            ins, citation_document=citation_document,
         )
-        candidates.extend(result.mutations)
-        candidates.extend(result.unresolved)
+        if mapper_result.mutations:
+            # Mapper resolved this instruction — use its output.
+            candidates.extend(mapper_result.mutations)
+        elif mapper_result.unresolved:
+            # Mapper matched but couldn't fully resolve (e.g.,
+            # ambiguous value).  Use the mapper's unresolved result.
+            candidates.extend(mapper_result.unresolved)
+        else:
+            # Mapper didn't match — fall back to the v2 resolver.
+            result, _ = resolve_instruction(
+                ins, current_state, citation_document=citation_document,
+            )
+            candidates.extend(result.mutations)
+            candidates.extend(result.unresolved)
 
     return GenreAdapterResult(
         genre=AmendmentPattern.INCREMENTAL,

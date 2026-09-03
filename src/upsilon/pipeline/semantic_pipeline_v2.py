@@ -311,21 +311,21 @@ def run_semantic_pipeline_v2(
     genre_dist: dict[str, int] = {}
 
     # --- Step 24B: conservation-first spine initialization ---
-    # Build section_refs from the curated instructions so the
-    # agreement-local address map can resolve target identity for
-    # SCALAR_REPLACEMENT amendments.  Commitments without a section
-    # ref in the curated instructions are not registered in the
-    # address map; the spine will fail-closed for them (correct
-    # behavior — identity cannot be established without an address).
-    section_refs: dict[str, str] = {}
-    for _step in chain.amendments:
-        for _ins in _step.instructions:
-            if _ins.target_key and _ins.target_section_ref:
-                section_refs.setdefault(_ins.target_key, _ins.target_section_ref)
+    # Build the address map from S0 source authority, NOT from
+    # amendment target labels.  The S0 section_refs are established
+    # from the source agreement (S0) and represent the authoritative
+    # section→commitment mapping.  Amendments use this pre-existing
+    # identity structure; they do not construct it.
+    #
+    # If s0_section_refs is not provided, the spine has no S0-established
+    # identity and must fail closed for amendments that rely on
+    # section-based identity resolution.  This is correct behavior —
+    # identity cannot be established without S0 authority.
+    s0_section_refs = chain.s0_section_refs or {}
     spine = ConservationFirstSpine(
         original_state=chain.original_state,
         agreement_identity=chain.chain_id,
-        section_refs=section_refs,
+        section_refs=s0_section_refs,
     )
     spine_total_promoted = 0
     spine_total_rejected = 0
@@ -397,19 +397,25 @@ def run_semantic_pipeline_v2(
         total_mapped_from_extraction += step_mapped_from_extraction
         total_unresolved += len(unresolved_mutations)
 
-        # --- Step 24B: route curated SCALAR_REPLACEMENT instructions
-        # through the conservation-first spine (Layers A–G). ---
+        # --- Step 24B: route parser-extracted SCALAR_REPLACEMENT
+        # mutations through the conservation-first spine (Layers A–G).
+        # ---
         # The spine is the controlling semantic path for
-        # SCALAR_REPLACEMENT.  Curated instructions whose
+        # SCALAR_REPLACEMENT.  Parser-extracted mapped mutations
+        # (StructuredMutation objects from the semantic mapper) whose
         # transformation family is activated in the spine are
         # processed through the full conservation-first architecture
         # (evidence → engine → candidate → conservation → proof →
-        # execution → lineage → authority gate).  Instructions whose
-        # family is not yet activated are routed away to the legacy
-        # path below.
+        # staging → lineage → authority gate → promotion).
+        #
+        # Phase 1: The spine receives parser-extracted evidence from
+        # the semantic mapper (StructuredMutation), NOT from curated
+        # AmendmentInstruction objects.  Curated instructions remain
+        # as test/diagnostic oracles but do not control production
+        # interpretation.
         #
         # The spine advances its own authoritative kernel state
-        # independently.  After the spine processes its instructions,
+        # independently.  After the spine processes its mutations,
         # we synchronize the pipeline's current_state with the
         # spine's authoritative state for spine-controlled
         # commitments so the legacy executor sees the updated state.
@@ -417,15 +423,9 @@ def run_semantic_pipeline_v2(
         spine_promoted = 0
         spine_rejected = 0
         spine_routed_away = 0
-        # Use the spine-specific inherited unresolved count, not the
-        # legacy parser's unresolved count.  The spine's authority
-        # assessment is about the specific commitments it controls.
-        for ins in step.instructions:
-            if not spine.is_activated(ins):
-                spine_routed_away += 1
-                continue
-            spine_result = spine.process_instruction(
-                ins,
+        for mut in mapped_mutations:
+            spine_result = spine.process_mutation(
+                mut,
                 citation_document=step.description,
                 inherited_unresolved=spine_inherited_unresolved,
             )
@@ -452,22 +452,11 @@ def run_semantic_pipeline_v2(
         #    also process them.  This eliminates the dual execution
         #    path: a spine-controlled commitment is processed by
         #    either the spine OR the legacy executor, never both.
-        #
-        #    We collect the set of commitment_ids the spine processed
-        #    (promoted, rejected, or routed-away-but-spine-controlled)
-        #    and exclude any mapped mutation whose target_key matches.
-        #    For routed-away instructions, the spine did not process
-        #    them, so they remain in the legacy path.
         spine_controlled_ids: set[str] = set()
         for sr in spine_results:
             if sr.transformation is not None:
                 spine_controlled_ids.add(sr.transformation.commitment_id)
             elif sr.evidence is not None and sr.evidence.canonical_key_hint:
-                # The spine attempted to process this instruction but
-                # rejected it before producing a transformation.  The
-                # canonical_key_hint identifies the target commitment.
-                # We must still exclude it from the legacy path to
-                # avoid dual processing.
                 spine_controlled_ids.add(sr.evidence.canonical_key_hint)
 
         mapped_instructions: list[AmendmentInstruction] = []
@@ -677,6 +666,7 @@ def run_semantic_pipeline_v2(
     applied_pair_step: dict[tuple[str, str | None], int] = {}
     applied_key_step: dict[str, int] = {}
     for step_idx, step_result in enumerate(steps):
+        # Legacy executor applied mutations
         for ins in step_result.execution_result.applied:
             if ins.target_key:
                 applied_keys.add(ins.target_key)
@@ -699,6 +689,21 @@ def run_semantic_pipeline_v2(
                     InstructionType.WAIVE_TEMPORARILY,
                 ):
                     applied_pairs.add((ins.target_key, None))
+        # Phase 7: Include spine-applied mutations in the measurement.
+        # The fact that dual execution was eliminated must NOT make
+        # spine mutations invisible to the safety audit.  An applied
+        # spine delta that disagrees with ground truth must count as
+        # an incorrect accepted mutation.
+        for sr in step_result.spine_results:
+            if sr.promoted and sr.transformation is not None:
+                cid = sr.transformation.commitment_id
+                applied_keys.add(cid)
+                applied_key_step[cid] = step_idx
+                for field_name in sr.transformation.affected_field_names:
+                    pair = (cid, field_name)
+                    if pair not in applied_pair_step or step_idx > applied_pair_step[pair]:
+                        applied_pair_step[pair] = step_idx
+                    applied_pairs.add(pair)
 
     incorrect_mutations: list[str] = []
     seen_incorrect: set[str] = set()

@@ -122,6 +122,7 @@ def make_evidence(
     source_text="Section 7.10 is hereby amended to reduce the Total Leverage Ratio from 4.00 to 1 to 3.75 to 1.0",
     exception_text=None,
     effective_date=None,
+    value_provenance="PARSER_EXTRACTED",
 ):
     return AmendmentEvidence(
         source_text=source_text,
@@ -137,6 +138,7 @@ def make_evidence(
         canonical_key_hint=canonical_key_hint,
         exception_text=exception_text,
         effective_date=effective_date,
+        value_provenance=value_provenance,
     )
 
 

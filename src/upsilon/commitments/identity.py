@@ -122,11 +122,41 @@ class AgreementAddressMap:
 
         Checks both current addresses and renumbered (old) addresses.
         Returns None if the address is not in this agreement's map.
+
+        Matching strategy (in priority order):
+        1. Exact match (e.g., "Section 7.10(a)" → registered).
+        2. Prefix match: if the query is a prefix of a registered
+           address (e.g., parser produces "Section 7.10" and the
+           S0 address map has "Section 7.10(a)"), resolve to the
+           registered commitment.  This handles the common case
+           where the parser identifies a section at a coarser
+           granularity than the S0 address map.
+        3. Suffix match: if a registered address is a prefix of the
+           query (e.g., query "Section 7.10(a)(i)" and the map has
+           "Section 7.10(a)"), resolve to the registered commitment.
         """
+        if not section_ref:
+            return None
+        # 1. Exact match
         if section_ref in self._address_to_id:
             return self._address_to_id[section_ref]
         if section_ref in self._renumbered:
             return self._renumbered[section_ref]
+        # 2. Prefix match: query is a prefix of a registered address
+        ref_lower = section_ref.lower().strip()
+        for addr, cid in self._address_to_id.items():
+            if addr.lower().startswith(ref_lower):
+                return cid
+        for addr, cid in self._renumbered.items():
+            if addr.lower().startswith(ref_lower):
+                return cid
+        # 3. Suffix match: registered address is a prefix of the query
+        for addr, cid in self._address_to_id.items():
+            if ref_lower.startswith(addr.lower()):
+                return cid
+        for addr, cid in self._renumbered.items():
+            if ref_lower.startswith(addr.lower()):
+                return cid
         return None
 
     def get_binding(self, commitment_id: str) -> AddressBinding | None:

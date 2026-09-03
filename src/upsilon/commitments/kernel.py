@@ -47,6 +47,10 @@ class KernelStore:
         self._current: dict[str, CommitmentKernel] = {}
         # commitment_id -> list of KernelVersion (history)
         self._versions: dict[str, list[KernelVersion]] = {}
+        # Staging area: commitment_id -> provisional successor kernel.
+        # Populated by stage(), consumed by promote() or discard().
+        # The authoritative _current is NOT changed until promote().
+        self._staged: dict[str, CommitmentKernel] = {}
 
     def establish_origin(self, kernel: CommitmentKernel) -> KernelVersion:
         """Establish a commitment in the origin kernel (C0).
@@ -148,6 +152,9 @@ class KernelStore:
         members (``_current``, ``_versions``) directly.  The rollback
         restores the predecessor as current and drops the rolled-back
         version from history so version numbering stays monotonic.
+
+        Deprecated: prefer stage()/promote()/discard() for new code.
+        Retained for backward compatibility.
         """
         pred_version = predecessor.version
         self._current[commitment_id] = predecessor
@@ -157,6 +164,91 @@ class KernelStore:
                 pred_version.version_number if pred_version else 0
             ):
                 versions.pop()
+
+    def stage(
+        self,
+        commitment_id: str,
+        successor: CommitmentKernel,
+        proof_id: str,
+        expected_predecessor_version: int | None = None,
+    ) -> KernelVersion:
+        """Stage a provisional successor WITHOUT changing authoritative current.
+
+        The successor is placed in a staging area.  The authoritative
+        ``_current`` remains the predecessor until ``promote()`` is
+        called.  This separates provisional execution from authority
+        promotion — the AuthorityGate is the only mechanism that
+        changes authoritative-current state.
+
+        Stale-version check: if ``expected_predecessor_version`` is
+        provided, staging fails closed if the current predecessor
+        version does not match.
+
+        Returns the KernelVersion that the successor WILL have upon
+        promotion.  Does NOT modify version history until promote().
+
+        Raises ValueError if the commitment is not in the store or
+        the predecessor version is stale.
+        """
+        predecessor = self._current.get(commitment_id)
+        if predecessor is None:
+            raise ValueError(
+                f"Commitment {commitment_id} not in kernel store"
+            )
+
+        pred_version = predecessor.version
+        pred_version_num = pred_version.version_number if pred_version else 0
+
+        if expected_predecessor_version is not None:
+            if pred_version_num != expected_predecessor_version:
+                raise ValueError(
+                    f"Predecessor version mismatch for {commitment_id}: "
+                    f"expected {expected_predecessor_version}, "
+                    f"actual {pred_version_num}"
+                )
+
+        new_version = KernelVersion(
+            commitment_id=commitment_id,
+            version_number=pred_version_num + 1,
+            valid_from=successor.valid_from or datetime.min.replace(tzinfo=UTC),
+            produced_by_proof_id=proof_id,
+            predecessor_version=pred_version_num,
+        )
+        successor.version = new_version
+        self._staged[commitment_id] = successor
+        return new_version
+
+    def promote(self, commitment_id: str) -> KernelVersion | None:
+        """Promote a staged successor to authoritative current.
+
+        Called ONLY by the authority gate path after AUTHORITY_GRANTED.
+        Moves the staged successor from the staging area to ``_current``
+        and appends its version to history.
+
+        Returns the KernelVersion if promotion succeeded, None if no
+        staged successor exists for the commitment.
+        """
+        successor = self._staged.pop(commitment_id, None)
+        if successor is None:
+            return None
+        self._current[commitment_id] = successor
+        if commitment_id not in self._versions:
+            self._versions[commitment_id] = []
+        self._versions[commitment_id].append(successor.version)
+        return successor.version
+
+    def discard(self, commitment_id: str) -> None:
+        """Discard a staged successor without promoting it.
+
+        Called when the authority gate blocks promotion.  The staged
+        successor is removed from the staging area.  Authoritative
+        current remains the predecessor — it was never changed.
+        """
+        self._staged.pop(commitment_id, None)
+
+    def get_staged(self, commitment_id: str) -> CommitmentKernel | None:
+        """Get the staged (provisional) successor for a commitment, if any."""
+        return self._staged.get(commitment_id)
 
     def get_version_history(self, commitment_id: str) -> list[KernelVersion]:
         """Get the full version history for a commitment."""
