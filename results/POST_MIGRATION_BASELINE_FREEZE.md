@@ -5,6 +5,27 @@
 **Merge commit:** `b434398` (Merge branch 'feature/semantic-mapper-v0.1' into main)
 **Verification method:** Pre-migration code (commit `0217213`) rerun with identical data, compared metric-by-metric against post-migration code output.
 
+## Checkpoint tuple
+
+This tuple makes the checkpoint independently interpretable without reconstructing context from logs. It is the post-structure / pre-semantic-implementation checkpoint: any future Step 23S/24 runtime change must be evaluated against this exact baseline to distinguish STRUCTURAL CHANGE (directory/import migration) from SEMANTIC PERFORMANCE CHANGE (MO§ES runtime implementation gains or regressions).
+
+| Field | Value |
+|-------|-------|
+| pre-migration commit | `0217213` |
+| migration commit | `e908eb6` |
+| comparison implementation commit | `(pending — set after commit 1)` |
+| checkpoint documentation commit | `(pending — set after commit 2)` |
+| metrics compared | 54 |
+| matched | 54 |
+| mismatched | 0 |
+| test baseline pre (Step 23S conformance) | 33 passed / 0 failed / 0 skipped |
+| test baseline post (Step 23S conformance) | 33 passed / 0 failed / 0 skipped |
+| incorrect accepted pre / post | 0 / 0 |
+| false authoritative promotions pre / post | 0 / 0 |
+| correct accepts pre / post | 2 / 2 |
+
+The **comparison implementation commit** is the commit containing `audits/repository/compare_baseline.py` with the live pre-migration worktree rerun logic — anyone checking out that commit gets the exact script that produced the 54/54 result. The **checkpoint documentation commit** is the commit that finalized this tuple with both hashes filled in. Splitting these two fields removes the self-reference problem: the implementation hash is recorded in a later commit, not in itself.
+
 ## Verification protocol
 
 1. Created git worktree at `e908eb6~1` (pre-migration state).
@@ -12,9 +33,9 @@
 3. Copied untracked result files needed by audit scripts (`chain_study_v1_results.json`, `step_21_v2_study_results.json`, `step_22_unresolved_taxonomy.json`).
 4. Ran all empirical audit scripts on pre-migration code.
 5. Ran all empirical audit scripts on post-migration code.
-6. Compared 53 metrics across all audits (frozen-input hash verification, Step 23R, Step 23, Step 23S, defect safety record).
+6. Compared 54 metrics across all audits (frozen-input hash verification, Step 23R, Step 23, Step 23S, defect safety record).
 
-## Result: 53 matched, 0 mismatched
+## Result: 54 matched, 0 mismatched
 
 The directory/import migration preserved all empirical behavior. Post-migration behavior is byte-identical to pre-migration.
 
@@ -131,8 +152,8 @@ The Step 23S safety audit verifies that the 7 MOSES runtime invariants (I1–I7)
 
 **Conformance tests:** 33 tests covering 7 MOSES runtime invariants (I1 target-vs-reference, I2 value-extraction compatibility, I3 cross-type evidence, I4 section-alias consistency, I5 section corroboration, I6 old-value consistency, I7 minimal semantic proof + authority gate).
 
-- Pre-migration: 33 passed (root-level `test_moses_safety.py`, per `STEP_23S_FINAL_REPORT.md`)
-- Post-migration: 33 passed (`tests/conservation/test_moses_safety.py`)
+- Pre-migration: 33 passed (root-level `test_moses_safety.py` at commit `0217213`, rerun live in a git worktree by `compare_baseline.py`)
+- Post-migration: 33 passed (`tests/conservation/test_moses_safety.py`, run live by `compare_baseline.py`)
 
 **Post-fix safety metrics** (sourced from `step23r_audit.json` `section_safety_metrics`, re-run after Step 23S implementation):
 
@@ -169,7 +190,8 @@ All 7 MOSES invariants are ENFORCED. The 10 prior incorrect accepts (from the pr
 - `data/ground_truth/frozen/generate_manifest.py verify` — frozen hash verification (live subprocess call from compare_baseline.py)
 - `audits/step23r/build_step23r_audit.py` — Step 23R independent failure census
 - `audits/build_step23_audit.py` — Step 23 eligibility & semantic funnel audit
-- `pytest tests/conservation/test_moses_safety.py` — Step 23S MOSES conformance tests (live subprocess call from compare_baseline.py)
+- `pytest tests/conservation/test_moses_safety.py` — post-migration Step 23S MOSES conformance tests (live subprocess call from compare_baseline.py)
+- `pytest test_moses_safety.py` (in git worktree at `0217213`) — pre-migration Step 23S MOSES conformance tests (live subprocess call from compare_baseline.py)
 - `audits/generate_defect_safety_record.py` — defect/safety distinction record
 - `audits/step23r/generate_step23r_deliverables.py` — Step 23R deliverables
 - `audits/repository/compare_baseline.py` — metric-by-metric comparison

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Compare pre-migration vs post-migration empirical baseline metrics.
 
 Extracts every critical metric from both the saved pre-migration results
@@ -23,6 +22,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PRE = Path("/tmp/pre_migration_baseline")
 POST = REPO_ROOT / "results"
+
+# Pre-migration commit (parent of the migration commit e908eb6).  All
+# pre-migration reruns use this commit so the comparison is genuine
+# pre-vs-post, not post-vs-documentation.
+PRE_MIGRATION_COMMIT = "0217213"
 
 PASS = 0
 FAIL = 0
@@ -61,9 +65,21 @@ def run_frozen_hash_verify() -> tuple[int, int, bool]:
     return checked, failures, passed
 
 
-def run_moses_conformance_tests() -> tuple[int, int, int]:
-    """Run the Step 23S MOSES conformance test suite and return
-    (passed, failed, skipped).
+def _parse_pytest_summary(stdout: str) -> tuple[int, int, int]:
+    """Parse a pytest -q summary line and return (passed, failed, skipped)."""
+    summary = stdout.strip().split("\n")[-1] if stdout.strip() else ""
+    passed_m = re.search(r"(\d+)\s+passed", summary)
+    failed_m = re.search(r"(\d+)\s+failed", summary)
+    skipped_m = re.search(r"(\d+)\s+skipped", summary)
+    passed = int(passed_m.group(1)) if passed_m else 0
+    failed = int(failed_m.group(1)) if failed_m else 0
+    skipped = int(skipped_m.group(1)) if skipped_m else 0
+    return passed, failed, skipped
+
+
+def run_moses_conformance_tests_post() -> tuple[int, int, int]:
+    """Run the post-migration Step 23S MOSES conformance test suite and
+    return (passed, failed, skipped).
     """
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "tests/conservation/test_moses_safety.py", "-q",
@@ -73,15 +89,56 @@ def run_moses_conformance_tests() -> tuple[int, int, int]:
         cwd=str(REPO_ROOT),
         check=False,
     )
-    # pytest -q summary line: "33 passed in 0.10s" or "33 passed, 1 failed in 0.10s"
-    summary = result.stdout.strip().split("\n")[-1] if result.stdout.strip() else ""
-    passed_m = re.search(r"(\d+)\s+passed", summary)
-    failed_m = re.search(r"(\d+)\s+failed", summary)
-    skipped_m = re.search(r"(\d+)\s+skipped", summary)
-    passed = int(passed_m.group(1)) if passed_m else 0
-    failed = int(failed_m.group(1)) if failed_m else 0
-    skipped = int(skipped_m.group(1)) if skipped_m else 0
-    return passed, failed, skipped
+    return _parse_pytest_summary(result.stdout)
+
+
+def run_moses_conformance_tests_pre() -> tuple[int, int, int]:
+    """Run the pre-migration Step 23S MOSES conformance test suite in a
+    temporary git worktree at PRE_MIGRATION_COMMIT and return
+    (passed, failed, skipped).
+
+    The pre-migration test file lived at the repository root
+    (test_moses_safety.py) and imported root-level modules
+    (moses_safety, models, semantic_pipeline_v2, semantic_resolver_v2).
+    A worktree gives us a clean checkout of that code without disturbing
+    the working tree.
+    """
+    worktree = Path("/tmp/pre_migration_moses_worktree")
+    # Remove any stale worktree from a prior run.
+    if worktree.exists():
+        subprocess.run(
+            ["git", "worktree", "remove", "--force", str(worktree)],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            check=False,
+        )
+    result = subprocess.run(
+        ["git", "worktree", "add", "--detach", str(worktree), PRE_MIGRATION_COMMIT],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(f"   WARNING: could not create pre-migration worktree: {result.stderr.strip()}")
+        return -1, -1, -1
+    try:
+        test_result = subprocess.run(
+            [sys.executable, "-m", "pytest", "test_moses_safety.py", "-q",
+             "--no-header", "--tb=short"],
+            capture_output=True,
+            text=True,
+            cwd=str(worktree),
+            check=False,
+        )
+        return _parse_pytest_summary(test_result.stdout)
+    finally:
+        subprocess.run(
+            ["git", "worktree", "remove", "--force", str(worktree)],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            check=False,
+        )
 
 
 print("=" * 70)
@@ -220,18 +277,21 @@ print()
 # 4. Step 23S — MOSES Semantic Safety Enforcement
 # ---------------------------------------------------------------------------
 print("4. STEP 23S — MOSES SEMANTIC SAFETY ENFORCEMENT")
-print("   (conformance tests run live; safety metrics from step23r_audit.json)")
+print("   (conformance tests run live on both pre- and post-migration code;")
+print("    safety metrics from step23r_audit.json)")
 # Step 23S conformance tests: 33 tests covering 7 MOSES runtime invariants
 # (I1 target-vs-reference, I2 value-extraction compatibility, I3 cross-type
 # evidence, I4 section-alias consistency, I5 section corroboration, I6
 # old-value consistency, I7 minimal semantic proof + authority gate).
-# Pre-migration: 33 passed (root-level test_moses_safety.py, per
-# STEP_23S_FINAL_REPORT.md).  Post-migration: tests/conservation/test_moses_safety.py.
-PRE_CONFORMANCE_PASSED = 33  # from STEP_23S_FINAL_REPORT.md section B
-post_passed, post_failed, post_skipped = run_moses_conformance_tests()
+# Pre-migration: root-level test_moses_safety.py at commit 0217213.
+# Post-migration: tests/conservation/test_moses_safety.py.
+pre_passed, pre_failed, pre_skipped = run_moses_conformance_tests_pre()
+post_passed, post_failed, post_skipped = run_moses_conformance_tests_post()
+print(f"   pre-migration  conformance: {pre_passed} passed, {pre_failed} failed, {pre_skipped} skipped")
 print(f"   post-migration conformance: {post_passed} passed, {post_failed} failed, {post_skipped} skipped")
-check("23S_conformance_tests_passed", PRE_CONFORMANCE_PASSED, post_passed)
-check("23S_conformance_tests_failed", 0, post_failed)
+check("23S_conformance_tests_passed", pre_passed, post_passed)
+check("23S_conformance_tests_failed", pre_failed, post_failed)
+check("23S_conformance_tests_skipped", pre_skipped, post_skipped)
 
 # Step 23S post-fix safety metrics (sourced from step23r_audit.json
 # section_safety_metrics, re-run after Step 23S implementation).
@@ -253,9 +313,12 @@ check("defect_chain_ids", sorted(m["chain_id"] for m in pre_defect["mutations"])
 pre_held = json.loads((PRE / "held_out_study_results.json").read_text())
 post_held = json.loads((POST / "held_out_study_results.json").read_text())
 check("held_out_aggregate_total_chains", pre_held["aggregate_metrics"]["total_chains"], post_held["aggregate_metrics"]["total_chains"])
-# total_mutations key may not exist; use total_instructions or similar
-pre_total = pre_held["aggregate_metrics"].get("total_mutations") or pre_held["aggregate_metrics"].get("total_instructions") or pre_held["aggregate_metrics"].get("total_amendments", "N/A")
-post_total = post_held["aggregate_metrics"].get("total_mutations") or post_held["aggregate_metrics"].get("total_instructions") or post_held["aggregate_metrics"].get("total_amendments", "N/A")
+# The aggregate count key is total_amendments in the frozen held-out
+# study schema.  Check it explicitly rather than relying on falsy `or`
+# chaining (which would misbehave if the value were 0).
+_TOTAL_KEY = "total_amendments"
+pre_total = pre_held["aggregate_metrics"].get(_TOTAL_KEY, "N/A")
+post_total = post_held["aggregate_metrics"].get(_TOTAL_KEY, "N/A")
 check("held_out_aggregate_total", pre_total, post_total)
 
 print()
