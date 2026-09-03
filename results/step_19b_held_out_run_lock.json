@@ -1,0 +1,1890 @@
+{
+  "lock_type": "held_out_run_immutable_lock",
+  "locked_at_utc": "2026-09-01T11:28:47.419838+00:00",
+  "frozen_system": "v1.0-frozen-operational-build",
+  "lock_purpose": "Preserve the held-out confirmatory study run as immutable. Any modification to the locked artifacts will be detectable by recomputing and comparing hashes.  This lock enables future confirmatory scoring against human gold without re-running or altering the frozen system's predictions.",
+  "aggregate_hash": "8a06d9325067c3d87ade8cd2b948581088fce9c532d70dac80e9b0120da0c4a4",
+  "artifact_hashes": {
+    "results/held_out_study_results.json": "5820b59f34b83b48e42a4a59b34cf5df15b26465de977f2c41fa53a796f12b8d",
+    "data/held_out/manifest.json": "3c39a08bd9a841c60be1d2fe3f4864724d59fe001c439b86e63d2133bb034a27",
+    "data/held_out/gold/preregistration.json": "b9ffa232306414076c0146ac02dc4a21fa01067249c443fb2ff8a59ee463bf76",
+    "data/held_out/gold/GOLD_ANNOTATION_PROTOCOL.md": "dbf3c0888556e3b28a0bcf90b22298ffcad807a6866fafef48d7bbf12d0a359c",
+    "data/held_out/gold/HELD-001_gold.json": "5a49b1b093b9bb210e485d2d245b78e8e6fb8dae8f2681134e2e1b328ac603ec",
+    "data/held_out/gold/HELD-002_gold.json": "065b985a841bd703642cf92b50dfac4a732ba7b57d5cb386a9e3e3ba1146012b",
+    "data/held_out/gold/HELD-004_gold.json": "0e6b36d1251005490b04abca285878b143adfa984355f4ed5b9c8dd701de52f7",
+    "data/held_out/gold/HELD-005_gold.json": "87d93bdbd69969b18d2f54ce9d51927525041839920289e875fc41ea699b7144",
+    "data/held_out/gold/HELD-008_gold.json": "209c74de928efa3f9310b5b692a36e1df6401694c0b3d4e701fbc6e1ce6d8463",
+    "results/step_19b_held_out_confirmatory_study.md": "377f17d2f6a6ac286e2721a7fa78d51bc7586c0f5c7e7c3dfef03d0020736569",
+    "results/step_19b_mutation_defect_analysis.json": "30a12a4ba14bb14a1f0a848a16cd6f951c985f583e0a95d085b59776f6986082"
+  },
+  "chain_document_hashes": [
+    {
+      "file": "data/held_out/HELD-001/A1.html",
+      "sha256": "fdd65a8a34de4c6b7e62fe41b09873e1b6d18813be9ff9dbbdc729182bf5ce9e",
+      "bytes": 518372
+    },
+    {
+      "file": "data/held_out/HELD-001/A1.txt",
+      "sha256": "dc9636cd36cc691994e5a8530e762f5996c8c98b7ec39400bf72d00bc5b010a7",
+      "bytes": 261644
+    },
+    {
+      "file": "data/held_out/HELD-001/A2.html",
+      "sha256": "7b2778f0a33291a5c87959c83557272f9740f7968683bc5a7b9faf0b50e969c5",
+      "bytes": 751540
+    },
+    {
+      "file": "data/held_out/HELD-001/A2.txt",
+      "sha256": "c04a2c56350ae525df4b2c77b21c4ca626c6110a8376cb80bd7e82e9728cdb92",
+      "bytes": 361170
+    },
+    {
+      "file": "data/held_out/HELD-001/S0.html",
+      "sha256": "b6b6917a0ca7d5c2d45857145f53f36b424531f79f0d50e73c74ef7b889eda26",
+      "bytes": 1656020
+    },
+    {
+      "file": "data/held_out/HELD-001/S0.txt",
+      "sha256": "b0c99652ce8b367f38f9431e5c72bed1659f54786874c96f75ac57bbf6000798",
+      "bytes": 557097
+    },
+    {
+      "file": "data/held_out/HELD-002/A1.html",
+      "sha256": "ee686b18a7e0675765d14be9d0b30b5d1b6a003612cf7276d467f30a39fe19bf",
+      "bytes": 44969
+    },
+    {
+      "file": "data/held_out/HELD-002/A1.txt",
+      "sha256": "4c3060b8c1c53e7dedbc7cbd25fcd89ca41484a469d431c4bcfb47dae6f0a27f",
+      "bytes": 8219
+    },
+    {
+      "file": "data/held_out/HELD-002/A2.html",
+      "sha256": "4f7063007f1f7c2fe34c38922754747d47f235db87ace2eb48fb262d7722cfd5",
+      "bytes": 42942
+    },
+    {
+      "file": "data/held_out/HELD-002/A2.txt",
+      "sha256": "1e11eb4045d938ff128e02f31c180fe199a2595c216ac56785800d9a1c4e1779",
+      "bytes": 7339
+    },
+    {
+      "file": "data/held_out/HELD-002/CMP.html",
+      "sha256": "4bbe41ac81d1e2427ceec438ee02cb85864c1d2c988af28588557f6ad1bd095a",
+      "bytes": 1257701
+    },
+    {
+      "file": "data/held_out/HELD-002/CMP.txt",
+      "sha256": "a9ca8d6640b733936e18176af16b81844ab46a1d86caf4647ee750f2e4e30067",
+      "bytes": 495898
+    },
+    {
+      "file": "data/held_out/HELD-002/S0.html",
+      "sha256": "d1c64456da93d25e67bdf878a25e393533343b55e12b1b0bff73f0c337589bb8",
+      "bytes": 917138
+    },
+    {
+      "file": "data/held_out/HELD-002/S0.txt",
+      "sha256": "e4b35e197c4848d35bf5f178fb12e475d6451da216811adda8f86528b0ddb311",
+      "bytes": 398914
+    },
+    {
+      "file": "data/held_out/HELD-003/A1.html",
+      "sha256": "81f559b754b73536583371eb041820c56bc8908d04f8842e0935c54f60d2b494",
+      "bytes": 40303
+    },
+    {
+      "file": "data/held_out/HELD-003/A1.txt",
+      "sha256": "eec3df95989864c36106095561d16a0d79d2a65f3669faf903823c5ac101a5e2",
+      "bytes": 20711
+    },
+    {
+      "file": "data/held_out/HELD-003/A2.html",
+      "sha256": "63d18c364f90b14fe7df38d1da0b99429572e44b49ac42727e3f42148b34ff38",
+      "bytes": 92422
+    },
+    {
+      "file": "data/held_out/HELD-003/A2.txt",
+      "sha256": "3d166303079060ec8a23ffebc135074cecc2d4fb6d17a3c69fb653cddd4760f0",
+      "bytes": 19371
+    },
+    {
+      "file": "data/held_out/HELD-003/S0.html",
+      "sha256": "8bd71193a6b217aca2f4b33502dec21babf8fd2df7e714986e6966a48502b31f",
+      "bytes": 491887
+    },
+    {
+      "file": "data/held_out/HELD-003/S0.txt",
+      "sha256": "420d37696c84ed643484ba9b1b6964486e2ac80fdb79e062a38ec2b59d690044",
+      "bytes": 297619
+    },
+    {
+      "file": "data/held_out/HELD-004/A1.html",
+      "sha256": "733ed7c49377bec7375afb369751e4be216e9476a7f166082ef9cbd02f8983b1",
+      "bytes": 52232
+    },
+    {
+      "file": "data/held_out/HELD-004/A1.txt",
+      "sha256": "91de9068c7a33ef12b1075207d783879673cc3e21bcd228d609bd948d2f2f1e2",
+      "bytes": 10474
+    },
+    {
+      "file": "data/held_out/HELD-004/A2.html",
+      "sha256": "0c630b6e8f9a42b495ae815f1396b4199e0f25b6e9a4c86f04315fe454470fb3",
+      "bytes": 427040
+    },
+    {
+      "file": "data/held_out/HELD-004/A2.txt",
+      "sha256": "1367a9c65f103df79919a6363bd3b1fa2d75ba71cb5420c33aab13dd0fd63003",
+      "bytes": 386711
+    },
+    {
+      "file": "data/held_out/HELD-004/CMP.html",
+      "sha256": "2779ac63ab69bbe878a6ade0d9d3b731566f564e865c77b82b23ba1f64d2e184",
+      "bytes": 479053
+    },
+    {
+      "file": "data/held_out/HELD-004/CMP.txt",
+      "sha256": "a6a25a7d8d63e5886a1781df36b5d9c67324331b220adc7b98a24dfe37a1ade4",
+      "bytes": 435235
+    },
+    {
+      "file": "data/held_out/HELD-004/S0.html",
+      "sha256": "836492dfca0cb718f1696bec241ab0c45506940ec777084373f636592cd0a2e6",
+      "bytes": 484540
+    },
+    {
+      "file": "data/held_out/HELD-004/S0.txt",
+      "sha256": "78c3cbb2d55674921c8d6a20b57872bef7efe4d062f7824ff6a74a632c2203f7",
+      "bytes": 277821
+    },
+    {
+      "file": "data/held_out/HELD-005/A1.html",
+      "sha256": "fb23c806ae70dacb779e22cfe49bef115db3dad53112efdd4271575585b59302",
+      "bytes": 10106
+    },
+    {
+      "file": "data/held_out/HELD-005/A1.txt",
+      "sha256": "bcf49659a93169599b7f0e228fe2d9c9cb4112467d0f9df49a5a7f4f07aa106f",
+      "bytes": 3669
+    },
+    {
+      "file": "data/held_out/HELD-005/A2.html",
+      "sha256": "3e0a675575beb597b7553db6f40960c5713aa068c1cd6b0df0895824a0bbd422",
+      "bytes": 12397
+    },
+    {
+      "file": "data/held_out/HELD-005/A2.txt",
+      "sha256": "114fb549438289cc976601f346b7f149f770c14333e01a26023d04a06b87003c",
+      "bytes": 3131
+    },
+    {
+      "file": "data/held_out/HELD-005/S0.html",
+      "sha256": "4da9046962975e1347dc267e3bede5bb5114229e2aa7f1d27d1d783cc8629607",
+      "bytes": 103907
+    },
+    {
+      "file": "data/held_out/HELD-005/S0.txt",
+      "sha256": "111abe3eaca95616ed767ccb44d9b3c39fcdccad243787c2bd887058a0bb5eae",
+      "bytes": 42803
+    },
+    {
+      "file": "data/held_out/HELD-006/A1.html",
+      "sha256": "cca45d5835352311f59e14ae43e7ebcf4c690820588155d0ce3230a9ff08726e",
+      "bytes": 48973
+    },
+    {
+      "file": "data/held_out/HELD-006/A1.txt",
+      "sha256": "cf1e68dcdd56337d53ec7fac0439604864aa483760127e7873886e57b21a5c85",
+      "bytes": 17060
+    },
+    {
+      "file": "data/held_out/HELD-006/A2.html",
+      "sha256": "54c49dad4b960ddbc77f6d29dd15c258d2922de814110940ca3c6635e36f2a82",
+      "bytes": 24295
+    },
+    {
+      "file": "data/held_out/HELD-006/A2.txt",
+      "sha256": "99be34f43c1335496e1966a35b24b712c4f3ec42464498fdc93d1f9b8c2aa038",
+      "bytes": 9142
+    },
+    {
+      "file": "data/held_out/HELD-006/S0.html",
+      "sha256": "e5d23f3f67c22abe21b798c8cc7555c5c0327c537208ad3a34f9a1d3e5d0df82",
+      "bytes": 804116
+    },
+    {
+      "file": "data/held_out/HELD-006/S0.txt",
+      "sha256": "848685cd255e93bc385d18fee293708a4837a3d5285a9b72675d79b9ef53110d",
+      "bytes": 293022
+    },
+    {
+      "file": "data/held_out/HELD-007/A1.html",
+      "sha256": "49134caa0f8d86ff7067f20bb30b2594b591c91a9d92d4ce722a936f368386e7",
+      "bytes": 48091
+    },
+    {
+      "file": "data/held_out/HELD-007/A1.txt",
+      "sha256": "f89928e449fd683d158a81f494c58e740e9126c24f5b114a61701f65b7189adf",
+      "bytes": 7214
+    },
+    {
+      "file": "data/held_out/HELD-007/A2.html",
+      "sha256": "a81a51c667f7ce934e84c6dd946a341a8f3d66f420893bac13311043a384d70d",
+      "bytes": 26268
+    },
+    {
+      "file": "data/held_out/HELD-007/A2.txt",
+      "sha256": "0f3563b1877afc065678ddb62163fa4de004a99a3f0a41bd675305d773556220",
+      "bytes": 7159
+    },
+    {
+      "file": "data/held_out/HELD-007/S0.html",
+      "sha256": "4fd3c88e473489d15308e7bf03a0e69b2dd0fa636ea0cc17d0554fb081cdb673",
+      "bytes": 655528
+    },
+    {
+      "file": "data/held_out/HELD-007/S0.txt",
+      "sha256": "eac538fd111d7c9a86e25bcfb98dbe4b6c6e2937578f7487e37203e8dbdfa50d",
+      "bytes": 386696
+    },
+    {
+      "file": "data/held_out/HELD-008/A1.html",
+      "sha256": "6af97b0c3c27b810cf00102931ccb49921e105abc90eb889ac30f7f006e529cc",
+      "bytes": 39868
+    },
+    {
+      "file": "data/held_out/HELD-008/A1.txt",
+      "sha256": "9dce413317de3f1560507fb726b212fd4800dbc89cd820f7f3fb2b4177bd321c",
+      "bytes": 11014
+    },
+    {
+      "file": "data/held_out/HELD-008/A2.html",
+      "sha256": "272b058de3c0142ec1e072b1c751c72a03c997b0257ed3c4d89e93550602b28b",
+      "bytes": 76727
+    },
+    {
+      "file": "data/held_out/HELD-008/A2.txt",
+      "sha256": "66eb3451a1246975e4386fc592a5415876f5edceff9e71c2ad9f402e18e24ff7",
+      "bytes": 35718
+    },
+    {
+      "file": "data/held_out/HELD-008/CMP.html",
+      "sha256": "c6cbb3e66633a704ef7021fba06ea7218fa6eb005fa4550129f95d7569270714",
+      "bytes": 932641
+    },
+    {
+      "file": "data/held_out/HELD-008/CMP.txt",
+      "sha256": "ecd9dec4ca9935d7063a3f71099ec2f57c74d5c9085353a5c537018faf51a88a",
+      "bytes": 484313
+    },
+    {
+      "file": "data/held_out/HELD-008/S0.html",
+      "sha256": "6a178b0031d79d96553e658617ead5ac6c6c37b4c863b62efd7ab6357e67d9d9",
+      "bytes": 184630
+    },
+    {
+      "file": "data/held_out/HELD-008/S0.txt",
+      "sha256": "2631ee871b5cc53af3b7bf82c32d284a91877f438da84ec25f1a23d085d5b980",
+      "bytes": 69498
+    },
+    {
+      "file": "data/held_out/HELD-009/A1.html",
+      "sha256": "95b348c08835a6c4dadd0286a87329b724c05d5df3a935e7251539cd64658d1f",
+      "bytes": 35722
+    },
+    {
+      "file": "data/held_out/HELD-009/A1.txt",
+      "sha256": "a494ea5ba17caa6cbe52a8079b2e7c9641d4a21f2b61ba7ec5a2d7d5230f276b",
+      "bytes": 14048
+    },
+    {
+      "file": "data/held_out/HELD-009/A2.html",
+      "sha256": "98af4ecc793c748b0fecf1e063afc40e471e10fecf1920308ebf6a0a954041bc",
+      "bytes": 35362
+    },
+    {
+      "file": "data/held_out/HELD-009/A2.txt",
+      "sha256": "f4efaffd4195e4b81a8f65214c36b6cc57aceb5e53803511902f06d800037b85",
+      "bytes": 13789
+    },
+    {
+      "file": "data/held_out/HELD-009/S0.html",
+      "sha256": "4211897db69a32e8bfe1e7d4af9b85ccddd404042c9cc241731d7b39a0f5dca6",
+      "bytes": 861458
+    },
+    {
+      "file": "data/held_out/HELD-009/S0.txt",
+      "sha256": "38ba9047ecbac1890abdf5a3228176deaf63b3d81fa6dd126f8255343ee06a73",
+      "bytes": 452819
+    },
+    {
+      "file": "data/held_out/HELD-010/A1.html",
+      "sha256": "872db962521c818c2141f6acd51a13b611eebf4e8e59c06636d26b6e3fb4e7bc",
+      "bytes": 60926
+    },
+    {
+      "file": "data/held_out/HELD-010/A1.txt",
+      "sha256": "e8315226b2693e6234349d39d112b43f196e2e9cf2983bc3d45279de56e57fdd",
+      "bytes": 14896
+    },
+    {
+      "file": "data/held_out/HELD-010/A10.html",
+      "sha256": "e473ebde51209cf279f55c7c2b24a7157216ddab0880f673f6c9e0beed323657",
+      "bytes": 263061
+    },
+    {
+      "file": "data/held_out/HELD-010/A10.txt",
+      "sha256": "a81d1be6d8848ea2bd855f210f09cc708f3279de37a7cf325eb406e095a4d87b",
+      "bytes": 74425
+    },
+    {
+      "file": "data/held_out/HELD-010/A11.html",
+      "sha256": "1119935f900c510d95a4d518f3eba4aef208c5ae54d4c2058c6ff877c30456eb",
+      "bytes": 287487
+    },
+    {
+      "file": "data/held_out/HELD-010/A11.txt",
+      "sha256": "937b80beee7a1256d18fa31bba0a84aee007f33e0cb9f718c74d0a5d5c34ec61",
+      "bytes": 93770
+    },
+    {
+      "file": "data/held_out/HELD-010/A12.html",
+      "sha256": "4fd4d3307cc1c337eea2c97302f38841404606ab6e2d4ffb721ebe5a326da4db",
+      "bytes": 223612
+    },
+    {
+      "file": "data/held_out/HELD-010/A12.txt",
+      "sha256": "68672940ed24f697217a6bd26d9c9b64722155b3738d7de8b4092e16bdb30377",
+      "bytes": 91754
+    },
+    {
+      "file": "data/held_out/HELD-010/A13.html",
+      "sha256": "3cc494fbb708284f722b55521ea7f02e9cff04db4b8a81e099ebda9fc87ad2fc",
+      "bytes": 153198
+    },
+    {
+      "file": "data/held_out/HELD-010/A13.txt",
+      "sha256": "86a0d518607b77e6b749e057102e423ea23b6aae412af745d8b5a23481ffcc74",
+      "bytes": 33785
+    },
+    {
+      "file": "data/held_out/HELD-010/A14.html",
+      "sha256": "ef7e18714db50cef62c1f1fc7a6cbf037a045deb8eb0d554a9ad0a74f14f450c",
+      "bytes": 184513
+    },
+    {
+      "file": "data/held_out/HELD-010/A14.txt",
+      "sha256": "b779d9a8706ae003581a6c360562fa1462c669d3eaaf20f70be0677305170984",
+      "bytes": 43866
+    },
+    {
+      "file": "data/held_out/HELD-010/A2.html",
+      "sha256": "8bfe51f234ea2eb0f20f7457f119115bb813fd7d324b59a24f3f0408b94d54ef",
+      "bytes": 133698
+    },
+    {
+      "file": "data/held_out/HELD-010/A2.txt",
+      "sha256": "52d49ecf0425868f765cc9787b6ee7b9468ad0d5fc59c6eb00bf691d118a0d43",
+      "bytes": 39846
+    },
+    {
+      "file": "data/held_out/HELD-010/A3.html",
+      "sha256": "9749afd6f75fe731c496551462764e9cbb2aa03dedfbf96bf8a79ae67475aba8",
+      "bytes": 53327
+    },
+    {
+      "file": "data/held_out/HELD-010/A3.txt",
+      "sha256": "bb0501b08b4cf9d1b76f07ed418b9583de77137d61613c3fcb0cf077ed9e403a",
+      "bytes": 16293
+    },
+    {
+      "file": "data/held_out/HELD-010/A4.html",
+      "sha256": "d5df05aaf7ac7ecd7f029ffbb0c667cf3ae42d849e851cc4619b544f89a0daed",
+      "bytes": 82350
+    },
+    {
+      "file": "data/held_out/HELD-010/A4.txt",
+      "sha256": "9070496ad865984a55a3ccc8fc462a742dda37887a7ec39569bb67f4605f4d58",
+      "bytes": 21462
+    },
+    {
+      "file": "data/held_out/HELD-010/A5.html",
+      "sha256": "ee69a727a5fc5803da1256129891daa047a87873ac499b81a9e42b323963268f",
+      "bytes": 95664
+    },
+    {
+      "file": "data/held_out/HELD-010/A5.txt",
+      "sha256": "12c1815e85eb919706ee3ba37d883bda14d9d17883deda37bb642e5493064b4e",
+      "bytes": 19802
+    },
+    {
+      "file": "data/held_out/HELD-010/A6.html",
+      "sha256": "57025906bb8f692fadc87e34a6ff5f0fed893f695b69a0417a9ab79cfcbb6410",
+      "bytes": 185212
+    },
+    {
+      "file": "data/held_out/HELD-010/A6.txt",
+      "sha256": "caf80316ba4a1c694d3b615a777cc53a01a339d58ab8aef99d282f2f9ab6fefd",
+      "bytes": 45952
+    },
+    {
+      "file": "data/held_out/HELD-010/A7.html",
+      "sha256": "cd4e4353925c1b12b90f9d166f4d25ba30eb799dd3c1a2f01110cf731c468846",
+      "bytes": 141597
+    },
+    {
+      "file": "data/held_out/HELD-010/A7.txt",
+      "sha256": "e95ad601ae9d4abd2f704bdbd8405a96bdec455b2ba23bfe7c8845bb4d5a8c6d",
+      "bytes": 33090
+    },
+    {
+      "file": "data/held_out/HELD-010/A8.html",
+      "sha256": "29a65f50328a6b005ccb2a2cfaf02239af647e588c74660aa507534487744751",
+      "bytes": 163878
+    },
+    {
+      "file": "data/held_out/HELD-010/A8.txt",
+      "sha256": "174ababd729e291942e0f12c1a18cec2357ceeb4e07d0bfabe86adc38c79041d",
+      "bytes": 35588
+    },
+    {
+      "file": "data/held_out/HELD-010/A9.html",
+      "sha256": "46754cabdc05e823489418190a553b3df513599ca91cce87683d76d8c591e0bb",
+      "bytes": 236193
+    },
+    {
+      "file": "data/held_out/HELD-010/A9.txt",
+      "sha256": "c015e7e48a333a4ac67087c4fe5a1ce2ec9f0f080614e896e71a89f54a591985",
+      "bytes": 61461
+    },
+    {
+      "file": "data/held_out/HELD-010/S0.html",
+      "sha256": "f62756b9234f2e483624648c3f46c16c5657d17e417c29260c296671f4353a7b",
+      "bytes": 626068
+    },
+    {
+      "file": "data/held_out/HELD-010/S0.txt",
+      "sha256": "24477b98c5f4656e49f30bd270c3e1026043162b03105fc0e0008f3c5ba2b645",
+      "bytes": 201708
+    },
+    {
+      "file": "data/held_out/HELD-011/A1.html",
+      "sha256": "84464959db6769d58fd9883c1ba5e1ff53a76187e899d060b0e33dbeb5dc9af5",
+      "bytes": 111319
+    },
+    {
+      "file": "data/held_out/HELD-011/A1.txt",
+      "sha256": "5854e46c9eccffcd2d7c8bc71024399fc2873597a95c165aabcf18edbe40c4ef",
+      "bytes": 23425
+    },
+    {
+      "file": "data/held_out/HELD-011/A10.html",
+      "sha256": "d15032830c9180d7e1a4f97bfc4c878f181bf0b2c95b318c2202b6ebb6261bfd",
+      "bytes": 119061
+    },
+    {
+      "file": "data/held_out/HELD-011/A10.txt",
+      "sha256": "ea19d77593885c681908948f630b5134325e1bc72d4eb2ef2093afbeeefb1723",
+      "bytes": 22106
+    },
+    {
+      "file": "data/held_out/HELD-011/A11.html",
+      "sha256": "c285dbf165245072acc30403b0e674536d4f5ab2b8eb4e1b3c461e4160b2d0ad",
+      "bytes": 101561
+    },
+    {
+      "file": "data/held_out/HELD-011/A11.txt",
+      "sha256": "29396f0f2704bc7df8bacb7a4bea95e845756ecf1d8602c26198186f99d6204e",
+      "bytes": 19739
+    },
+    {
+      "file": "data/held_out/HELD-011/A12.html",
+      "sha256": "f3248d9e1feda1f98cd129406188c87a4fba49f16e14242fc25a69b494a188a6",
+      "bytes": 106442
+    },
+    {
+      "file": "data/held_out/HELD-011/A12.txt",
+      "sha256": "6a7dececf9ccec0fc0528052a74a4ed99fc8474683e03cb42d11761b98da8b12",
+      "bytes": 16712
+    },
+    {
+      "file": "data/held_out/HELD-011/A13.html",
+      "sha256": "dcef38e516b8885922b69c7c4a638aa7b60a6bf52b68761dd3fdfbfe1464718f",
+      "bytes": 135932
+    },
+    {
+      "file": "data/held_out/HELD-011/A13.txt",
+      "sha256": "b234007855f01642161223ee6aabbe8b5f94b550f56a3b507715ad8da975fa59",
+      "bytes": 30126
+    },
+    {
+      "file": "data/held_out/HELD-011/A2.html",
+      "sha256": "8d48d0e017fbc863911585382898149e881122ac8db8788b0e94e7dbe0340865",
+      "bytes": 99679
+    },
+    {
+      "file": "data/held_out/HELD-011/A2.txt",
+      "sha256": "40bff06452b3448edb04ed9ff163d30f3f9b819dfeea0266d7d6f12c0890c279",
+      "bytes": 11035
+    },
+    {
+      "file": "data/held_out/HELD-011/A3.html",
+      "sha256": "75ff721b5860dfc324c7b9688c0a776d7a4e42c21774f8dc5f4116685058436a",
+      "bytes": 211048
+    },
+    {
+      "file": "data/held_out/HELD-011/A3.txt",
+      "sha256": "20ee6d1c2aae053f17b90ef050a2925154aa3b95c805a4346a52ce6cf201c6c0",
+      "bytes": 37414
+    },
+    {
+      "file": "data/held_out/HELD-011/A4.html",
+      "sha256": "a75d5b0e24a59bf03d23df620e28cd794c317efe049d67142757cac31336e702",
+      "bytes": 112278
+    },
+    {
+      "file": "data/held_out/HELD-011/A4.txt",
+      "sha256": "718ebeb5b997c71c7f2c15aebfba931567b70f31a64949dc796849414a29e289",
+      "bytes": 32762
+    },
+    {
+      "file": "data/held_out/HELD-011/A5.html",
+      "sha256": "0da9ee931dfd75fda613b9f61d574c3f2bd0f53f8850d2388cfce4426310948a",
+      "bytes": 199939
+    },
+    {
+      "file": "data/held_out/HELD-011/A5.txt",
+      "sha256": "bc2d0fcb87f4ad217d99de50bd28337e916739f9e98d44a8d110f34772ef1847",
+      "bytes": 20083
+    },
+    {
+      "file": "data/held_out/HELD-011/A6.html",
+      "sha256": "cdcccfb7cdd908a9206b00c722e2718e6403065408af90f94dd87758d0fb089c",
+      "bytes": 139853
+    },
+    {
+      "file": "data/held_out/HELD-011/A6.txt",
+      "sha256": "fef6b409899fb964a41648644ef197b43b032e91467c9cba02c2524bd421553e",
+      "bytes": 22514
+    },
+    {
+      "file": "data/held_out/HELD-011/A7.html",
+      "sha256": "2def4479b02dcf001b70f9b236e4183279645ea01cfb5f3cb9507eb4542e85bb",
+      "bytes": 105857
+    },
+    {
+      "file": "data/held_out/HELD-011/A7.txt",
+      "sha256": "7f6b775d784736c494d04a0682b6d33182fb33eb2ae4ef99e20c71bcddcf9b15",
+      "bytes": 14783
+    },
+    {
+      "file": "data/held_out/HELD-011/A8.html",
+      "sha256": "98d3c35c7788113e23c5dc34460b77d25cdcf9539646a1e609068fe77aa51dc7",
+      "bytes": 132680
+    },
+    {
+      "file": "data/held_out/HELD-011/A8.txt",
+      "sha256": "9492ff3365a8bf5655e4b2632786e0793070f2f6c2cea6a31c14e9c4d62a6fff",
+      "bytes": 16305
+    },
+    {
+      "file": "data/held_out/HELD-011/A9.html",
+      "sha256": "21ae5f834b7f79eb80539d280a1b8f31c239f42d82462c35755a190378e5e277",
+      "bytes": 112095
+    },
+    {
+      "file": "data/held_out/HELD-011/A9.txt",
+      "sha256": "071fbdcf591556f5b2cd8c449755d42da58f49acda90a4f9d668c265a8a56c6d",
+      "bytes": 19492
+    },
+    {
+      "file": "data/held_out/HELD-011/S0.html",
+      "sha256": "b250f8052b5f319174e8ff4121fad1fc395720fcff63d2eadae0f8a89c92e2d5",
+      "bytes": 35214
+    },
+    {
+      "file": "data/held_out/HELD-011/S0.txt",
+      "sha256": "0f475be1ff0ecbba7c991d01042a3045d199c234bcdc539313c2e700b86a6a16",
+      "bytes": 16075
+    },
+    {
+      "file": "data/held_out/HELD-012/A1.html",
+      "sha256": "676ad81d25e9eb6d3cebaa6b3f5ff1c28647e764f483950af0eb13a9073911a6",
+      "bytes": 105014
+    },
+    {
+      "file": "data/held_out/HELD-012/A1.txt",
+      "sha256": "6dfa974e8337bc77ad70214e5ffbe419160b5744da830c6f326a87075797cdce",
+      "bytes": 50137
+    },
+    {
+      "file": "data/held_out/HELD-012/A10.html",
+      "sha256": "9d23610312f1c5b5ec2ff5402120fdacb822809a0da520095133ea7b1303f9cb",
+      "bytes": 79435
+    },
+    {
+      "file": "data/held_out/HELD-012/A10.txt",
+      "sha256": "33afdb6ebdb58e49d3de2b4bb98b034868271c3f386f4512a8d41e6652b31dbf",
+      "bytes": 30721
+    },
+    {
+      "file": "data/held_out/HELD-012/A11.html",
+      "sha256": "e58326445f51caf14f41d71fd54a29074df6a3c91eb1200180b6f50311788e3d",
+      "bytes": 72140
+    },
+    {
+      "file": "data/held_out/HELD-012/A11.txt",
+      "sha256": "dee68dd53777d0bb6c6d5ca4a58c334e31ee8b46e784bb9646959aa1b195beb2",
+      "bytes": 10762
+    },
+    {
+      "file": "data/held_out/HELD-012/A2.html",
+      "sha256": "6d19cedd6387e7250903e6bbb647d95d2846ead64a8981660bdd6358f78f514d",
+      "bytes": 57463
+    },
+    {
+      "file": "data/held_out/HELD-012/A2.txt",
+      "sha256": "02ec838869a088bc04e510c19dd0dcc12052de257e57319069ffe3efd0c0f4da",
+      "bytes": 18909
+    },
+    {
+      "file": "data/held_out/HELD-012/A3.html",
+      "sha256": "ee2ed4c158014415497ad307ee5762e2a5e8479ecd6e836c3bafca75a0921e01",
+      "bytes": 1050563
+    },
+    {
+      "file": "data/held_out/HELD-012/A3.txt",
+      "sha256": "c9d45aa5ccf39c2ef8a29120cfe5193542d53396caf864fe93f21d8c1e2488fd",
+      "bytes": 492114
+    },
+    {
+      "file": "data/held_out/HELD-012/A4.html",
+      "sha256": "a6b97f5fe205eae84f44222fad06a930677d85318c0f7669eaeb48e643db9f49",
+      "bytes": 95910
+    },
+    {
+      "file": "data/held_out/HELD-012/A4.txt",
+      "sha256": "abcd32599f77bf4bca4b27276f5ad5167675cf80ea4a250c7a46033b5fa4a83d",
+      "bytes": 36449
+    },
+    {
+      "file": "data/held_out/HELD-012/A5.html",
+      "sha256": "8b2bb610bf8cf5171bb2c089c74453f9423cd3a73170b90244398aec1c1c2c92",
+      "bytes": 959242
+    },
+    {
+      "file": "data/held_out/HELD-012/A5.txt",
+      "sha256": "1466f07d70790250841b8f9147c46f9fe33ba6982c7ba209873e856425d8d849",
+      "bytes": 521209
+    },
+    {
+      "file": "data/held_out/HELD-012/A6.html",
+      "sha256": "5c621f3917ae791c82fa255d2983bac589a3fe43a8b330e1e77dff1e7ba18031",
+      "bytes": 90705
+    },
+    {
+      "file": "data/held_out/HELD-012/A6.txt",
+      "sha256": "629d083827e6e8b6aca2230a78c181a67cf9957e94597fb40366a4f7806c24a9",
+      "bytes": 15928
+    },
+    {
+      "file": "data/held_out/HELD-012/A7.html",
+      "sha256": "e92194c85d21b4e5bba2227cf1109624532be8169fca3b5f2bf0c7a2c8b770e8",
+      "bytes": 144873
+    },
+    {
+      "file": "data/held_out/HELD-012/A7.txt",
+      "sha256": "9748db0ae818faaed6740aa44de9aaed38cd12876eedf7b3a7390b9e680f1cc1",
+      "bytes": 30064
+    },
+    {
+      "file": "data/held_out/HELD-012/A8.html",
+      "sha256": "e07bacff65a87766b9fb3120e6dfa17ebad0d544e00c654058136769922be7f5",
+      "bytes": 147755
+    },
+    {
+      "file": "data/held_out/HELD-012/A8.txt",
+      "sha256": "e23e7e385ee8acbe36dff997b44dbb9516d548a8e3f8169a0e928365f84dcafd",
+      "bytes": 26397
+    },
+    {
+      "file": "data/held_out/HELD-012/A9.html",
+      "sha256": "00a52de20db9cb22b42f9dbdc2b4135d982e4a301a58bec6b3c02ce2e99ba8a6",
+      "bytes": 33421
+    },
+    {
+      "file": "data/held_out/HELD-012/A9.txt",
+      "sha256": "3d1e799968d376d3ceb59f35c5465d3f3ea876976bb469931a9e26bc7938a844",
+      "bytes": 10143
+    },
+    {
+      "file": "data/held_out/HELD-012/S0.html",
+      "sha256": "8a84bdfa89c4c217be680dc54b887cd52d26d97ae56374dc47f96ead98dc83dc",
+      "bytes": 235245
+    },
+    {
+      "file": "data/held_out/HELD-012/S0.txt",
+      "sha256": "3f4c0146b5ee5d55f5deb2234e4424fcd7fc566eaeaf54af276fb0f491d2a8ea",
+      "bytes": 68731
+    },
+    {
+      "file": "data/held_out/HELD-013/A1.html",
+      "sha256": "653b9d52ed49a08492097b1eedaace2ae1808b8403b84c7615742211346d0f2a",
+      "bytes": 1552419
+    },
+    {
+      "file": "data/held_out/HELD-013/A1.txt",
+      "sha256": "b31bc62b2bc554c3ad735dae4244d1c5c337a650df7a73235bb93e914b97054f",
+      "bytes": 691060
+    },
+    {
+      "file": "data/held_out/HELD-013/A10.html",
+      "sha256": "aaf78f931ed1752106c14c86f0ac33591d592bc227c9be1c82f388c7fcfc3c97",
+      "bytes": 251758
+    },
+    {
+      "file": "data/held_out/HELD-013/A10.txt",
+      "sha256": "fa861c1f17a37b2bfafbdff68d4f31d84e3a6206fca86ace93b534b7ded8b028",
+      "bytes": 96302
+    },
+    {
+      "file": "data/held_out/HELD-013/A11.html",
+      "sha256": "503bdb9d4fb95d2fde15d4447d7f8df92b02c7bab8620be919ec61d805e51b20",
+      "bytes": 2429261
+    },
+    {
+      "file": "data/held_out/HELD-013/A11.txt",
+      "sha256": "2d3c7f75966a52ad490def6e8d9b751e0c33cb62df4511b9109e16a6fd2ce499",
+      "bytes": 887804
+    },
+    {
+      "file": "data/held_out/HELD-013/A2.html",
+      "sha256": "ec9bec3b9ae13b939443602e100c1ae45d8619a712abc72787c6f7c809eb0638",
+      "bytes": 1857213
+    },
+    {
+      "file": "data/held_out/HELD-013/A2.txt",
+      "sha256": "a526862fb25e8ded5cfd8486f50a7fcc740f6016e8ab8e2558bdc00d77bbad7e",
+      "bytes": 734912
+    },
+    {
+      "file": "data/held_out/HELD-013/A3.html",
+      "sha256": "46f9d57d390448ebda0ae5993909ec2e2b8bc1c4d6ffca231fdbdc27771b2633",
+      "bytes": 1985836
+    },
+    {
+      "file": "data/held_out/HELD-013/A3.txt",
+      "sha256": "1f3a197c147a7ce63a005cdb8acfe1f9d8e9671facbc345b6bea25991e26dfbc",
+      "bytes": 741193
+    },
+    {
+      "file": "data/held_out/HELD-013/A4.html",
+      "sha256": "867f1e6d667018c8312c9f5fe5f322b84a483a60b9b2300adbd391a603c773a5",
+      "bytes": 123070
+    },
+    {
+      "file": "data/held_out/HELD-013/A4.txt",
+      "sha256": "d7dc48357e20521699d0858e7ae1b416b85b592f553ee5d2ade20798ea0de75d",
+      "bytes": 12237
+    },
+    {
+      "file": "data/held_out/HELD-013/A5.html",
+      "sha256": "3bb01665b5f16896a414bc2cc10add545eff9e215f72c43f1787e4b8d26fcc2f",
+      "bytes": 1883009
+    },
+    {
+      "file": "data/held_out/HELD-013/A5.txt",
+      "sha256": "87ee18ee1e2bdc7ae2f3efb2c8223f70dad2260dfa07302c8a03cb65bc578a6d",
+      "bytes": 731610
+    },
+    {
+      "file": "data/held_out/HELD-013/A6.html",
+      "sha256": "209c170953dc068f4513939cda1ad58a3951aed2440090b29ac3db52175fc039",
+      "bytes": 128441
+    },
+    {
+      "file": "data/held_out/HELD-013/A6.txt",
+      "sha256": "75b49dbfa527076d8d3fca4e0345b7f4efe631e001d34f3a571be612379925d1",
+      "bytes": 30218
+    },
+    {
+      "file": "data/held_out/HELD-013/A7.html",
+      "sha256": "f48443b80437ba3e65c6f479f083c41f27a487e68add5e032134207f4abd743c",
+      "bytes": 290344
+    },
+    {
+      "file": "data/held_out/HELD-013/A7.txt",
+      "sha256": "51d10fa5f53ec9d7f7447ad4a9c0788cc17992ab31c1fa4d6c9314e19f08a286",
+      "bytes": 117987
+    },
+    {
+      "file": "data/held_out/HELD-013/A8.html",
+      "sha256": "10494a68ea96b1c6027ec7bdb77c227251198a8a8c239ade19f81945f4688e45",
+      "bytes": 460866
+    },
+    {
+      "file": "data/held_out/HELD-013/A8.txt",
+      "sha256": "e071f4665ac478a23a7156d407cd1afea1842eddcc59db2e96c590eaaec9cb6f",
+      "bytes": 206131
+    },
+    {
+      "file": "data/held_out/HELD-013/A9.html",
+      "sha256": "e3610cbe006009ce42e865b84bfecb2c41dcb6b477f0739b65820bd57df00a3c",
+      "bytes": 121595
+    },
+    {
+      "file": "data/held_out/HELD-013/A9.txt",
+      "sha256": "631b98e60df3c67bd8bcf6bb30cd52c38c61fa2c9e0632cf3d597ac008f6fd6b",
+      "bytes": 29140
+    },
+    {
+      "file": "data/held_out/HELD-013/S0.html",
+      "sha256": "953ed8cc13c770d0e54eb53ed837d80b72a354d6fdec4127bcebeb011cd7c705",
+      "bytes": 14164
+    },
+    {
+      "file": "data/held_out/HELD-013/S0.txt",
+      "sha256": "305f1a0f636edd44a7f02cd0de9029aeb61f69e86cdb72504d2dce3190a51df7",
+      "bytes": 5579
+    },
+    {
+      "file": "data/held_out/HELD-014/A1.html",
+      "sha256": "075bf5b63d73e501c7f411688be9a55afffe3eeb671ec015503910e0cf7cd2dc",
+      "bytes": 104145
+    },
+    {
+      "file": "data/held_out/HELD-014/A1.txt",
+      "sha256": "853ca0d8c21552525f95ba92883d26f613d1fae71d0b309ff141d9597def9eaf",
+      "bytes": 28021
+    },
+    {
+      "file": "data/held_out/HELD-014/A10.html",
+      "sha256": "f3831617e8ee418ad18d37d7c6fe18db169318ded908825771229cbd045b334a",
+      "bytes": 2159765
+    },
+    {
+      "file": "data/held_out/HELD-014/A10.txt",
+      "sha256": "d69e22c17d2bb9a9dec170225fa0b112e89440593500bce0b9ef222542352fb7",
+      "bytes": 844857
+    },
+    {
+      "file": "data/held_out/HELD-014/A11.html",
+      "sha256": "0cdb992673a85534a065f4f62a5651b3119fa88db368ed9c84522c196f6f49da",
+      "bytes": 137575
+    },
+    {
+      "file": "data/held_out/HELD-014/A11.txt",
+      "sha256": "f9df17480e67912dbbe855e4ac2ca3735368f2abd5556fa1855ed1ed999166bb",
+      "bytes": 23481
+    },
+    {
+      "file": "data/held_out/HELD-014/A2.html",
+      "sha256": "4ed48e824c6aec9f539c42b2bcb185aadb8fea0d1f423495bb252652a59d7efe",
+      "bytes": 1321443
+    },
+    {
+      "file": "data/held_out/HELD-014/A2.txt",
+      "sha256": "37fa39a815c084135d323bf4eee66a6ee4eb9fba9b35b4eccde3858a8ff15aa0",
+      "bytes": 822680
+    },
+    {
+      "file": "data/held_out/HELD-014/A3.html",
+      "sha256": "f802a3d7936c69733244b334c4549b2378502691356395c58eec1074a0339030",
+      "bytes": 144288
+    },
+    {
+      "file": "data/held_out/HELD-014/A3.txt",
+      "sha256": "de7f74f5241662b7a0052e66f9368f2e96b04f8f5391cb563ec5b194c94bcc8e",
+      "bytes": 23636
+    },
+    {
+      "file": "data/held_out/HELD-014/A4.html",
+      "sha256": "8d61601c0be9e093cbddf1b1df714924538a7a3277cd0beca39434146349881e",
+      "bytes": 92825
+    },
+    {
+      "file": "data/held_out/HELD-014/A4.txt",
+      "sha256": "747e4169d6de8917a65c954ec54d72b551c9d410d3b2a43a2c73c34b699d4df1",
+      "bytes": 20191
+    },
+    {
+      "file": "data/held_out/HELD-014/A5.html",
+      "sha256": "addfc9a51d1d0709df8523381bc7adecad2b6d69edf993e311b04b0760bc0309",
+      "bytes": 175329
+    },
+    {
+      "file": "data/held_out/HELD-014/A5.txt",
+      "sha256": "dccb85f42d1ae0739a5ae0e1daddbc59bfda0b5c113e7e174a9575ed91e7c370",
+      "bytes": 33426
+    },
+    {
+      "file": "data/held_out/HELD-014/A6.html",
+      "sha256": "f27071ea48e52760f7e64f0e10517318ca22ecaf30fc52a37fa39c319d1159a9",
+      "bytes": 115149
+    },
+    {
+      "file": "data/held_out/HELD-014/A6.txt",
+      "sha256": "73e9f39618ba1a81a46c1473b5fea1160770f0f82371f4f203d47f8802bbb2fb",
+      "bytes": 16742
+    },
+    {
+      "file": "data/held_out/HELD-014/A7.html",
+      "sha256": "cd08bb280e53dead804d65ff16bf34e3888a47b70871bec82df0632f30ab1c7d",
+      "bytes": 2256487
+    },
+    {
+      "file": "data/held_out/HELD-014/A7.txt",
+      "sha256": "1c36cde5b7e32e2a65038fa880c03231cc3ab722201823fa00c66eebf3ab8ba1",
+      "bytes": 849253
+    },
+    {
+      "file": "data/held_out/HELD-014/A8.html",
+      "sha256": "794403bbeb32ddb76b21a64d9d18df299c04ef2ecd04a5a736b7ed4f26a0e8c0",
+      "bytes": 406265
+    },
+    {
+      "file": "data/held_out/HELD-014/A8.txt",
+      "sha256": "47264e6c669a54abbbcc29ebd20f9bf6883a6656b969f6754e87f314d874f9dd",
+      "bytes": 91538
+    },
+    {
+      "file": "data/held_out/HELD-014/A9.html",
+      "sha256": "8a686c3166a10cfd56a5580b0d1810d0e8a241b9bee4c97268a8eb1fa7221a83",
+      "bytes": 147591
+    },
+    {
+      "file": "data/held_out/HELD-014/A9.txt",
+      "sha256": "3afdcde02b717d18a123c6a3b0098970cb91cf283f976c710926a77e827d7bdf",
+      "bytes": 21413
+    },
+    {
+      "file": "data/held_out/HELD-014/S0.html",
+      "sha256": "6623a95ab41c1624416ec275f5411f01f7d9dbbd7d8d14dfde916d889f98b34f",
+      "bytes": 144119
+    },
+    {
+      "file": "data/held_out/HELD-014/S0.txt",
+      "sha256": "f11b7cf8b9e45a303ac787a16e2744195ba2957095a63e3fa36e6f8bdbfe9c82",
+      "bytes": 84926
+    },
+    {
+      "file": "data/held_out/HELD-015/A1.html",
+      "sha256": "b7cfcaaba6e083c95fd136deb1eadf8c7f6f2da333fcd03101c2e4f13f4bf389",
+      "bytes": 210957
+    },
+    {
+      "file": "data/held_out/HELD-015/A1.txt",
+      "sha256": "7ff81cd91222e88333556ba484dfe9a631b1b6aa43c2e09d6a05cbc697848264",
+      "bytes": 67179
+    },
+    {
+      "file": "data/held_out/HELD-015/A10.html",
+      "sha256": "a634d890e6816b900f822ea7b300496e558170610713d2601a1969eba7ca95d4",
+      "bytes": 93876
+    },
+    {
+      "file": "data/held_out/HELD-015/A10.txt",
+      "sha256": "eb6827a25d9a42ed7ac6f10b528dbfef0d5b9536f0a4f1ad19c98ced82f4ef8a",
+      "bytes": 25060
+    },
+    {
+      "file": "data/held_out/HELD-015/A2.html",
+      "sha256": "6f7edfa1c9ec7474701e694f7f9991ee543225f0726e2448f428e4892b2b9a59",
+      "bytes": 151393
+    },
+    {
+      "file": "data/held_out/HELD-015/A2.txt",
+      "sha256": "6949ac3d334f756170b79ef0214ec0a8729cfddd83bc7d91ce38c144ec0422ed",
+      "bytes": 55896
+    },
+    {
+      "file": "data/held_out/HELD-015/A3.html",
+      "sha256": "f74992740cc38cff84886b52dd5ab994f3fff836328fd4ae23c8dbbe5b607fa3",
+      "bytes": 147898
+    },
+    {
+      "file": "data/held_out/HELD-015/A3.txt",
+      "sha256": "3866609f49c93517ca3717cd34a49f7151ab6eca9da0e4fc65a9af620cf07d36",
+      "bytes": 48847
+    },
+    {
+      "file": "data/held_out/HELD-015/A4.html",
+      "sha256": "3dada6f1c6324dad8a9209836e3c9fda0b531fd424c139685564a599592e5d74",
+      "bytes": 74740
+    },
+    {
+      "file": "data/held_out/HELD-015/A4.txt",
+      "sha256": "a1725d9801dcebcb26ad89081c7e550b4c7963e9ac20b8d3214f834bf6fb8a8c",
+      "bytes": 22878
+    },
+    {
+      "file": "data/held_out/HELD-015/A5.html",
+      "sha256": "051a9ceff60662c32baa3859e53795389b3227ed8cebe6a8986c38346c5cd40c",
+      "bytes": 90251
+    },
+    {
+      "file": "data/held_out/HELD-015/A5.txt",
+      "sha256": "3c81a3e19b7319e4e42ebbd9af3cb2153ef252f374cee1b7aa8bc32314801ace",
+      "bytes": 24848
+    },
+    {
+      "file": "data/held_out/HELD-015/A6.html",
+      "sha256": "8f443dd3519fa2f8244545828e1271a7d54457ea90f58377c0b3b34d583777e0",
+      "bytes": 121205
+    },
+    {
+      "file": "data/held_out/HELD-015/A6.txt",
+      "sha256": "faa5c089837d26182263a72da7880b6f1fb782ec511cc0489e20d8485f4ef575",
+      "bytes": 34760
+    },
+    {
+      "file": "data/held_out/HELD-015/A7.html",
+      "sha256": "62e156d1480c7ae078efa77d76717286bf7e5d581026005d5059963dc3b2455f",
+      "bytes": 90449
+    },
+    {
+      "file": "data/held_out/HELD-015/A7.txt",
+      "sha256": "33aacb94aec3285e3cc034202839dd3da7f1cd9a91af124b1f71dc2c1a654c90",
+      "bytes": 23266
+    },
+    {
+      "file": "data/held_out/HELD-015/A8.html",
+      "sha256": "847334df764ecd6df15e915a0d81c2e3370e29eac85f3b015a09ccb1ae7edbfb",
+      "bytes": 109909
+    },
+    {
+      "file": "data/held_out/HELD-015/A8.txt",
+      "sha256": "bcc6785b782fc35b1acc42c7692b069784dad02d9ed641ba0a0f39d45e7ed074",
+      "bytes": 32006
+    },
+    {
+      "file": "data/held_out/HELD-015/A9.html",
+      "sha256": "b942b833fc40aeb8809bf97ed4199eab3cbd4ee1673fa0e8e3d02530b11fe649",
+      "bytes": 85533
+    },
+    {
+      "file": "data/held_out/HELD-015/A9.txt",
+      "sha256": "d29f9784da8d15e6277f7335b66270004087b745a9871cbfac2eccaf6397a44d",
+      "bytes": 25259
+    },
+    {
+      "file": "data/held_out/HELD-015/S0.html",
+      "sha256": "2e8b90298f20cca2d3ad4b559e49f3d9d184a37c0768f6d5fd9012908a339545",
+      "bytes": 36059
+    },
+    {
+      "file": "data/held_out/HELD-015/S0.txt",
+      "sha256": "d155acdb6f2107f9554e584d8cd7e754805c3127b3ab22796cbb670ac37bfa5e",
+      "bytes": 16679
+    },
+    {
+      "file": "data/held_out/HELD-016/A1.html",
+      "sha256": "55c117a9ecedf06c1f56eb87c4139b0fac6b044963548e8864274c06f2f0ab2b",
+      "bytes": 38851
+    },
+    {
+      "file": "data/held_out/HELD-016/A1.txt",
+      "sha256": "4ebb4323d2cea20a1a45540e8cc1ba75330471636686d7764ac3061cacd5a853",
+      "bytes": 14989
+    },
+    {
+      "file": "data/held_out/HELD-016/A10.html",
+      "sha256": "a1095e4ae23cb529b78095b380c4eea22cd30aa52b72becfb3dff87332ae2e62",
+      "bytes": 159726
+    },
+    {
+      "file": "data/held_out/HELD-016/A10.txt",
+      "sha256": "4e5a6c2bb7163018b89f126b550bdcc940f6ded76b504bcec5a3118e0b8d9663",
+      "bytes": 23925
+    },
+    {
+      "file": "data/held_out/HELD-016/A2.html",
+      "sha256": "469f81ff01a9b2557b3746e8f05cbff59a8813426b6f302e908830e0a50ec882",
+      "bytes": 64579
+    },
+    {
+      "file": "data/held_out/HELD-016/A2.txt",
+      "sha256": "8b4a2f4e0339012a231cb65db10214898dd00b2e07f7e6e5f36ac3e4ce31be1d",
+      "bytes": 11947
+    },
+    {
+      "file": "data/held_out/HELD-016/A3.html",
+      "sha256": "26ba27cf7bc5762655851a885aad8f3ecad068a0f4c349ec6ec9bb5575925ebe",
+      "bytes": 17942
+    },
+    {
+      "file": "data/held_out/HELD-016/A3.txt",
+      "sha256": "63e5c709ceb02457c60674db0207d880c3fe454dfc7e330d0b44f8e3931fa0f2",
+      "bytes": 3478
+    },
+    {
+      "file": "data/held_out/HELD-016/A4.html",
+      "sha256": "e557b977f4a4362936f22d949944b6926c849f75d6de800e32594109c8b6a949",
+      "bytes": 41735
+    },
+    {
+      "file": "data/held_out/HELD-016/A4.txt",
+      "sha256": "f964bf40d0cb7dfd1b0fe6d28ecadf3ee332cb44fcd1fe937c563aad1bc0c0bb",
+      "bytes": 11696
+    },
+    {
+      "file": "data/held_out/HELD-016/A5.html",
+      "sha256": "6038be21a6931da2ec1371545039d9e7a60246a514a2500548263131e27c5f67",
+      "bytes": 446867
+    },
+    {
+      "file": "data/held_out/HELD-016/A5.txt",
+      "sha256": "247527f219c693cec994e1159158fd73366238964b41c2dc806a69d2ddafcd04",
+      "bytes": 233835
+    },
+    {
+      "file": "data/held_out/HELD-016/A6.html",
+      "sha256": "6d95a0b155a6c9068f2a617084175f3562d8ff650f888588ddfb2c7ca255ef34",
+      "bytes": 23857
+    },
+    {
+      "file": "data/held_out/HELD-016/A6.txt",
+      "sha256": "d1987ead1c140415432efbaa925c5efe860a98c082f720e7252ad178befabac1",
+      "bytes": 12115
+    },
+    {
+      "file": "data/held_out/HELD-016/A7.html",
+      "sha256": "b86d8cc3bf1f5a4eb26f4be5e333a26d1ea34059286987573e307546adc2b90c",
+      "bytes": 78359
+    },
+    {
+      "file": "data/held_out/HELD-016/A7.txt",
+      "sha256": "02e1036681fc80264abfb10a882048a3b8445def651e893f0ada8a1920bbd2e8",
+      "bytes": 25953
+    },
+    {
+      "file": "data/held_out/HELD-016/A8.html",
+      "sha256": "22909cef3634d0612eaae000cc6bcf1841dac55300a0a74f533f851652ed848e",
+      "bytes": 26279
+    },
+    {
+      "file": "data/held_out/HELD-016/A8.txt",
+      "sha256": "b2cf063ba68cc0e7ee69698a82ce6fb082fe4c48cf6aa4aafbda872f78be3932",
+      "bytes": 12584
+    },
+    {
+      "file": "data/held_out/HELD-016/A9.html",
+      "sha256": "a798b84366c1d4aa76a982fee5522d7d45dc477feb5ba37911b53b8a11df2c5e",
+      "bytes": 25390
+    },
+    {
+      "file": "data/held_out/HELD-016/A9.txt",
+      "sha256": "0062559e07d5ab4d900c2f45d84bc6432dc3160556ae94077e4b0079ae15d71a",
+      "bytes": 13518
+    },
+    {
+      "file": "data/held_out/HELD-016/S0.html",
+      "sha256": "05e9726e54553a750989815ec5dcf6cca43f77feeef1719e18cdc05888912aa8",
+      "bytes": 479076
+    },
+    {
+      "file": "data/held_out/HELD-016/S0.txt",
+      "sha256": "914efd9166bee867ff5b5beee47732fb93f8c5695880299f0422b2325877884c",
+      "bytes": 202989
+    },
+    {
+      "file": "data/held_out/HELD-017/A1.html",
+      "sha256": "138d0263d2f6c62bf0bd20de6708c3b2bd46190e57364787ae9d6e47de6fd63e",
+      "bytes": 69283
+    },
+    {
+      "file": "data/held_out/HELD-017/A1.txt",
+      "sha256": "41e9d03d24d4fc272423eea510be9dff0964bff22d826510144c877f829c612b",
+      "bytes": 23213
+    },
+    {
+      "file": "data/held_out/HELD-017/A2.html",
+      "sha256": "4c9d83b850926ba0615e3d626a5f0c38ab2c609e5cbe80187cbbef6f013be17b",
+      "bytes": 53706
+    },
+    {
+      "file": "data/held_out/HELD-017/A2.txt",
+      "sha256": "832375b07c8f9ed99779a5ab42d70b9323e1041c454f975ee490e1811a2d9ce9",
+      "bytes": 11508
+    },
+    {
+      "file": "data/held_out/HELD-017/A3.html",
+      "sha256": "5eac8c2bf5f32a77564e61599a3161ebb9a332fb3ce31784625f7dd98a4eceb2",
+      "bytes": 118628
+    },
+    {
+      "file": "data/held_out/HELD-017/A3.txt",
+      "sha256": "6e21e5fca26cd9523e7990510a783cc15a92a193150b079a2a4f84447566cc06",
+      "bytes": 33162
+    },
+    {
+      "file": "data/held_out/HELD-017/A4.html",
+      "sha256": "6cc44bef498baa3ca890d1e4f42a773f56cdf1f24ceafc59d5a1e142f030031b",
+      "bytes": 138656
+    },
+    {
+      "file": "data/held_out/HELD-017/A4.txt",
+      "sha256": "00806e921856dc7ae323d14c1a9ed1de43f0c5737f94c5d57453d7bf5350ef46",
+      "bytes": 42579
+    },
+    {
+      "file": "data/held_out/HELD-017/A5.html",
+      "sha256": "bba44121c77087204c8e9b6ea035e0b71dfc04b2cf413d6155ca462f901f4bdc",
+      "bytes": 1238524
+    },
+    {
+      "file": "data/held_out/HELD-017/A5.txt",
+      "sha256": "e35036827ab3e0829352b2e7eb4c724a1c419740e516ce6e2e72e65e20425d57",
+      "bytes": 487998
+    },
+    {
+      "file": "data/held_out/HELD-017/A6.html",
+      "sha256": "74ae6c005b4eabe72389a759fd6d2691235dfd3c8adc9f53006ab107a288b4c5",
+      "bytes": 1525391
+    },
+    {
+      "file": "data/held_out/HELD-017/A6.txt",
+      "sha256": "c9f3b3f951c82ff1e98ecc866017e673766a6a8dde80a2cd18d2d5eacda75456",
+      "bytes": 578829
+    },
+    {
+      "file": "data/held_out/HELD-017/A7.html",
+      "sha256": "6cd0b80dd4f3df4a47bfdd00d0967d5f42010de57cbde7ef9f42defb3d556aa1",
+      "bytes": 1077816
+    },
+    {
+      "file": "data/held_out/HELD-017/A7.txt",
+      "sha256": "9f6b2e51440edaaee9d0efcce54506114b6c2d1cff6d84aa5c07c5420e71b832",
+      "bytes": 577394
+    },
+    {
+      "file": "data/held_out/HELD-017/A8.html",
+      "sha256": "809d6fab228728eec47d7393650fdc35447a4774fc2185f4b37f11431daee50d",
+      "bytes": 1123954
+    },
+    {
+      "file": "data/held_out/HELD-017/A8.txt",
+      "sha256": "4e0080473fadd7901a427fb216179b45500d16e600ab527c9121cb2bf3ed3422",
+      "bytes": 552916
+    },
+    {
+      "file": "data/held_out/HELD-017/A9.html",
+      "sha256": "68cfcd8d023dba2c81e7718e2d1d83a881b2a203087771b64e343fc850fd85c8",
+      "bytes": 985228
+    },
+    {
+      "file": "data/held_out/HELD-017/A9.txt",
+      "sha256": "3e303e10217ad59b99501c13f59d0564dbc2d822557f62680175312961baedf5",
+      "bytes": 586372
+    },
+    {
+      "file": "data/held_out/HELD-017/S0.html",
+      "sha256": "7cb35aa86aad6d370be750f5fcc754a962c824ed0de9774aaa0187a697f91618",
+      "bytes": 1317022
+    },
+    {
+      "file": "data/held_out/HELD-017/S0.txt",
+      "sha256": "1a94e45115649dc81ab0646ec48abcd122abc0894741f16f5ec0fb5d5c8c433f",
+      "bytes": 324224
+    },
+    {
+      "file": "data/held_out/HELD-018/A1.html",
+      "sha256": "e2ef1b6356dab3b0de05ac9dcdec0bafa775bbcd4ecd77ea3637a9ea951dcec7",
+      "bytes": 271908
+    },
+    {
+      "file": "data/held_out/HELD-018/A1.txt",
+      "sha256": "22030009fcbdeb2476a7b20490382f41bfbc202caae4cc4e2169bc82456dcf18",
+      "bytes": 81624
+    },
+    {
+      "file": "data/held_out/HELD-018/A2.html",
+      "sha256": "dfb1d5629919557dcb16e866179e37e007b2c13a8aff6146fca7d712f14d2591",
+      "bytes": 46705
+    },
+    {
+      "file": "data/held_out/HELD-018/A2.txt",
+      "sha256": "9c0f1004b1969b2c3ff25c0b8c48a38abe66fe308a60c066a6fe3d76b65b4433",
+      "bytes": 23080
+    },
+    {
+      "file": "data/held_out/HELD-018/A3.html",
+      "sha256": "f47bee856db2144f224d905ba5fc743c34ea34d748d74b551815c532ca44ab96",
+      "bytes": 36648
+    },
+    {
+      "file": "data/held_out/HELD-018/A3.txt",
+      "sha256": "ff30a934eef1dfc1023c363dc44e0c7ad4c517008f1377a34a35e03cd99672eb",
+      "bytes": 13297
+    },
+    {
+      "file": "data/held_out/HELD-018/A4.html",
+      "sha256": "3d9f5c1096546aa8180321785c1241849f1f403aae89415c96277561aee377bb",
+      "bytes": 41216
+    },
+    {
+      "file": "data/held_out/HELD-018/A4.txt",
+      "sha256": "0cb4a7c0cf609baaf9b23173b2bfa7667c747f61e90c4c4d88d70a0c7dadd9bf",
+      "bytes": 13398
+    },
+    {
+      "file": "data/held_out/HELD-018/A5.html",
+      "sha256": "4f44fcb3206d9140dff647a379bc292f4df6a3fd6b9dd56dbae77bf3e5aec41f",
+      "bytes": 76784
+    },
+    {
+      "file": "data/held_out/HELD-018/A5.txt",
+      "sha256": "ba044b0a9be2d2c085759f92f183ec359d01fd20f99be96973f495f05d37b9cd",
+      "bytes": 20881
+    },
+    {
+      "file": "data/held_out/HELD-018/A6.html",
+      "sha256": "308b908b818631c4c9ef7d50e91faac70d985e537624b34067ba739a455bdace",
+      "bytes": 37609
+    },
+    {
+      "file": "data/held_out/HELD-018/A6.txt",
+      "sha256": "c376e685f9c316ff516b069a2e17ea13185b2df4d3fa46778c3bdc7d8322b112",
+      "bytes": 13997
+    },
+    {
+      "file": "data/held_out/HELD-018/A7.html",
+      "sha256": "c873d2b6ace02897ed8725c59366caff5a95a8c56c1d301d56d4977eba3b848c",
+      "bytes": 52556
+    },
+    {
+      "file": "data/held_out/HELD-018/A7.txt",
+      "sha256": "6a746770f48f4c643d8c55a49cdb55aafe6593ea85e01616a7fc0a4422b8ecd9",
+      "bytes": 15667
+    },
+    {
+      "file": "data/held_out/HELD-018/A8.html",
+      "sha256": "a9466beaa3f2f2b472d34af3f26821950c210d40c42c8689e36780eb763710e1",
+      "bytes": 314699
+    },
+    {
+      "file": "data/held_out/HELD-018/A8.txt",
+      "sha256": "78dff43627364199655a34d56413d360bfb21eee0fe076b5a62ee0cdec7b85e3",
+      "bytes": 192782
+    },
+    {
+      "file": "data/held_out/HELD-018/A9.html",
+      "sha256": "9f10902d27501deb39a00de4548aed12a5f25588d0ee9364350de533e0442c21",
+      "bytes": 65352
+    },
+    {
+      "file": "data/held_out/HELD-018/A9.txt",
+      "sha256": "f4092541a17104420b436202b116a33e610db00e4fbd87ea2a6690bb9c207145",
+      "bytes": 16434
+    },
+    {
+      "file": "data/held_out/HELD-018/S0.html",
+      "sha256": "5c11c0935594a1f7d24d807281ec939a0846ebeee74082979f427e096c0d4427",
+      "bytes": 27132
+    },
+    {
+      "file": "data/held_out/HELD-018/S0.txt",
+      "sha256": "267e15bb6d178be080e858cc037151b65886bb2413c9c2ebca5e38f3ed10eb82",
+      "bytes": 5140
+    },
+    {
+      "file": "data/held_out/HELD-019/A1.html",
+      "sha256": "4b88743780cfb2522de3be9f5f47e84278146ebc27978875d58feb64e9aec906",
+      "bytes": 150288
+    },
+    {
+      "file": "data/held_out/HELD-019/A1.txt",
+      "sha256": "047921012ef7004fc923c3b99f4d9fcd999f5b6a8e57bb42a3a4db9bc83f9d97",
+      "bytes": 27097
+    },
+    {
+      "file": "data/held_out/HELD-019/A2.html",
+      "sha256": "c7d56aa3a33d68c0d8926b1a56c375b4571bf0f180a384ef6579b3b285a08522",
+      "bytes": 1107774
+    },
+    {
+      "file": "data/held_out/HELD-019/A2.txt",
+      "sha256": "e0da2425c55d022ef84e75dfb36def50a8193dbb9753d5fb21e89a6de3d460c3",
+      "bytes": 500741
+    },
+    {
+      "file": "data/held_out/HELD-019/A3.html",
+      "sha256": "2299f90d1c746710342fc5c5f661d0a147e42ecfd37f55e272f238315f5269e5",
+      "bytes": 171731
+    },
+    {
+      "file": "data/held_out/HELD-019/A3.txt",
+      "sha256": "f2708b28af8f5e0a505fc6075f7cd6292bd3c1b7ac01e39ef8c7523d7f7939c9",
+      "bytes": 43851
+    },
+    {
+      "file": "data/held_out/HELD-019/A4.html",
+      "sha256": "379fa7d04c7c3e9669e0e8a5c3619bc808c312bb09ff7d87e9d012632235c588",
+      "bytes": 132048
+    },
+    {
+      "file": "data/held_out/HELD-019/A4.txt",
+      "sha256": "afe5fa3c849ba189b1e452f420b1f87b5f3917fe739a0352ab2fed096b7345b7",
+      "bytes": 30079
+    },
+    {
+      "file": "data/held_out/HELD-019/A5.html",
+      "sha256": "f9c2642bb72a457732845276c00cd13f60c6579eecaaba31487049a4098fb841",
+      "bytes": 4728
+    },
+    {
+      "file": "data/held_out/HELD-019/A5.txt",
+      "sha256": "fa683e07b38fb62eb618bce8c4d7be2fcbaa18da4bde43580061d4812cc6be27",
+      "bytes": 2708
+    },
+    {
+      "file": "data/held_out/HELD-019/A6.html",
+      "sha256": "110797aad58011c175b9005471539df4f05a616d841fdfeae59dd84d6aada16d",
+      "bytes": 1001561
+    },
+    {
+      "file": "data/held_out/HELD-019/A6.txt",
+      "sha256": "62cf19a3a8ef58e9d156e05bec30f7d7be3eb5b76503b815117728b344c32754",
+      "bytes": 443969
+    },
+    {
+      "file": "data/held_out/HELD-019/S0.html",
+      "sha256": "3496d18bdccd6ea01d3e2f04e5e3cbd9e6725445bbaf097974df1cafb629148e",
+      "bytes": 488863
+    },
+    {
+      "file": "data/held_out/HELD-019/S0.txt",
+      "sha256": "5d45629e84871cc5438a9375d395d6c02745827c91f24e2b879dc7f07ce68eb9",
+      "bytes": 200486
+    },
+    {
+      "file": "data/held_out/HELD-020/A1.html",
+      "sha256": "a0fd6131d5b152ba612df88a16533d8330e4b9091a105ed6693dd6bf53a1395c",
+      "bytes": 1307879
+    },
+    {
+      "file": "data/held_out/HELD-020/A1.txt",
+      "sha256": "3d8e028ae1672ebc65265c149c18b524620055f13ce8075b03def69a0ee2914e",
+      "bytes": 398382
+    },
+    {
+      "file": "data/held_out/HELD-020/A2.html",
+      "sha256": "cf45a2228fbb9e5f135f3616aef3cf58abad89eb763e2cefc4d8033371954927",
+      "bytes": 45455
+    },
+    {
+      "file": "data/held_out/HELD-020/A2.txt",
+      "sha256": "2d5c94f939959d327b7fe47516a81b7ce4cf0905ea35e2e095c6ea8c3eae8bc0",
+      "bytes": 13895
+    },
+    {
+      "file": "data/held_out/HELD-020/A3.html",
+      "sha256": "5936e8a1e87ef801252f445d8cff46016d06627ed2da62be851c86b412f90f43",
+      "bytes": 135833
+    },
+    {
+      "file": "data/held_out/HELD-020/A3.txt",
+      "sha256": "3c04bbaa7c011bcb5eaf97b1ced70a756317226d2c930ccf0a373b4b2fde3873",
+      "bytes": 28311
+    },
+    {
+      "file": "data/held_out/HELD-020/A4.html",
+      "sha256": "6008c6669ab9deb420fa68bc2f975f32bfb1a5cb0f83a2f7c2460ad8e17e973b",
+      "bytes": 319676
+    },
+    {
+      "file": "data/held_out/HELD-020/A4.txt",
+      "sha256": "f53483098b54923ccf82e6e9ceacdcf26c0f659275fd624631bdc29a983b587f",
+      "bytes": 115532
+    },
+    {
+      "file": "data/held_out/HELD-020/A5.html",
+      "sha256": "acefce1a10a7b59c969e31641a7316ee55d6f10cf91425c23880a16d466ba739",
+      "bytes": 300375
+    },
+    {
+      "file": "data/held_out/HELD-020/A5.txt",
+      "sha256": "1c70fb4ed02a06933ab5f7574068e7eebd3feb190cad1cde807deeb38206feff",
+      "bytes": 109751
+    },
+    {
+      "file": "data/held_out/HELD-020/A6.html",
+      "sha256": "0267965ab0a15cfe80ab075774acc5d2360ec7cdf35ad24281c3e81ea5079fcb",
+      "bytes": 80996
+    },
+    {
+      "file": "data/held_out/HELD-020/A6.txt",
+      "sha256": "7671a1c8a4de3bedb0dc9135b56d29cd03581548e5192e416b87a5a2358912f4",
+      "bytes": 12943
+    },
+    {
+      "file": "data/held_out/HELD-020/A7.html",
+      "sha256": "10667b3e61dc5f4321736fdf2d65fdbd86b7a0435132d16fac88ccff5538fd58",
+      "bytes": 442354
+    },
+    {
+      "file": "data/held_out/HELD-020/A7.txt",
+      "sha256": "57e58c1627a1ed48490b7ac123df134e24e7e11ceb051d0b4890e5350eadc66e",
+      "bytes": 227839
+    },
+    {
+      "file": "data/held_out/HELD-020/A8.html",
+      "sha256": "71a71b5e13e1a93115232d6eaf7f2246a645b08b4f306ee27a818ef15379213a",
+      "bytes": 83967
+    },
+    {
+      "file": "data/held_out/HELD-020/A8.txt",
+      "sha256": "c8d8db15c326db0a089fda5dfaade0f1cb62825387acca86da37bee599c137dc",
+      "bytes": 14508
+    },
+    {
+      "file": "data/held_out/HELD-020/A9.html",
+      "sha256": "279c85f6a35ed783bab2e010414d37a64f662a36967e4b163d6a17f4e1945a34",
+      "bytes": 43375
+    },
+    {
+      "file": "data/held_out/HELD-020/A9.txt",
+      "sha256": "1a187f01f486ab4abf3c8cceeebd2a831497b740a7255de7924cb93ba4be54e3",
+      "bytes": 20701
+    },
+    {
+      "file": "data/held_out/HELD-020/S0.html",
+      "sha256": "1ba314718cd363234925eabf9448b20cf39240017263ee08796fe744d5e03658",
+      "bytes": 347269
+    },
+    {
+      "file": "data/held_out/HELD-020/S0.txt",
+      "sha256": "6a3ef097ee69a5590f7c011754bff2453310ec885162d595e96dbba7da6e74e7",
+      "bytes": 176598
+    },
+    {
+      "file": "data/held_out/HELD-021/A1.html",
+      "sha256": "3f6f271a6e327c9db77493ef42548e18d6b165a590ce3e95eec03c0c307062b3",
+      "bytes": 97909
+    },
+    {
+      "file": "data/held_out/HELD-021/A1.txt",
+      "sha256": "cadbbb48cf1b1a2b9ffde4b1f28d960cb322da701fc4ac7ec5bc7e6c2db944f2",
+      "bytes": 16422
+    },
+    {
+      "file": "data/held_out/HELD-021/A2.html",
+      "sha256": "0fdcd8f64cd7718533366d5c1ff1d92e6ab6015c7a9a833abd085e10f2d0c207",
+      "bytes": 32070
+    },
+    {
+      "file": "data/held_out/HELD-021/A2.txt",
+      "sha256": "57c6bf290c9d8739e49259759a4bb68c88b2e1ffa4033797273bb5ce72bef1bc",
+      "bytes": 3700
+    },
+    {
+      "file": "data/held_out/HELD-021/A3.html",
+      "sha256": "fdf134ae2c9cf37540fe2a0c2c8810737bb01aec907d0f6c5997679a0b95fe8b",
+      "bytes": 74955
+    },
+    {
+      "file": "data/held_out/HELD-021/A3.txt",
+      "sha256": "39a9a0893453d4c1f1372997bc6d461136ddbbd19f3f449ab9e1341b97a0c5d6",
+      "bytes": 14881
+    },
+    {
+      "file": "data/held_out/HELD-021/A4.html",
+      "sha256": "7a69675741b4633dce14456b55c6a6bdbcf2ffb09029e33878931f62079befc8",
+      "bytes": 1550723
+    },
+    {
+      "file": "data/held_out/HELD-021/A4.txt",
+      "sha256": "6b2dacd0ac9cf0f8f6d921ade6da4134ae4f4dc66d8618b782b2fe2b214883ba",
+      "bytes": 557225
+    },
+    {
+      "file": "data/held_out/HELD-021/A5.html",
+      "sha256": "23b0eacd402d56870488f73237049a6b051d966b0d00681edbe703e49e8a15ca",
+      "bytes": 1116382
+    },
+    {
+      "file": "data/held_out/HELD-021/A5.txt",
+      "sha256": "426d66808602c939318a02cd16a24993177066b198cb0f666c1ab614f70ae73d",
+      "bytes": 509597
+    },
+    {
+      "file": "data/held_out/HELD-021/A6.html",
+      "sha256": "5944a3a42c97051b951845f25d65f9a92d5a95bfefc753892c86cf899a56a221",
+      "bytes": 2234985
+    },
+    {
+      "file": "data/held_out/HELD-021/A6.txt",
+      "sha256": "b65d32b28d6331805e8c84f988934bd34299765336ffb573b3ac0e87711449bd",
+      "bytes": 690784
+    },
+    {
+      "file": "data/held_out/HELD-021/S0.html",
+      "sha256": "f7e3689f340cd59a447cba8d83339038b304bfd47794876cf7090842c649ea18",
+      "bytes": 46309
+    },
+    {
+      "file": "data/held_out/HELD-021/S0.txt",
+      "sha256": "91202b825f625bf59755eee7a333373f530cdd12319f85b25adfbcb21c6ce4b6",
+      "bytes": 17112
+    },
+    {
+      "file": "data/held_out/HELD-022/A1.html",
+      "sha256": "c9a5725eb6ec4e46ee07461ec9e80f42d08aea5bd2877d07416e148dd87372c1",
+      "bytes": 43828
+    },
+    {
+      "file": "data/held_out/HELD-022/A1.txt",
+      "sha256": "31dfc2aa5aad6c26406ea67c5ba9cdedb79ef42ab5cc207db2fc19b217273553",
+      "bytes": 17668
+    },
+    {
+      "file": "data/held_out/HELD-022/A2.html",
+      "sha256": "4e3935a8b7b4eada2e53429b4134d163f2bb035ae9a08ab6986ea5d288434dc5",
+      "bytes": 95409
+    },
+    {
+      "file": "data/held_out/HELD-022/A2.txt",
+      "sha256": "06d2e9d425838a598c26aafc1ecf77471cb905ca8c01c74e51c9e56715d63e80",
+      "bytes": 30683
+    },
+    {
+      "file": "data/held_out/HELD-022/A3.html",
+      "sha256": "eac1c2c8dc062e67f858a001d7f704c8501eecb9a8e557a046c06c56f05f0d4f",
+      "bytes": 77215
+    },
+    {
+      "file": "data/held_out/HELD-022/A3.txt",
+      "sha256": "055fa763410338ae5fe17dfd17ec81fa44f64d15b20096f00289bd73b892dee7",
+      "bytes": 31256
+    },
+    {
+      "file": "data/held_out/HELD-022/A4.html",
+      "sha256": "a7fc67aec03bf5b689473c3bc6fe0288e683264f7611c857e6aff46800f975d6",
+      "bytes": 68212
+    },
+    {
+      "file": "data/held_out/HELD-022/A4.txt",
+      "sha256": "5bcedbabee47a2f30cadf6b42ffbd2b7d2a0169218f003f69d6356f7ed595848",
+      "bytes": 21882
+    },
+    {
+      "file": "data/held_out/HELD-022/A5.html",
+      "sha256": "3084347e4333f375014953850074a1a1a7a9e83dce55af43ae9240f11c98971b",
+      "bytes": 105012
+    },
+    {
+      "file": "data/held_out/HELD-022/A5.txt",
+      "sha256": "7afc722e335f7e438018bdc63aef5d51cabd08ec5d41d3edacf9c11777096ad4",
+      "bytes": 28082
+    },
+    {
+      "file": "data/held_out/HELD-022/A6.html",
+      "sha256": "803b5b9dc87c6f40d0cabc3334e5ad6b0fa627a7d49f459e29cac2f70b28baed",
+      "bytes": 131841
+    },
+    {
+      "file": "data/held_out/HELD-022/A6.txt",
+      "sha256": "a39d48e16ab2b36dda2b25d9d3d613030ef5dae7f4cf2e5ce656f40257fb5ecf",
+      "bytes": 39326
+    },
+    {
+      "file": "data/held_out/HELD-022/A7.html",
+      "sha256": "f5e80bc3ec8bcc1cef16d49611fe465fd15637c72ab08f360078234fde6ab742",
+      "bytes": 62061
+    },
+    {
+      "file": "data/held_out/HELD-022/A7.txt",
+      "sha256": "299fbfe13d38e58775fafac83782a0ed893c04d0f5849f6174af997b05d510cd",
+      "bytes": 25269
+    },
+    {
+      "file": "data/held_out/HELD-022/A8.html",
+      "sha256": "3e5001c70117fe9d6e873112c886ebe2f98dc92e74373548d83da6d51f2135d3",
+      "bytes": 268428
+    },
+    {
+      "file": "data/held_out/HELD-022/A8.txt",
+      "sha256": "49ca8022c99ad0f289917e293222f9bb8a0576b2918375afd2bdfb8ba1064eab",
+      "bytes": 116964
+    },
+    {
+      "file": "data/held_out/HELD-022/S0.html",
+      "sha256": "69f976ccec3f272651535bfc41c11d06ea0dbe018f8c4c16ea6697075eaa25ba",
+      "bytes": 1029233
+    },
+    {
+      "file": "data/held_out/HELD-022/S0.txt",
+      "sha256": "c48dc561cc43461b60488aaccd84bf0dd23c0dd7f0bcd69993efbc90823cf02d",
+      "bytes": 352565
+    },
+    {
+      "file": "data/held_out/HELD-023/A1.html",
+      "sha256": "dd889339ee45928a174302f88ff2ad21df60a1fdde5f08bd5ea2a8d1dcdea553",
+      "bytes": 16913
+    },
+    {
+      "file": "data/held_out/HELD-023/A1.txt",
+      "sha256": "c08ab2b39d5cdd0b359a57e41bdd0895dbcf6df18653062dfa542794beb075db",
+      "bytes": 13641
+    },
+    {
+      "file": "data/held_out/HELD-023/A2.html",
+      "sha256": "68b058cbd862da2cdef9885001e1889ace54804f48dcb8985abf09ce19860b36",
+      "bytes": 146236
+    },
+    {
+      "file": "data/held_out/HELD-023/A2.txt",
+      "sha256": "14f34f7551df1a41908946c17e3f5a5639a04275d146bed996e92ade492b1bf0",
+      "bytes": 130724
+    },
+    {
+      "file": "data/held_out/HELD-023/S0.html",
+      "sha256": "f0a70f61e2a61c47301c246ba3833736410d788c79d050873cf2760fd322852f",
+      "bytes": 436110
+    },
+    {
+      "file": "data/held_out/HELD-023/S0.txt",
+      "sha256": "da1940ccd0f26af640e0c3d1db8b0239bc8e9926d667b5ca6d4993ca731babfb",
+      "bytes": 286290
+    },
+    {
+      "file": "data/held_out/HELD-024/A1.html",
+      "sha256": "f6da90f63e786ff485f0916f439e057ed8afbcf913b541244858eff4be5aa026",
+      "bytes": 103443
+    },
+    {
+      "file": "data/held_out/HELD-024/A1.txt",
+      "sha256": "db5c95019bf04841fa17d14faf470e4568b55d9f102be0b6d2c1d8a7c2ebf1f9",
+      "bytes": 26988
+    },
+    {
+      "file": "data/held_out/HELD-024/A2.html",
+      "sha256": "90ef1b7feb006dc5c938fc81050f95bc237523fc8d6151e9dcdf10a92f73ae39",
+      "bytes": 109935
+    },
+    {
+      "file": "data/held_out/HELD-024/A2.txt",
+      "sha256": "5a8498ed65bfdc7c823f2dcfd871fe425a8a9654c5d17cf1b2de49801cbe38c7",
+      "bytes": 41020
+    },
+    {
+      "file": "data/held_out/HELD-024/A3.html",
+      "sha256": "7de1c8df57836f96ffa1b9549fcd07cd547fa1a4cec2cc2186a67d6019a7e532",
+      "bytes": 99602
+    },
+    {
+      "file": "data/held_out/HELD-024/A3.txt",
+      "sha256": "ea197f6096c0a005d79a7d6529c462f2baed270108d6b58e2158b93feb46a46f",
+      "bytes": 29015
+    },
+    {
+      "file": "data/held_out/HELD-024/A4.html",
+      "sha256": "bd1df20622942c2c191de664cadeeba47745a843a37cbfd66b56c987b81308e7",
+      "bytes": 154531
+    },
+    {
+      "file": "data/held_out/HELD-024/A4.txt",
+      "sha256": "ee2fefbc205fa6274793772e599bab96e16f5de68e5d132828584969d13aa312",
+      "bytes": 37367
+    },
+    {
+      "file": "data/held_out/HELD-024/A5.html",
+      "sha256": "16ac74f635e3046f96aebc9b6cba2771e83b5c2efb52ebca3606b580d54cd271",
+      "bytes": 924954
+    },
+    {
+      "file": "data/held_out/HELD-024/A5.txt",
+      "sha256": "d0a3a72164c1962fbf77fca2978543176001fa85751be0d8ab524668345afd1d",
+      "bytes": 533109
+    },
+    {
+      "file": "data/held_out/HELD-024/A6.html",
+      "sha256": "5ebc6c9c8e82f877fc45ce2f663dc736524b87cf7c2b168dcb4c1336d3b0536f",
+      "bytes": 1191180
+    },
+    {
+      "file": "data/held_out/HELD-024/A6.txt",
+      "sha256": "ca4b42e33521bda29a695078db1a96c407c5aa6e2eabcd60535254843be9f0b4",
+      "bytes": 605182
+    },
+    {
+      "file": "data/held_out/HELD-024/A7.html",
+      "sha256": "08daeeca2b0f0415d0f6d15e6094ca315d87cfbacf39886c1cea92d85445633e",
+      "bytes": 76662
+    },
+    {
+      "file": "data/held_out/HELD-024/A7.txt",
+      "sha256": "6fe2fda7e34e414de44dd8656fbeea43c73ccedc1ab781c2c1eb37663e8edac6",
+      "bytes": 20510
+    },
+    {
+      "file": "data/held_out/HELD-024/S0.html",
+      "sha256": "0baa8c7e632ca5fab6649fc1eaee380d7f11b20fd42aae0bbed736f9c0786fe2",
+      "bytes": 200916
+    },
+    {
+      "file": "data/held_out/HELD-024/S0.txt",
+      "sha256": "c60f79a239354126362584c8dafe13b7e0042951afc847b3dcb99a2c2689ef31",
+      "bytes": 69231
+    },
+    {
+      "file": "data/held_out/HELD-025/A1.html",
+      "sha256": "b37a43407095d54c0c82ed262264b35a7972e4f07945a31a80142b1226aad7e5",
+      "bytes": 3030530
+    },
+    {
+      "file": "data/held_out/HELD-025/A1.txt",
+      "sha256": "43e51a6eb7ca706fecfdf6649afc23d61ccb5dfe2aad94bcff8ba8d8f3c54557",
+      "bytes": 1209577
+    },
+    {
+      "file": "data/held_out/HELD-025/A2.html",
+      "sha256": "fde4c532ad26852d5bdbb6520d9f20c04f8d97c94e925a8f7381144599e83ef5",
+      "bytes": 57111
+    },
+    {
+      "file": "data/held_out/HELD-025/A2.txt",
+      "sha256": "fdf181ba463bc50b3b44f9b38a38006f2ab52b90aa316d3410e8221678e43c33",
+      "bytes": 22633
+    },
+    {
+      "file": "data/held_out/HELD-025/A3.html",
+      "sha256": "eec05bdb4ec84ba22d62296b1fce5a1f233479504d0fa7d3a5512870aa59825e",
+      "bytes": 365621
+    },
+    {
+      "file": "data/held_out/HELD-025/A3.txt",
+      "sha256": "14ed5014d41ec5faf377e84225a532f6c5cea3b4a9599c74060e604b887ef087",
+      "bytes": 175725
+    },
+    {
+      "file": "data/held_out/HELD-025/A4.html",
+      "sha256": "da79480c480e39c06ec1924681002217290c40087a16800498eabe0f35991b1e",
+      "bytes": 464765
+    },
+    {
+      "file": "data/held_out/HELD-025/A4.txt",
+      "sha256": "0de5d21f454d42b81d7f2152c6a81f2074e33b0dfb45034713bb75e04243c584",
+      "bytes": 69079
+    },
+    {
+      "file": "data/held_out/HELD-025/S0.html",
+      "sha256": "60cc94c9df2ce3e8b387bc151cb21a036df7cd02c78aa54cc400985ce54dc3c9",
+      "bytes": 315232
+    },
+    {
+      "file": "data/held_out/HELD-025/S0.txt",
+      "sha256": "aba7cd83da03cb7516d47a6ed8bce13ed4671abe0c1b0b19a4aa57abd404610f",
+      "bytes": 122735
+    }
+  ],
+  "chain_document_count": 372,
+  "lock_invariants": [
+    "Frozen system code (v1.0-frozen-operational-build) is not modified.",
+    "Held-out predictions are not re-run.",
+    "No tuning against held-out data.",
+    "Automated proxy annotations are NOT human gold.",
+    "Provisional held-out metrics are NOT confirmatory evidence."
+  ]
+}

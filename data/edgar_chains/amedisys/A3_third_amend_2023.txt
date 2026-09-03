@@ -1,0 +1,258 @@
+EX-10.1
+3
+tm2319648d1_ex10-1.htm
+EXHIBIT 10.1
+Exhibit 10.1
+TERMINATION AGREEMENT
+This TERMINATION AGREEMENT (this
+“
+Agreement
+”), dated as of June 26, 2023, is made and entered into by and between Option Care Health, Inc.,
+a Delaware corporation (“
+OPCH
+”), Uintah Merger Sub, Inc., a wholly owned subsidiary of OPCH and a Delaware corporation
+(“
+OPCH Merger Sub
+”), and Amedisys, Inc., a Delaware corporation (“
+Amedisys
+”, together with
+OPCH and OPCH Merger Sub, the “
+parties
+” and each, a “
+party
+”). Capitalized terms used herein but
+not otherwise defined shall have the meanings ascribed to such terms in the OPCH Merger Agreement (as defined below).
+W I T N E S S E T H:
+WHEREAS, the parties hereto
+are parties to that certain Agreement and Plan of Merger, dated as of May 3, 2023 (the “
+OPCH Merger Agreement
+”);
+WHEREAS, Section 8.1(a) of
+the OPCH Merger Agreement provides that the Merger Agreement may be terminated by mutual written consent of Amedisys and OPCH;
+WHEREAS, Amedisys and OPCH have
+mutually agreed to terminate the OPCH Merger Agreement; and
+WHEREAS, immediately after the
+execution of this Agreement, Amedisys intends to enter into an Agreement and Plan of Merger with UnitedHealth Group Incorporated, a Delaware
+corporation (“
+UnitedHealth
+”), and Aurora Holdings Merger Sub Inc., a Delaware corporation and a wholly owned subsidiary
+of UnitedHealth (the “
+Optum Merger Agreement
+”).
+NOW, THEREFORE, in consideration
+of the foregoing and the mutual covenants and agreements herein contained taken as a whole, the parties agree as follows effective immediately
+upon the execution of this Agreement by each of the parties hereto:
+Section 1.
+Matters Related
+to the Termination of the OPCH Merger Agreement
+.
+(a)
+Termination
+.
+Effective as of the receipt by OPCH of the Amedisys Termination Fee (as defined below) pursuant to Section 2 below (the “
+Effective
+Time
+”) and only if the payment of the Amedisys Termination Fee is received within 24 hours of the execution of this Agreement,
+the parties hereto mutually agree that pursuant to Section 8.1(a) of the OPCH Merger Agreement, the OPCH Merger Agreement is
+hereby terminated.
+(b)
+No
+Further Obligations
+. Except with respect to the obligations of the parties set forth in the Confidentiality Agreement, that certain
+Clean Team Confidentiality Agreement, dated as of April 12, 2023 (the “
+Clean Team Agreement
+”), by and among OPCH
+and Amedisys, and
+Section 2
+below, upon the Effective Time and only if the payment of the Amedisys Termination Fee is received
+within 24 hours of the execution of this Agreement, (i) no party shall have any further obligations to any other party under the
+OPCH Merger Agreement, any agreement or instrument delivered in connection therewith or in connection with any of the transactions contemplated
+thereby and (ii) each party shall be free to conduct its business and affairs in the same manner as if the OPCH Merger Agreement
+had not been executed.
+Section 2.
+Termination
+Fees
+. Amedisys shall pay, or cause to be paid, to OPCH an amount equal to $106,000,000 (the “
+Amedisys Termination Fee
+”)
+by wire transfer in immediately available funds to the account specified on Annex A hereto, such wire transfer to be initiated immediately
+after the execution and delivery of this Agreement by each party. OPCH irrevocably agrees to accept the payment of such Amedisys Termination
+Fee if paid pursuant to the terms of this
+Section 2
+.
+Section 3.
+Mutual Releases
+.
+(a)
+Effective
+as at the Effective Time and only if the payment of the Amedisys Termination Fee is received within 24 hours of the execution of this
+Agreement, to the fullest extent permitted by Applicable Law, Amedisys, on behalf of itself, its subsidiaries, stockholders, affiliates,
+officers, directors, employees and Representatives (collectively, the “
+Amedisys Parties
+”) hereby unequivocally, knowingly,
+voluntarily, unconditionally and irrevocably waives, fully and finally releases, remises, exculpates, acquits and forever discharges OPCH
+and OPCH’s subsidiaries, stockholders, affiliates, officers, directors, employees and Representatives (collectively, the “
+OPCH
+Parties
+”) from any and all direct or derivative actions, causes of action, suits, debts, accounts, bonds, bills, covenants,
+contracts, controversies, obligations, claims, counterclaims, setoffs, debts, demands, damages, costs, expenses, compensation and liabilities
+of every kind and any nature whatsoever, in each case whether absolute or contingent, liquidated or unliquidated, known or unknown, and
+whether arising at law or in equity, which such Amedisys Party had, has, or may have based upon, arising from, in connection with or relating
+to the OPCH Merger Agreement, any agreement or instrument delivered in connection therewith or the transactions contemplated thereby.
+Notwithstanding the immediately foregoing sentence and
+Section 1
+, (i) no party shall be released from any breach of this
+Agreement or have its respective rights and obligations under this Agreement impaired, and (ii) the Confidentiality Agreement and
+the Clean Team Agreement will each continue in full force and effect in accordance with its terms, and no party to the Confidentiality
+Agreement or the Clean Team Agreement shall be released from any direct or derivative actions or claims which may arise thereunder. On
+and from the Effective Time and only if the payment of the Amedisys Termination Fee is received within 24 hours of the execution of this
+Agreement, each Amedisys Party shall refrain from, directly or indirectly, asserting any direct or derivative claim or demand or commencing,
+instituting, maintaining, facilitating, aiding or causing to be commenced, instituted or maintained, any direct or derivative legal or
+arbitral proceeding of any kind against any Amedisys Party based upon any matter released under this
+Section 3(a)
+.
+(b)
+Effective
+as at the Effective Time and only if the payment of the Amedisys Termination Fee is received within 24 hours of the execution of this
+Agreement, to the fullest extent permitted by Applicable Law, OPCH, on behalf of itself and each OPCH Party, hereby unequivocally, knowingly,
+voluntarily, unconditionally and irrevocably waives, fully and finally releases, remises, exculpates, acquits and forever discharges each
+Amedisys Party from any and all direct or derivative actions, causes of action, suits, debts, accounts, bonds, bills, covenants, contracts,
+controversies, obligations, claims, counterclaims, setoffs, debts, demands, damages, costs, expenses, compensation and liabilities of
+every kind and any nature whatsoever, in each case whether absolute or contingent, liquidated or unliquidated, known or unknown, and whether
+arising at law or in equity, which such OPCH Party had, has, or may have based upon, arising from, in connection with or relating to the
+OPCH Merger Agreement, any agreement or instrument delivered in connection therewith or the transactions contemplated thereby. Notwithstanding
+the immediately foregoing sentence and
+Section 1
+, (i) no party shall be released from any breach of this Agreement or
+have its respective rights and obligations under this Agreement impaired, (ii) nothing contained in this paragraph shall in any way
+affect or impair OPCH’s right to receive payment of the Amedisys Termination Fee pursuant to
+Section 2
+of this Agreement,
+and (iii) the Confidentiality Agreement and the Clean Team Agreement will each continue in full force and effect in accordance with
+its terms, and no party to the Confidentiality Agreement or the Clean Team Agreement shall be released from any direct or derivative actions
+or claims which may arise thereunder. On and from the Effective Time and only if the payment of the Amedisys Termination Fee is received
+within 24 hours of the execution of this Agreement, each OPCH Party shall refrain from, directly or indirectly, asserting any direct or
+derivative claim or demand or commencing, instituting, maintaining, facilitating, aiding or causing to be commenced, instituted or maintained,
+any direct or derivative legal or arbitral proceeding of any kind against any Amedisys Party based upon any matter released under this
+Section 3(b)
+.
+2
+Section 4.
+No Breach
+.
+For the avoidance of doubt the entry by Amedisys into the Optum Merger Agreement shall not be deemed to be a breach of the OPCH Merger
+Agreement or this Agreement if Amedisys shall have provided to OPCH evidence of a federal wire to OPCH for the payment of the Amedisys
+Termination Fee prior to such entry and OPCH receives the Amedisys Termination Fee within 24 hours of the execution of this Agreement.
+Section 5.
+Representations
+and Warranties
+. Each of the parties hereby represents that the execution, delivery and performance of this Agreement by it has been
+duly and validly authorized by all necessary corporate action and no other corporate proceedings by or on the part of it are necessary
+to authorize this Agreement or to perform its obligations hereunder; this Agreement has been duly and validly executed and delivered by
+it, and assuming the due authorization, execution and delivery hereof by the other party hereto, constitutes its legal, valid and binding
+obligation, enforceable against it in accordance with the terms hereof, subject to the Enforceability Exceptions.
+Section 6.
+Destruction/Return
+of Confidential Information
+. At the Effective Time and only if the payment of the Amedisys Termination Fee is received within 24 hours
+of the execution of this Agreement, each of Amedisys and OPCH requests of the other that (i) such other party and its Representatives
+(as defined in the Confidentiality Agreement) return or destroy all Confidential Information (as defined in the Confidentiality Agreement)
+in accordance with Section 7 of the Confidentiality Agreement and (ii) an appropriate officer of such other party certifies
+such return or destruction of the Confidential Information in accordance with Section 7 of the Confidentiality Agreement.
+Section 7.
+General Provisions
+.
+(a)
+Counterparts
+.
+This Agreement may be executed in two or more counterparts, all of which shall be considered one and the same agreement and shall become
+effective when one or more counterparts have been signed by each of the parties hereto and delivered to the other parties.
+3
+(b)
+Entire
+Agreement; No Third-Party Beneficiaries; No Additional Representations
+. This Agreement (including the documents, exhibits, schedules,
+disclosure letters and instruments referred to herein), taken together with the Confidentiality Agreement and the Clean Team Agreement:
+(i) constitutes the entire agreement, and supersedes all prior agreements and understandings, both written and oral, among OPCH,
+OPCH Merger Sub and Amedisys with respect to the Merger and the other transactions contemplated by this Agreement, and (ii) is not
+intended to, and does not, confer upon any person other than the parties hereto any rights or remedies hereunder, other than as provided
+in
+Section 3(a)
+and
+Section 3(b)
+.
+(c)
+Assignment
+.
+Neither this Agreement nor any of the rights, interests or obligations under this Agreement shall be assigned, in whole or in part, by
+operation of law or otherwise by any of the parties without the prior written consent of the other parties. Any purported assignment in
+violation of the preceding sentence shall be void. Subject to the preceding two sentences, this Agreement will be binding upon, inure
+to the benefit of and be enforceable by the parties and their respective successors and assigns.
+(d)
+GOVERNING
+LAW
+. THIS AGREEMENT SHALL BE GOVERNED BY AND CONSTRUED IN ACCORDANCE WITH THE LAWS OF THE STATE OF DELAWARE, REGARDLESS OF THE LAWS
+THAT MIGHT OTHERWISE GOVERN UNDER ANY APPLICABLE PRINCIPLES OF CONFLICTS OF LAWS THEREOF.
+(e)
+WAIVER
+OF JURY TRIAL
+. EACH PARTY ACKNOWLEDGES AND AGREES THAT ANY CONTROVERSY WHICH MAY ARISE UNDER THIS AGREEMENT IS LIKELY TO INVOLVE
+COMPLICATED AND DIFFICULT ISSUES, AND THEREFORE IT HEREBY IRREVOCABLY AND UNCONDITIONALLY WAIVES, TO THE FULLEST EXTENT PERMITTED BY APPLICABLE
+LAW, ANY RIGHT IT MAY HAVE TO A TRIAL BY JURY IN RESPECT OF ANY LITIGATION DIRECTLY OR INDIRECTLY ARISING OUT OF OR RELATING TO THIS
+AGREEMENT AND ANY OF THE AGREEMENTS DELIVERED IN CONNECTION HEREWITH OR THE TRANSACTIONS CONTEMPLATED HEREBY OR THEREBY. EACH PARTY CERTIFIES
+AND ACKNOWLEDGES THAT (A) NO REPRESENTATIVE, AGENT OR ATTORNEY OF ANY OTHER PARTY HAS REPRESENTED, EXPRESSLY OR OTHERWISE, THAT SUCH
+OTHER PARTY WOULD NOT, IN THE EVENT OF LITIGATION, SEEK TO ENFORCE THE FOREGOING WAIVER, (B) IT UNDERSTANDS AND HAS CONSIDERED
+THE IMPLICATIONS OF SUCH WAIVER, (C) IT MAKES SUCH WAIVER VOLUNTARILY AND (D) IT HAS BEEN INDUCED TO ENTER INTO THIS AGREEMENT
+BY, AMONG OTHER THINGS, THE MUTUAL WAIVER AND CERTIFICATIONS IN THIS
+SECTION 5(E)
+.
+4
+(f)
+Jurisdiction
+.
+In any action between the parties arising out of or relating to this Agreement or any of the transactions contemplated hereby, each of
+the parties (i) irrevocably and unconditionally consents and submits to the exclusive jurisdiction and venue of the Court of Chancery
+of the State of Delaware in and for New Castle County, Delaware, (ii) agrees that it will not attempt to deny or defeat such jurisdiction
+by motion or other request for leave from such court and (iii) agrees that it will not bring any such action in any court other than
+the Court of Chancery for the State of Delaware in and for New Castle County, Delaware, or, if (and only if) such court finds it lacks
+subject matter jurisdiction, the federal court of the United States of America sitting in Delaware, and appellate courts thereof, or,
+if (and only if) each of such Court of Chancery for the State of Delaware and such federal court finds it lacks subject matter jurisdiction,
+any state court within the State of Delaware. Service of process, summons, notice or document to any party’s address and in the
+manner set forth in Section 9.2 of the OPCH Merger Agreement shall be effective service of process for any such action.
+[
+Remainder of Page Intentionally Left Blank
+]
+5
+IN WITNESS WHEREOF
+, each
+of the parties has caused this Agreement to be executed as of the date first written above.
+Option
+Care Health, Inc.
+By:
+/s/ John C. Rademacher
+Name: John C. Rademacher
+Title: President and Chief Executive Officer
+UNITAH
+MERGER SUB, INC.
+By:
+/s/ Michael Shapiro
+Name: Michael Shapiro
+Title: Chief Financial Officer and Treasurer
+[Signature Page to the
+Termination Agreement]
+Amedisys, INC.
+By:
+/s/ Richard Ashworth
+Name: Richard Ashworth
+Title: President and Chief Executive Officer
+[Signature Page to the
+Termination Agreement]
+Annex A
+Wire Instructions
+Account number:
+Routing number ACH/EFT
+Wire Routing:
+Swift:
+Account Name:
+Account Type:
+Bank name and address:

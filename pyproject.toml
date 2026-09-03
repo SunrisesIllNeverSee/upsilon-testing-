@@ -15,3 +15,39 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+
+# ---------------------------------------------------------------------------
+# Package layout — src/upsilon is the target engine package
+# ---------------------------------------------------------------------------
+[tool.setuptools.packages.find]
+where = ["src", "."]
+include = ["upsilon*"]
+
+[tool.setuptools.package-dir]
+"" = "."
+
+# ---------------------------------------------------------------------------
+# Pytest configuration — staged test discovery migration
+# ---------------------------------------------------------------------------
+#
+# The report specified a staged migration of test discovery boundaries:
+#
+#   Phase 0 (current):  python_files = ["test_*.py"]   (root still has tests)
+#   Phase 1 (next):     testpaths = ["tests", "."]      (some tests moved)
+#   Phase 2 (final):    testpaths = ["tests"]           (all tests moved)
+#
+# We are now at Phase 2: all tests have moved to tests/.
+#
+# Do NOT set testpaths = ["."] — that means "look everywhere" and defeats
+# the purpose of an explicit collection boundary.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# src/upsilon uses a src-layout.  Add src/ to sys.path so `import upsilon`
+# resolves without requiring an external PYTHONPATH or an editable install.
+# This keeps `pytest -q` (and `make test`) working in the transitional state
+# where target tests live under tests/unit/ and legacy tests remain at root.
+pythonpath = ["src", "."]

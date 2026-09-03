@@ -1,0 +1,3022 @@
+{
+  "generated_at": "regenerate via: python audits/repository/generate_dependency_graph.py",
+  "module_count": 121,
+  "boundary_violation_count": 7,
+  "modules": [
+    {
+      "module": "acquire_chain_study",
+      "imports": [],
+      "imported_by": [
+        "acquire_comparison_sources",
+        "test_chain_study"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_chain_study"
+      ],
+      "runtime_dependents": [
+        "acquire_comparison_sources"
+      ],
+      "third_party_imports": [
+        "httpx",
+        "bs4"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "acquire_comparison_sources",
+      "imports": [
+        "acquire_chain_study"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "acquire_chain_study"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "httpx"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "acquire_held_out_study",
+      "imports": [],
+      "imported_by": [
+        "test_held_out_study"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_held_out_study"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "httpx",
+        "bs4"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "agreement_context",
+      "imports": [
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "imported_by": [
+        "model_assisted_candidates",
+        "test_agreement_context"
+      ],
+      "top_level_imports": [
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "deferred_imports": [
+        "commitment_registry"
+      ],
+      "test_dependents": [
+        "test_agreement_context"
+      ],
+      "runtime_dependents": [
+        "model_assisted_candidates"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "amendment_parser",
+      "imports": [],
+      "imported_by": [
+        "analyze_held_out_mutations",
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "classify_development_corpus",
+        "diagnose_17b_defects",
+        "genre_adapters",
+        "produce_census_tables",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "test_parser_v03",
+        "test_parser_v04_regression",
+        "test_semantic_regression"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_parser_v03",
+        "test_parser_v04_regression",
+        "test_semantic_regression"
+      ],
+      "runtime_dependents": [
+        "analyze_held_out_mutations",
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "classify_development_corpus",
+        "diagnose_17b_defects",
+        "genre_adapters",
+        "produce_census_tables",
+        "semantic_pipeline",
+        "semantic_pipeline_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "analyze_held_out_mutations",
+      "imports": [
+        "amendment_parser",
+        "chain_reconstruction",
+        "executor",
+        "legacy_models",
+        "run_held_out_study",
+        "semantic_mapper",
+        "semantic_pipeline"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "run_held_out_study",
+        "semantic_pipeline",
+        "chain_reconstruction",
+        "amendment_parser",
+        "semantic_mapper",
+        "legacy_models",
+        "executor"
+      ],
+      "deferred_imports": [
+        "semantic_pipeline"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "apply",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "authority",
+      "imports": [],
+      "imported_by": [
+        "test_upsilonsrc"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_upsilonsrc"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "authorized_change",
+      "imports": [
+        "identity"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "identity"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "build_development_corpus",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "httpx",
+        "bs4"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "build_failure_matrix",
+      "imports": [],
+      "imported_by": [
+        "test_build_failure_matrix",
+        "test_v02_change_spec"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_build_failure_matrix",
+        "test_v02_change_spec"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "build_release_package",
+      "imports": [],
+      "imported_by": [
+        "test_build_release_package"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_build_release_package"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "build_step22_taxonomy",
+      "imports": [],
+      "imported_by": [
+        "test_step22_taxonomy"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_step22_taxonomy"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "build_step23_audit",
+      "imports": [
+        "amendment_parser",
+        "commitment_registry",
+        "genre_adapters",
+        "legacy_models",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [
+        "test_step23_audit"
+      ],
+      "top_level_imports": [
+        "amendment_parser",
+        "commitment_registry",
+        "genre_adapters",
+        "legacy_models",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_step23_audit"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "build_step23r_audit",
+      "imports": [
+        "amendment_parser",
+        "executor",
+        "genre_adapters",
+        "legacy_models",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [
+        "test_step23r_audit"
+      ],
+      "top_level_imports": [
+        "amendment_parser",
+        "executor",
+        "genre_adapters",
+        "legacy_models",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_step23r_audit"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "build_unresolved_corpus",
+      "imports": [
+        "amendment_parser",
+        "commitment_registry",
+        "legacy_models",
+        "pattern_classifier",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "semantic_mapper"
+      ],
+      "imported_by": [
+        "test_build_unresolved_corpus"
+      ],
+      "top_level_imports": [
+        "amendment_parser",
+        "commitment_registry",
+        "legacy_models",
+        "pattern_classifier",
+        "semantic_mapper"
+      ],
+      "deferred_imports": [
+        "run_chain_study_v2",
+        "run_held_out_study"
+      ],
+      "test_dependents": [
+        "test_build_unresolved_corpus"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "chain_reconstruction",
+      "imports": [
+        "executor",
+        "legacy_models",
+        "persistence"
+      ],
+      "imported_by": [
+        "analyze_held_out_mutations",
+        "chain_study_chains",
+        "edgar_chains",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_edgar_smoke_test",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_smoke_test",
+        "run_v2_study",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "synthetic_chains",
+        "test_chain_reconstruction",
+        "test_chain_study_v2",
+        "test_edgar_chains",
+        "test_step_22b_incorrect_mutation_fix"
+      ],
+      "top_level_imports": [
+        "legacy_models",
+        "executor",
+        "persistence"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_chain_reconstruction",
+        "test_chain_study_v2",
+        "test_edgar_chains",
+        "test_step_22b_incorrect_mutation_fix"
+      ],
+      "runtime_dependents": [
+        "analyze_held_out_mutations",
+        "chain_study_chains",
+        "edgar_chains",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_edgar_smoke_test",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_smoke_test",
+        "run_v2_study",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "synthetic_chains"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "BOUNDARY_VIOLATION",
+      "migration_preconditions": [
+        "authority and execution responsibilities extracted first",
+        "lineage graph retained as pure graph structure in lineage/ layer"
+      ],
+      "responsibilities_combined": "lineage graph + execution state advancement + authority propagation",
+      "target_split": "lineage/ (graph) + execution/ (state advancement) + authority/ (propagation)"
+    },
+    {
+      "module": "chain_study_chains",
+      "imports": [
+        "chain_reconstruction",
+        "edgar_chains",
+        "pattern_classifier"
+      ],
+      "imported_by": [
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_operational_preflight",
+        "test_chain_study"
+      ],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "pattern_classifier"
+      ],
+      "deferred_imports": [
+        "edgar_chains"
+      ],
+      "test_dependents": [
+        "test_chain_study"
+      ],
+      "runtime_dependents": [
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_operational_preflight"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "classify_development_corpus",
+      "imports": [
+        "amendment_parser"
+      ],
+      "imported_by": [
+        "produce_census_tables",
+        "test_semantic_regression"
+      ],
+      "top_level_imports": [
+        "amendment_parser"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_semantic_regression"
+      ],
+      "runtime_dependents": [
+        "produce_census_tables"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "classify_gold_scope",
+      "imports": [
+        "gt_extractor",
+        "s0_extractor"
+      ],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [
+        "s0_extractor",
+        "gt_extractor"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "commitment_extractor",
+      "imports": [
+        "legacy_models"
+      ],
+      "imported_by": [
+        "genre_adapters",
+        "gt_extractor",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_v2_study",
+        "s0_extractor",
+        "test_chain_study_v2",
+        "test_commitment_extractor",
+        "test_v02_regression"
+      ],
+      "top_level_imports": [
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_chain_study_v2",
+        "test_commitment_extractor",
+        "test_v02_regression"
+      ],
+      "runtime_dependents": [
+        "genre_adapters",
+        "gt_extractor",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_v2_study",
+        "s0_extractor"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "commitment_registry",
+      "imports": [
+        "legacy_models"
+      ],
+      "imported_by": [
+        "agreement_context",
+        "build_step23_audit",
+        "build_unresolved_corpus",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "moses_safety",
+        "semantic_resolver_v2",
+        "test_agreement_context",
+        "test_commitment_registry"
+      ],
+      "top_level_imports": [
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_agreement_context",
+        "test_commitment_registry"
+      ],
+      "runtime_dependents": [
+        "agreement_context",
+        "build_step23_audit",
+        "build_unresolved_corpus",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "moses_safety",
+        "semantic_resolver_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "BOUNDARY_VIOLATION",
+      "migration_preconditions": [
+        "new identity interface exists first",
+        "evidence alias matching extracted to evidence/ layer",
+        "section-reference resolution extracted to evidence/ layer"
+      ],
+      "responsibilities_combined": "commitment identity + evidence alias matching + section-reference resolution",
+      "target_split": "commitments/ (identity) + evidence/ (alias/section evidence)"
+    },
+    {
+      "module": "create_held_out_gold",
+      "imports": [
+        "gold_schema"
+      ],
+      "imported_by": [
+        "test_held_out_study"
+      ],
+      "top_level_imports": [
+        "gold_schema"
+      ],
+      "deferred_imports": [
+        "gold_schema"
+      ],
+      "test_dependents": [
+        "test_held_out_study"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "diagnose_17b_defects",
+      "imports": [
+        "amendment_parser",
+        "run_chain_study_v2",
+        "semantic_pipeline"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "amendment_parser",
+        "run_chain_study_v2",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "discovery_validation",
+      "imports": [],
+      "imported_by": [
+        "run_operational_preflight",
+        "test_v02_regression"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_v02_regression"
+      ],
+      "runtime_dependents": [
+        "run_operational_preflight"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "download_smoke_cases",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "httpx",
+        "bs4"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "edgar_chains",
+      "imports": [
+        "chain_reconstruction",
+        "legacy_models"
+      ],
+      "imported_by": [
+        "chain_study_chains",
+        "run_edgar_smoke_test",
+        "semantic_pipeline",
+        "test_edgar_chains",
+        "test_semantic_pipeline"
+      ],
+      "top_level_imports": [
+        "legacy_models",
+        "chain_reconstruction"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_edgar_chains",
+        "test_semantic_pipeline"
+      ],
+      "runtime_dependents": [
+        "chain_study_chains",
+        "run_edgar_smoke_test",
+        "semantic_pipeline"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "BOUNDARY_VIOLATION",
+      "migration_preconditions": [
+        "embedded frozen states externalized and hashed first",
+        "hand-extracted states moved to data/ground_truth/frozen/ with provenance",
+        "ingestion fixture code retained in ingestion/edgar/ layer"
+      ],
+      "responsibilities_combined": "ingestion fixtures + frozen chain data + hand-extracted states",
+      "target_split": "ingestion/edgar/ (fixtures) + data/ground_truth/frozen/ (data)"
+    },
+    {
+      "module": "evaluate_parser",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pandas"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "evaluation_layers",
+      "imports": [],
+      "imported_by": [
+        "test_evaluation_layers"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_evaluation_layers"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "executor",
+      "imports": [
+        "legacy_models"
+      ],
+      "imported_by": [
+        "analyze_held_out_mutations",
+        "build_step23r_audit",
+        "chain_reconstruction",
+        "run_operational_preflight",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "test_executor",
+        "test_persistence_plan",
+        "test_semantic_mapper_v01"
+      ],
+      "top_level_imports": [
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_executor",
+        "test_persistence_plan",
+        "test_semantic_mapper_v01"
+      ],
+      "runtime_dependents": [
+        "analyze_held_out_mutations",
+        "build_step23r_audit",
+        "chain_reconstruction",
+        "run_operational_preflight",
+        "semantic_pipeline",
+        "semantic_pipeline_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "freeze_step_18",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "freeze_study",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "generate_defect_safety_record",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "generate_dependency_graph",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "generate_manifest",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "generate_step22_final_report",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "generate_step23_report",
+      "imports": [],
+      "imported_by": [
+        "test_step23_audit"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_step23_audit"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "generate_step23r_deliverables",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "generate_step_19b_report",
+      "imports": [],
+      "imported_by": [
+        "test_held_out_study"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_held_out_study"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "stats"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "genre_adapters",
+      "imports": [
+        "amendment_parser",
+        "commitment_extractor",
+        "commitment_registry",
+        "legacy_models",
+        "pattern_classifier",
+        "semantic_mapper",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [
+        "build_step23_audit",
+        "build_step23r_audit",
+        "run_v2_study",
+        "semantic_pipeline_v2",
+        "test_genre_adapters"
+      ],
+      "top_level_imports": [
+        "amendment_parser",
+        "commitment_extractor",
+        "commitment_registry",
+        "legacy_models",
+        "pattern_classifier",
+        "semantic_mapper",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_genre_adapters"
+      ],
+      "runtime_dependents": [
+        "build_step23_audit",
+        "build_step23r_audit",
+        "run_v2_study",
+        "semantic_pipeline_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "gold_schema",
+      "imports": [],
+      "imported_by": [
+        "create_held_out_gold",
+        "run_held_out_study",
+        "test_gold_schema",
+        "test_held_out_study"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_gold_schema",
+        "test_held_out_study"
+      ],
+      "runtime_dependents": [
+        "create_held_out_gold",
+        "run_held_out_study"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "graph",
+      "imports": [],
+      "imported_by": [
+        "queries"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [
+        "queries"
+      ],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "gt_extractor",
+      "imports": [
+        "commitment_extractor"
+      ],
+      "imported_by": [
+        "classify_gold_scope",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study",
+        "test_chain_study_v2",
+        "test_commitment_extractor"
+      ],
+      "top_level_imports": [
+        "commitment_extractor"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_chain_study_v2",
+        "test_commitment_extractor"
+      ],
+      "runtime_dependents": [
+        "classify_gold_scope",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "identity",
+      "imports": [],
+      "imported_by": [
+        "authorized_change",
+        "kernel",
+        "test_upsilonsrc",
+        "transformation_proof"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_upsilonsrc"
+      ],
+      "runtime_dependents": [
+        "authorized_change",
+        "kernel",
+        "transformation_proof"
+      ],
+      "third_party_imports": [
+        "pydantic"
+      ],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "invariants",
+      "imports": [],
+      "imported_by": [
+        "validator"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [
+        "validator"
+      ],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "kernel",
+      "imports": [
+        "identity"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "identity"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pydantic"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "legacy_models",
+      "imports": [],
+      "imported_by": [
+        "agreement_context",
+        "analyze_held_out_mutations",
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "chain_reconstruction",
+        "commitment_extractor",
+        "commitment_registry",
+        "edgar_chains",
+        "executor",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "moses_safety",
+        "persistence",
+        "run_operational_preflight",
+        "semantic_gold",
+        "semantic_mapper",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2",
+        "synthetic_chains",
+        "test_agreement_context",
+        "test_chain_reconstruction",
+        "test_chain_study",
+        "test_chain_study_v2",
+        "test_commitment_registry",
+        "test_edgar_chains",
+        "test_executor",
+        "test_false_authoritative_promotion",
+        "test_genre_adapters",
+        "test_held_out_study",
+        "test_model_assisted_candidates",
+        "test_moses_safety",
+        "test_operational_preflight",
+        "test_parser_v03",
+        "test_persistence_plan",
+        "test_semantic_mapper",
+        "test_semantic_mapper_v01",
+        "test_semantic_pipeline",
+        "test_semantic_resolver_v2",
+        "test_step22f_staged_interpreter",
+        "test_step23_audit",
+        "test_step_22b_incorrect_mutation_fix"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_agreement_context",
+        "test_chain_reconstruction",
+        "test_chain_study",
+        "test_chain_study_v2",
+        "test_commitment_registry",
+        "test_edgar_chains",
+        "test_executor",
+        "test_false_authoritative_promotion",
+        "test_genre_adapters",
+        "test_held_out_study",
+        "test_model_assisted_candidates",
+        "test_moses_safety",
+        "test_operational_preflight",
+        "test_parser_v03",
+        "test_persistence_plan",
+        "test_semantic_mapper",
+        "test_semantic_mapper_v01",
+        "test_semantic_pipeline",
+        "test_semantic_resolver_v2",
+        "test_step22f_staged_interpreter",
+        "test_step23_audit",
+        "test_step_22b_incorrect_mutation_fix"
+      ],
+      "runtime_dependents": [
+        "agreement_context",
+        "analyze_held_out_mutations",
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "chain_reconstruction",
+        "commitment_extractor",
+        "commitment_registry",
+        "edgar_chains",
+        "executor",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "moses_safety",
+        "persistence",
+        "run_operational_preflight",
+        "semantic_gold",
+        "semantic_mapper",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2",
+        "synthetic_chains"
+      ],
+      "third_party_imports": [
+        "pydantic"
+      ],
+      "migration_risk": "HIGH",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "lineage",
+      "imports": [
+        "transformation"
+      ],
+      "imported_by": [
+        "test_upsilonsrc"
+      ],
+      "top_level_imports": [
+        "transformation"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_upsilonsrc"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pydantic"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "lock_held_out_run",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "loss_detection",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "migrate_files",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "util"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "model_assisted_candidates",
+      "imports": [
+        "agreement_context",
+        "commitment_registry",
+        "legacy_models",
+        "semantic_mapper",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [
+        "test_model_assisted_candidates"
+      ],
+      "top_level_imports": [
+        "commitment_registry",
+        "legacy_models",
+        "semantic_mapper",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [
+        "agreement_context"
+      ],
+      "test_dependents": [
+        "test_model_assisted_candidates"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "moses_safety",
+      "imports": [
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "imported_by": [
+        "semantic_resolver_v2",
+        "test_moses_safety"
+      ],
+      "top_level_imports": [
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_moses_safety"
+      ],
+      "runtime_dependents": [
+        "semantic_resolver_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "pattern_classifier",
+      "imports": [],
+      "imported_by": [
+        "build_unresolved_corpus",
+        "chain_study_chains",
+        "genre_adapters",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study",
+        "semantic_pipeline_v2",
+        "test_genre_adapters",
+        "test_pattern_classifier"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_genre_adapters",
+        "test_pattern_classifier"
+      ],
+      "runtime_dependents": [
+        "build_unresolved_corpus",
+        "chain_study_chains",
+        "genre_adapters",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study",
+        "semantic_pipeline_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "persistence",
+      "imports": [
+        "legacy_models"
+      ],
+      "imported_by": [
+        "chain_reconstruction",
+        "run_operational_preflight",
+        "run_step_17b",
+        "test_operational_preflight",
+        "test_persistence_plan"
+      ],
+      "top_level_imports": [
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_operational_preflight",
+        "test_persistence_plan"
+      ],
+      "runtime_dependents": [
+        "chain_reconstruction",
+        "run_operational_preflight",
+        "run_step_17b"
+      ],
+      "third_party_imports": [
+        "psycopg"
+      ],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "prepare_human_gold_handoff",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "produce_census_tables",
+      "imports": [
+        "amendment_parser",
+        "classify_development_corpus"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "amendment_parser",
+        "classify_development_corpus"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "promotion_gate",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "proof",
+      "imports": [
+        "transformation"
+      ],
+      "imported_by": [
+        "test_upsilonsrc"
+      ],
+      "top_level_imports": [
+        "transformation"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_upsilonsrc"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pydantic"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "queries",
+      "imports": [
+        "graph"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "graph"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "record_run",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_chain_study",
+      "imports": [
+        "chain_reconstruction",
+        "chain_study_chains",
+        "semantic_pipeline"
+      ],
+      "imported_by": [
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study",
+        "test_chain_study",
+        "test_chain_study_v2"
+      ],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "chain_study_chains",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_chain_study",
+        "test_chain_study_v2"
+      ],
+      "runtime_dependents": [
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_chain_study_v2",
+      "imports": [
+        "chain_reconstruction",
+        "chain_study_chains",
+        "commitment_extractor",
+        "gt_extractor",
+        "pattern_classifier",
+        "run_chain_study",
+        "s0_extractor",
+        "semantic_pipeline"
+      ],
+      "imported_by": [
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "diagnose_17b_defects",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_step_17b",
+        "run_v2_study",
+        "test_chain_study_v2"
+      ],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "chain_study_chains",
+        "commitment_extractor",
+        "gt_extractor",
+        "run_chain_study",
+        "s0_extractor",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [
+        "pattern_classifier"
+      ],
+      "test_dependents": [
+        "test_chain_study_v2"
+      ],
+      "runtime_dependents": [
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "diagnose_17b_defects",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_step_17b",
+        "run_v2_study"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_edgar_smoke_test",
+      "imports": [
+        "chain_reconstruction",
+        "edgar_chains"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "edgar_chains"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_held_out_study",
+      "imports": [
+        "chain_reconstruction",
+        "commitment_extractor",
+        "gold_schema",
+        "gt_extractor",
+        "pattern_classifier",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "s0_extractor",
+        "semantic_pipeline"
+      ],
+      "imported_by": [
+        "analyze_held_out_mutations",
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "run_v2_study",
+        "test_held_out_study"
+      ],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "commitment_extractor",
+        "gold_schema",
+        "gt_extractor",
+        "pattern_classifier",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "s0_extractor",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_held_out_study"
+      ],
+      "runtime_dependents": [
+        "analyze_held_out_mutations",
+        "build_step23_audit",
+        "build_step23r_audit",
+        "build_unresolved_corpus",
+        "run_v2_study"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_operational_preflight",
+      "imports": [
+        "chain_reconstruction",
+        "chain_study_chains",
+        "commitment_extractor",
+        "discovery_validation",
+        "executor",
+        "legacy_models",
+        "persistence",
+        "run_chain_study_v2",
+        "semantic_pipeline"
+      ],
+      "imported_by": [
+        "test_operational_preflight"
+      ],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "commitment_extractor",
+        "discovery_validation",
+        "executor",
+        "persistence",
+        "run_chain_study_v2",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [
+        "chain_study_chains",
+        "executor",
+        "persistence",
+        "legacy_models"
+      ],
+      "test_dependents": [
+        "test_operational_preflight"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "psycopg",
+        "mock"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_smoke_test",
+      "imports": [
+        "chain_reconstruction",
+        "synthetic_chains"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "synthetic_chains"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_step_17b",
+      "imports": [
+        "persistence",
+        "run_chain_study_v2",
+        "semantic_pipeline"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "persistence",
+        "run_chain_study_v2",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "psycopg"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "run_v2_study",
+      "imports": [
+        "chain_reconstruction",
+        "commitment_extractor",
+        "genre_adapters",
+        "gt_extractor",
+        "pattern_classifier",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "s0_extractor",
+        "semantic_pipeline_v2"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "commitment_extractor",
+        "genre_adapters",
+        "gt_extractor",
+        "pattern_classifier",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "s0_extractor",
+        "semantic_pipeline_v2"
+      ],
+      "deferred_imports": [
+        "run_chain_study_v2"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "s0_extractor",
+      "imports": [
+        "commitment_extractor"
+      ],
+      "imported_by": [
+        "classify_gold_scope",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study",
+        "test_chain_study_v2",
+        "test_commitment_extractor",
+        "test_v02_regression"
+      ],
+      "top_level_imports": [
+        "commitment_extractor"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_chain_study_v2",
+        "test_commitment_extractor",
+        "test_v02_regression"
+      ],
+      "runtime_dependents": [
+        "classify_gold_scope",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_v2_study"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "sec_ingest",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "parse",
+        "httpx",
+        "bs4"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "semantic_gold",
+      "imports": [
+        "legacy_models",
+        "semantic_mapper"
+      ],
+      "imported_by": [
+        "test_semantic_mapper_v01"
+      ],
+      "top_level_imports": [
+        "legacy_models",
+        "semantic_mapper"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_semantic_mapper_v01"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "semantic_mapper",
+      "imports": [
+        "legacy_models"
+      ],
+      "imported_by": [
+        "analyze_held_out_mutations",
+        "build_unresolved_corpus",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "semantic_gold",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2",
+        "test_model_assisted_candidates",
+        "test_semantic_mapper",
+        "test_semantic_mapper_v01"
+      ],
+      "top_level_imports": [
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_model_assisted_candidates",
+        "test_semantic_mapper",
+        "test_semantic_mapper_v01"
+      ],
+      "runtime_dependents": [
+        "analyze_held_out_mutations",
+        "build_unresolved_corpus",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "semantic_gold",
+        "semantic_pipeline",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "BOUNDARY_VIOLATION",
+      "migration_preconditions": [
+        "commitment identity resolution moved to commitments/ layer",
+        "transformation mapping retained in transformations/ layer"
+      ],
+      "responsibilities_combined": "transformation + identity resolution via section heuristics",
+      "target_split": "transformations/ (mapping) + commitments/ (identity)"
+    },
+    {
+      "module": "semantic_pipeline",
+      "imports": [
+        "amendment_parser",
+        "chain_reconstruction",
+        "edgar_chains",
+        "executor",
+        "legacy_models",
+        "semantic_mapper"
+      ],
+      "imported_by": [
+        "analyze_held_out_mutations",
+        "diagnose_17b_defects",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_step_17b",
+        "test_chain_study",
+        "test_chain_study_v2",
+        "test_semantic_pipeline"
+      ],
+      "top_level_imports": [
+        "amendment_parser",
+        "chain_reconstruction",
+        "executor",
+        "legacy_models",
+        "semantic_mapper"
+      ],
+      "deferred_imports": [
+        "edgar_chains"
+      ],
+      "test_dependents": [
+        "test_chain_study",
+        "test_chain_study_v2",
+        "test_semantic_pipeline"
+      ],
+      "runtime_dependents": [
+        "analyze_held_out_mutations",
+        "diagnose_17b_defects",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "run_held_out_study",
+        "run_operational_preflight",
+        "run_step_17b"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "BOUNDARY_VIOLATION",
+      "migration_preconditions": [
+        "legacy consumers migrated to compatibility facade or retired",
+        "v2 pipeline confirmed as functional replacement"
+      ],
+      "responsibilities_combined": "legacy pipeline combining orchestration + mapping + execution",
+      "target_split": "archive/legacy_code/ or split as v2; superseded by v2"
+    },
+    {
+      "module": "semantic_pipeline_v2",
+      "imports": [
+        "amendment_parser",
+        "chain_reconstruction",
+        "executor",
+        "genre_adapters",
+        "legacy_models",
+        "pattern_classifier",
+        "semantic_mapper",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [
+        "run_v2_study",
+        "test_false_authoritative_promotion",
+        "test_moses_safety",
+        "test_step_22b_incorrect_mutation_fix"
+      ],
+      "top_level_imports": [
+        "amendment_parser",
+        "chain_reconstruction",
+        "executor",
+        "genre_adapters",
+        "legacy_models",
+        "pattern_classifier",
+        "semantic_mapper",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_false_authoritative_promotion",
+        "test_moses_safety",
+        "test_step_22b_incorrect_mutation_fix"
+      ],
+      "runtime_dependents": [
+        "run_v2_study"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "MEDIUM",
+      "boundary_status": "BOUNDARY_VIOLATION",
+      "migration_preconditions": [
+        "authority determination extracted to authority/ layer first",
+        "pipeline orchestration retained in pipeline/ layer"
+      ],
+      "responsibilities_combined": "pipeline orchestration + authority determination",
+      "target_split": "pipeline/ (orchestration) + authority/ (authority logic)"
+    },
+    {
+      "module": "semantic_resolver_v2",
+      "imports": [
+        "commitment_registry",
+        "legacy_models",
+        "moses_safety",
+        "semantic_mapper"
+      ],
+      "imported_by": [
+        "build_step23_audit",
+        "build_step23r_audit",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "semantic_pipeline_v2",
+        "test_moses_safety",
+        "test_semantic_resolver_v2",
+        "test_step22f_staged_interpreter"
+      ],
+      "top_level_imports": [
+        "commitment_registry",
+        "legacy_models",
+        "semantic_mapper",
+        "moses_safety"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_moses_safety",
+        "test_semantic_resolver_v2",
+        "test_step22f_staged_interpreter"
+      ],
+      "runtime_dependents": [
+        "build_step23_audit",
+        "build_step23r_audit",
+        "genre_adapters",
+        "model_assisted_candidates",
+        "semantic_pipeline_v2"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "HIGH",
+      "boundary_status": "BOUNDARY_VIOLATION",
+      "migration_preconditions": [
+        "new identity / evidence / transformation interfaces exist first",
+        "value re-extraction moved to evidence/ layer"
+      ],
+      "responsibilities_combined": "transformation + evidence re-extraction (discards parser old/new values)",
+      "target_split": "transformations/ (resolver) + evidence/ (value extraction)"
+    },
+    {
+      "module": "synthetic_chains",
+      "imports": [
+        "chain_reconstruction",
+        "legacy_models"
+      ],
+      "imported_by": [
+        "run_smoke_test",
+        "test_chain_reconstruction"
+      ],
+      "top_level_imports": [
+        "legacy_models",
+        "chain_reconstruction"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_chain_reconstruction"
+      ],
+      "runtime_dependents": [
+        "run_smoke_test"
+      ],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_agreement_context",
+      "imports": [
+        "agreement_context",
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "agreement_context",
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_build_failure_matrix",
+      "imports": [
+        "build_failure_matrix"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "build_failure_matrix"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "mock",
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_build_release_package",
+      "imports": [
+        "build_release_package"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "build_release_package"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_build_unresolved_corpus",
+      "imports": [
+        "build_unresolved_corpus"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "build_unresolved_corpus"
+      ],
+      "deferred_imports": [
+        "build_unresolved_corpus"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "mock",
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_chain_reconstruction",
+      "imports": [
+        "chain_reconstruction",
+        "legacy_models",
+        "synthetic_chains"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "legacy_models",
+        "synthetic_chains"
+      ],
+      "deferred_imports": [
+        "legacy_models"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_chain_study",
+      "imports": [
+        "acquire_chain_study",
+        "chain_study_chains",
+        "legacy_models",
+        "run_chain_study",
+        "semantic_pipeline"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_study_chains",
+        "run_chain_study",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [
+        "run_chain_study",
+        "acquire_chain_study",
+        "legacy_models"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "mock",
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_chain_study_v2",
+      "imports": [
+        "chain_reconstruction",
+        "commitment_extractor",
+        "gt_extractor",
+        "legacy_models",
+        "run_chain_study",
+        "run_chain_study_v2",
+        "s0_extractor",
+        "semantic_pipeline"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "commitment_extractor",
+        "run_chain_study_v2",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [
+        "s0_extractor",
+        "gt_extractor",
+        "legacy_models",
+        "run_chain_study"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_commitment_extractor",
+      "imports": [
+        "commitment_extractor",
+        "gt_extractor",
+        "s0_extractor"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "commitment_extractor",
+        "gt_extractor",
+        "s0_extractor"
+      ],
+      "deferred_imports": [
+        "commitment_extractor"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_commitment_registry",
+      "imports": [
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "commitment_registry",
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_edgar_chains",
+      "imports": [
+        "chain_reconstruction",
+        "edgar_chains",
+        "legacy_models"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "edgar_chains",
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_evaluation_layers",
+      "imports": [
+        "evaluation_layers"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "evaluation_layers"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_executor",
+      "imports": [
+        "executor",
+        "legacy_models"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "legacy_models",
+        "executor"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_false_authoritative_promotion",
+      "imports": [
+        "legacy_models",
+        "semantic_pipeline_v2"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "legacy_models",
+        "semantic_pipeline_v2"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "mock",
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_frozen_manifest",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_genre_adapters",
+      "imports": [
+        "genre_adapters",
+        "legacy_models",
+        "pattern_classifier"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "genre_adapters",
+        "legacy_models",
+        "pattern_classifier"
+      ],
+      "deferred_imports": [
+        "genre_adapters"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_gitignore_boundary",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_gold_schema",
+      "imports": [
+        "gold_schema"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "gold_schema"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_held_out_study",
+      "imports": [
+        "acquire_held_out_study",
+        "create_held_out_gold",
+        "generate_step_19b_report",
+        "gold_schema",
+        "legacy_models",
+        "run_held_out_study"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "gold_schema"
+      ],
+      "deferred_imports": [
+        "create_held_out_gold",
+        "run_held_out_study",
+        "acquire_held_out_study",
+        "legacy_models",
+        "generate_step_19b_report"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "mock",
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_model_assisted_candidates",
+      "imports": [
+        "legacy_models",
+        "model_assisted_candidates",
+        "semantic_mapper"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "model_assisted_candidates",
+        "legacy_models",
+        "semantic_mapper"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_moses_safety",
+      "imports": [
+        "legacy_models",
+        "moses_safety",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "legacy_models",
+        "moses_safety",
+        "semantic_pipeline_v2",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [
+        "legacy_models"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_operational_preflight",
+      "imports": [
+        "legacy_models",
+        "persistence",
+        "run_operational_preflight"
+      ],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [
+        "persistence",
+        "legacy_models",
+        "run_operational_preflight"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_parser_v03",
+      "imports": [
+        "amendment_parser",
+        "legacy_models"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "amendment_parser"
+      ],
+      "deferred_imports": [
+        "legacy_models"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_parser_v04_regression",
+      "imports": [
+        "amendment_parser"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "amendment_parser"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_pattern_classifier",
+      "imports": [
+        "pattern_classifier"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "pattern_classifier"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_persistence_integration",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_persistence_plan",
+      "imports": [
+        "executor",
+        "legacy_models",
+        "persistence"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "legacy_models",
+        "executor",
+        "persistence"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_schema",
+      "imports": [],
+      "imported_by": [],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_semantic_mapper",
+      "imports": [
+        "legacy_models",
+        "semantic_mapper"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "legacy_models",
+        "semantic_mapper"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_semantic_mapper_v01",
+      "imports": [
+        "executor",
+        "legacy_models",
+        "semantic_gold",
+        "semantic_mapper"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "legacy_models",
+        "semantic_mapper",
+        "semantic_gold"
+      ],
+      "deferred_imports": [
+        "executor",
+        "legacy_models"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_semantic_pipeline",
+      "imports": [
+        "edgar_chains",
+        "legacy_models",
+        "semantic_pipeline"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "edgar_chains",
+        "legacy_models",
+        "semantic_pipeline"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_semantic_regression",
+      "imports": [
+        "amendment_parser",
+        "classify_development_corpus"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "amendment_parser"
+      ],
+      "deferred_imports": [
+        "amendment_parser",
+        "classify_development_corpus"
+      ],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_semantic_resolver_v2",
+      "imports": [
+        "legacy_models",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "legacy_models",
+        "semantic_resolver_v2"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_step22_taxonomy",
+      "imports": [
+        "build_step22_taxonomy"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "build_step22_taxonomy"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_step22f_staged_interpreter",
+      "imports": [
+        "legacy_models",
+        "semantic_resolver_v2"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "semantic_resolver_v2",
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_step23_audit",
+      "imports": [
+        "build_step23_audit",
+        "generate_step23_report",
+        "legacy_models"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "build_step23_audit",
+        "generate_step23_report",
+        "legacy_models"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_step23r_audit",
+      "imports": [
+        "build_step23r_audit"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "build_step23r_audit"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_step_22b_incorrect_mutation_fix",
+      "imports": [
+        "chain_reconstruction",
+        "legacy_models",
+        "semantic_pipeline_v2"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "chain_reconstruction",
+        "legacy_models",
+        "semantic_pipeline_v2"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_upsilonsrc",
+      "imports": [
+        "authority",
+        "identity",
+        "lineage",
+        "proof"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "authority",
+        "identity",
+        "lineage",
+        "proof"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest",
+        "commitments",
+        "conservation",
+        "models",
+        "transformations"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_v02_change_spec",
+      "imports": [
+        "build_failure_matrix",
+        "v02_change_spec"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "build_failure_matrix",
+        "v02_change_spec"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "test_v02_regression",
+      "imports": [
+        "commitment_extractor",
+        "discovery_validation",
+        "s0_extractor"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "commitment_extractor",
+        "discovery_validation",
+        "s0_extractor"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "pytest"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "transformation",
+      "imports": [],
+      "imported_by": [
+        "lineage",
+        "proof"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [
+        "lineage",
+        "proof"
+      ],
+      "third_party_imports": [
+        "pydantic"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "transformation_proof",
+      "imports": [
+        "identity",
+        "validator"
+      ],
+      "imported_by": [],
+      "top_level_imports": [
+        "identity",
+        "validator"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "v02_change_spec",
+      "imports": [],
+      "imported_by": [
+        "test_v02_change_spec"
+      ],
+      "top_level_imports": [],
+      "deferred_imports": [],
+      "test_dependents": [
+        "test_v02_change_spec"
+      ],
+      "runtime_dependents": [],
+      "third_party_imports": [],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    },
+    {
+      "module": "validator",
+      "imports": [
+        "invariants"
+      ],
+      "imported_by": [
+        "transformation_proof"
+      ],
+      "top_level_imports": [
+        "invariants"
+      ],
+      "deferred_imports": [],
+      "test_dependents": [],
+      "runtime_dependents": [
+        "transformation_proof"
+      ],
+      "third_party_imports": [
+        "models"
+      ],
+      "migration_risk": "LOW",
+      "boundary_status": "CLEAN",
+      "migration_preconditions": []
+    }
+  ]
+}

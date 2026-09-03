@@ -1,3 +1,0 @@
-case_id,cik,issuer,accession,filing_date,exhibit,document_url,ground_truth_feature
-SW-001,0001132105,Sportsman's Warehouse Inc.,0001193125-26-281135,2026-06-24,EX-10.2,https://www.sec.gov/Archives/edgar/data/1132105/000119312526281135/spwh-ex10_2.htm,Amendment contains Annex A composite credit agreement
-DKS-001,0001089063,DICK'S Sporting Goods Inc.,0001089063-19-000053,2019-06-28,EX-10.1,https://www.sec.gov/Archives/edgar/data/1089063/000108906319000053/exhibit101.htm,Amendment contains Annex A composite credit agreement

@@ -1,0 +1,1490 @@
+EX-10.1
+2
+amed-20253103x101exhibit.htm
+EX-10.1
+Document
+Exhibit 10.1
+EXECUTION VERSION
+FOURTH AMENDMENT TO AMENDED AND RESTATED CREDIT AGREEMENT
+THIS FOURTH AMENDMENT TO AMENDED AND RESTATED CREDIT AGREEMENT (this “
+Agreement
+”), dated as of April 17, 2025 (the “
+Fourth Amendment Effective Date
+”), is entered into among AMEDISYS, INC., a Delaware corporation (the “
+Company
+”), AMEDISYS HOLDING, L.L.C., a Louisiana limited liability company (“
+Amedisys Holding
+”; Amedisys Holding, together with the Company, each a “
+Borrower
+” and collectively, the “
+Borrowers
+”), the Guarantors party hereto, the Lenders party hereto,
+Bank of America, N.A.
+, as Administrative Agent, Swingline Lender and L/C Issuer, and the other L/C Issuers party hereto.
+RECITALS
+WHEREAS, the Borrowers, the Guarantors party thereto, the Lenders from time to time party thereto, Bank of America, N.A., as Administrative Agent, Swingline Lender and L/C Issuer, and the other L/C Issuers party thereto, have entered into that certain Amended and Restated Credit Agreement dated as of June 29, 2018 (as amended, modified, extended, restated, replaced, or supplemented from time to time, the “
+Credit Agreement
+”);
+WHEREAS, the Borrowers have requested that the Credit Agreement be amended as set forth below, subject to the terms and conditions specified in this Agreement; and
+WHEREAS, the Administrative Agent is authorized pursuant to clause (z) of the penultimate paragraph in Section 11.01 of the Credit Agreement to make Conforming Changes from time to time and, in reliance on such authorization, the Administrative Agent desires to amend the Credit Agreement to make certain Confirming Changes as set forth in the amendments to the definitions of “Term SOFR” and “U.S. Government Securities Business Day” in
+Section 2(b)
+below.
+NOW, THEREFORE, in consideration of the premises and the mutual covenants contained herein, and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the parties hereto agree as follows:
+1.
+Defined Terms
+.
+Capitalized terms used herein and not otherwise defined herein shall have the meanings given to such terms in the Credit Agreement.
+2.
+Amendments to Credit Agreement
+.
+(a)
+The following definitions are added to Section 1.01 of the Credit Agreement in the appropriate alphabetical order:
+“
+Fourth Amendment Effective Date
+” means April 17, 2025.
+“
+Outbound Investment Rules
+” means the regulations administered and enforced, together with any related public guidance issued, by the United States Treasury Department under U.S. Executive Order 14105 of August 9, 2023, or any similar law or regulation; as of the Fourth Amendment Effective Date, and as codified at 31 C.F.R. § 850.101 et seq.
+(b)
+The following definitions in Section 1.01 of the Credit Agreement are amended and restated in their entireties to read as follows:
+“
+Fee Letter
+” means the fee letter agreement, dated July 6, 2021, among the Borrowers, Bank of America and BofA Securities and/or the fee letter agreement, dated April 7, 2025, among the Borrowers and BofA Securities, as the context may require.
+“
+Revolving Facility Maturity Date
+” means July 30, 2027;
+provided
+,
+that
+, if such date is not a Business Day, the Revolving Facility Maturity Date shall be the next preceding Business Day.
+“
+Term Facility Maturity Date
+” means July 30, 2027;
+provided
+,
+that
+, if such date is not a Business Day, the Term Facility Maturity Date shall be the next preceding Business Day.
+“
+Term SOFR
+” means: (a) for any Interest Period with respect to a Term SOFR Loan, the rate per annum equal to the Term SOFR Screen Rate two U.S. Government Securities Business Days prior to the commencement of such Interest Period with a term equivalent to such Interest Period;
+provided
+,
+that
+, if the rate is not published prior to 11:00 a.m. on such determination date then Term SOFR means the Term SOFR Screen Rate on the first U.S. Government Securities Business Day immediately prior thereto; in each case,
+plus
+the SOFR Adjustment for such Interest Period; and (b) for any interest calculation with respect to a Base Rate Loan on any date, the rate per annum equal to the Term SOFR Screen Rate two U.S. Government Securities Business Days prior to such date with a term of one month commencing that day;
+provided
+,
+that
+, if the rate is not published prior to 11:00 a.m. on such determination date then Term SOFR means the Term SOFR Screen Rate on the first U.S. Government Securities Business Day immediately prior thereto, in each case,
+plus
+the SOFR Adjustment for such term;
+provided
+,
+that
+, if Term SOFR determined in accordance with either of the foregoing
+clause (a)
+or
+clause (b)
+of this definition would otherwise be less than zero, Term SOFR shall be deemed zero for purposes of this Agreement.
+“
+U.S. Government Securities Business Day
+” means any day except for (a) a Saturday, (b) a Sunday or (c) a day on which the Securities Industry and Financial Markets Association recommends that the fixed income departments of its members be closed for the entire day for
+purposes of trading in United States government securities.
+(c)
+In the definition of “Excluded Property” in Section 1.01 of the Credit Agreement, (i) the existing clause (j) is renumbered to be clause (k) and (ii) a new clause (j) is added to read as follows:
+, (j) any property constituting margin stock (within the meaning of Regulation U issued by
+the FRB)
+(d)
+The table in Section 2.07(d) of the Credit Agreement is amended and restated in its entirety to read as follows:
+Payment Date
+Principal
+Amortization Payment
+(% of Outstanding Amount of Term Loans as of the Second Amendment Effective Date)
+December, 2021
+0.625%
+March, 2022
+0.625%
+June, 2022
+0.625%
+September, 2022
+0.625%
+December, 2022
+0.625%
+March, 2023
+0.625%
+June, 2023
+0.625%
+September, 2023
+0.625%
+December, 2023
+1.250%
+March, 2024
+1.250%
+June, 2024
+1.250%
+September, 2024
+1.250%
+December, 2024
+1.250%
+March, 2025
+1.250%
+June, 2025
+1.250%
+September, 2025
+1.250%
+December, 2025
+1.250%
+March, 2026
+1.250%
+June, 2026
+1.250%
+September, 2026
+1.250%
+December, 2026
+1.250%
+March, 2027
+1.250%
+June, 2027
+1.250%
+Term Facility Maturity Date
+Outstanding Principal Balance
+of Term Loans
+(e)
+A new Section 5.26 is added to Article V of the Credit Agreement to read as follows:
+5.26
+Outbound Investment Rules
+.
+Neither the Company nor any of its Subsidiaries is a “covered foreign person” as that term is used in the Outbound Investment Rules. Neither the Company nor any  of its Subsidiaries currently engages, or has any present intention to engage in the  future, directly or indirectly, in (i) a “covered activity” or a “covered transaction”,  as each such term is defined in the Outbound Investment Rules, (ii) any activity or  transaction that would constitute a “covered activity” or a “covered transaction”, as  each such term is defined in the Outbound Investment Rules, or (iii) any other activity that would cause the Administrative Agent or the Lenders to be in violation of the Outbound Investment Rules or cause the Administrative Agent or the Lenders to be legally prohibited by the Outbound Investment Rules from performing under this Agreement.
+(f)
+A new Section 7.20 is added to Article VII of the Credit Agreement to read as follows:
+7.20
+Outbound Investment Rules
+.
+(a) Be or become a “covered foreign person”, as that term is defined in the
+Outbound Investment Rules, or (b) engage, directly or indirectly, in (i) a “covered activity” or a “covered transaction”, as each such term is defined in the Outbound Investment Rules, (ii) any activity or transaction that would constitute a “covered activity” or a “covered transaction”, as each such term is defined in the Outbound Investment Rules, or (iii) any other activity that would cause the Administrative Agent or the Lenders to be in violation of the Outbound Investment Rules or cause the Administrative Agent or the Lenders to be legally prohibited by the Outbound Investment Rules from performing under this Agreement.
+(g)
+A new clause (e) is added in Section 11.07 of the Credit Agreement to read as follows:
+(e)
+Disclosures
+Regarding Suspected Violations of Laws, etc
+.
+For the avoidance of doubt, nothing herein prohibits any individual from communicating or disclosing information regarding suspected violations of laws, rules, or regulations to a governmental, regulatory, or self-regulatory authority without any notification to any person.
+3.
+Condition Precedent
+.
+This Agreement shall become effective upon satisfaction of the following conditions precedent:
+(a)
+receipt by the Administrative Agent of counterparts of this Agreement, properly executed by a Responsible Officer of each Loan Party, each Lender, the Swingline Lender, each L/C Issuer and the Administrative Agent;
+(b)
+receipt by the Administrative Agent of the following, in form and substance satisfactory to the Administrative Agent and its legal counsel: (i) copies of the Organization Documents of the Borrowers certified to be true and complete as of a recent date by the appropriate Governmental Authority of the jurisdiction of its organization or incorporation, where applicable, and certified by a secretary or assistant secretary of such Borrower to be true and correct as of the Fourth Amendment Effective Date (
+provided
+,
+that
+, with respect to any such Organization Documents that have not been amended, modified or terminated (other than any modification resulting solely from a change in the registered agent for such Borrower) since the date previously delivered to the Administrative Agent, such Borrower may certify that such Organization Documents have not been amended, modified or terminated (other than any modification resulting solely from a change in the registered agent for such Borrower) since such date and remain in full force and effect, and remain true and complete (other than any modification resulting solely from a change in the registered agent for such Borrower), in the form delivered to the Administrative Agent on such date); (ii) such certificates of resolutions or other action, incumbency certificates and/or other certificates of Responsible Officers of each Borrower as the Administrative Agent may require evidencing the identity, authority and capacity of each Responsible Officer thereof authorized to act as a Responsible Officer in connection with this Agreement and the other Loan Documents to which such Borrower is a party; and (iii) such documents and certifications as the Administrative Agent may reasonably require to evidence that each Borrower is duly organized or formed, and is validly existing, in good standing and qualified to engage in business in its jurisdiction of organization or incorporation;
+(c)
+receipt by the Administrative Agent of an opinion or opinions of counsel for the Borrowers, dated the Fourth Amendment Effective Date and addressed to the Administrative Agent and the Lenders, in form and substance reasonably acceptable to the Administrative Agent;
+(d)
+receipt by the Administrative Agent of any fees owing to the Administrative Agent, the Arrangers and the Lenders that are required to be paid on or before the Fourth Amendment Effective Date; and
+(e)
+(i) the Administrative Agent and the Lenders shall have completed a due diligence investigation of the Loan Parties and their Subsidiaries in scope, and with results, satisfactory to the Administrative Agent and the Lenders, including with respect to OFAC, the Foreign Corrupt Practices Act and “know your customer” due diligence, (ii) upon the request of any Lender made at least ten (10) days prior to the Fourth Amendment Effective Date, the Borrowers shall have provided to such Lender (and such Lender shall be reasonably satisfied with) the documentation and other information so requested in connection with applicable “know your customer” and anti-money-laundering rules and regulations, including the PATRIOT Act, in each case at least five (5) days prior to the Fourth Amendment Effective Date, and (iii) at least five (5) days prior to the Fourth Amendment Effective Date, if any Borrower qualifies as a “legal entity customer” under the Beneficial Ownership Regulation, such Borrower shall deliver, to each Lender that so requests, a Beneficial Ownership Certification in relation to such Borrower.
+For purposes of determining compliance with the conditions specified in this
+Section 3
+, each Lender that has signed this Agreement shall be deemed to have consented to, approved or accepted or to be satisfied
+with, each document or other matter required thereunder to be consented to or approved by or acceptable
+or satisfactory to a Lender unless the Administrative Agent shall have received notice from such Lender  prior to the proposed Fourth Amendment Effective Date specifying its objection thereto.
+4.
+Payment of Expenses
+.
+The Loan Parties agree to reimburse the Administrative Agent for all  reasonable fees, charges, and disbursements of the Administrative Agent in connection with the preparation, execution, and delivery of this Agreement, including all reasonable fees, charges, and disbursements of counsel to the Administrative Agent (paid directly to such counsel if requested by the Administrative Agent).
+5.
+Miscellaneous
+.
+(a)
+The Loan Documents (as expressly amended and modified by this Agreement) and the obligations of the Loan Parties thereunder are hereby ratified and confirmed and shall remain in full force and effect according to their terms.
+This Agreement shall constitute a Loan Document.
+(b)
+Each Loan Party (i) agrees that the Collateral Documents continue to be in full force and effect and are not impaired or adversely affected in any manner whatsoever, (ii) confirms its grant of security interests pursuant to the Collateral Documents to which it is a party as Collateral for the Secured Obligations, and (iii) acknowledges that all Liens granted (or purported to be granted) pursuant to the Collateral Documents remain and continue in full force and effect in respect of, and to secure, the Secured Obligations.
+(c)
+Each Guarantor (i) acknowledges and consents to all of the terms and conditions of this Agreement, (ii) affirms all of its obligations under the Loan Documents, and (iii) agrees that this Agreement and all documents executed in connection herewith do not operate to reduce or discharge its obligations under the Loan Documents.
+(d)
+Each Loan Party hereby represents and warrants as follows: (i) such Loan Party has taken
+all necessary corporate, limited liability or other organizational action to authorize the execution, delivery and performance of this Agreement; (ii) this Agreement has been duly executed and delivered by such Loan Party and constitutes the legal, valid and binding obligation of such Loan Party, enforceable against such Loan Party in accordance with its terms, except as enforceability may be limited by applicable bankruptcy, insolvency, reorganization, moratorium or similar laws affecting the enforcement of creditors’ rights generally and by general equitable principles and/or principles of good faith and fair dealing (whether enforcement is sought by proceedings in equity or at law); (iii) no approval, consent, exemption, authorization or other action by, or notice to, or filing with, any Governmental Authority or any other Person is necessary or required in connection with the execution, delivery or performance by, or enforcement against, such Loan Party of this Agreement; and (iv) after giving effect to the transactions contemplated by this Agreement to occur on the Fourth Amendment Effective Date, (A) the representations and warranties of the Company and each other Loan Party contained in Article II and Article V of the Credit Agreement or in any other Loan Document, or which are contained in any document furnished at any time under or in connection therewith, are true and correct in all material respects (and in all respects if any such representation and warranty is already qualified by materiality or reference to Material Adverse Effect) on and as of the Fourth Amendment Effective Date, except to the extent such representations and warranties specifically refer to an earlier date, in which case they shall be true and correct in all material respects (and in all respects if any such representation or warranty is already qualified by materiality or reference to Material Adverse Effect) as of such earlier date, and except that for purposes of this
+Section 5(d)(iv)(A)
+, the representations and warranties contained in subsections (a) and (b) of Section 5.05 of the Credit Agreement shall be deemed to refer to the most recent statements furnished pursuant to clauses (a) and (b), respectively, of Section 6.01 of the Credit Agreement, and (B) no Default or Event of Default has occurred and is continuing.
+(e)
+Subject to Section 11.18 of the Credit Agreement, this Agreement may be in the form of an Electronic Record and may be executed using Electronic Signatures (including facsimile and .pdf) and shall be considered an original, and shall have the same legal effect, validity and enforceability as a paper record.
+This Agreement may be executed in as many counterparts as necessary or convenient, including both paper and electronic counterparts, but all such counterparts are one and the same Agreement.
+The authorization under this
+Section 5(e)
+may include use or acceptance by the Administrative Agent, any L/C Issuer and each Lender of a manually signed paper copy of this Agreement which has been converted into electronic form (such as scanned into .pdf format), or an electronically signed copy of this Agreement converted into another format, for transmission, delivery and/or retention.
+(f)
+If any provision of this Agreement is held to be illegal, invalid or unenforceable, (i) the legality, validity and enforceability of the remaining provisions of this Agreement shall not be affected or impaired thereby and (ii) the parties shall endeavor in good faith negotiations to replace the illegal, invalid or unenforceable provisions with valid provisions the economic effect of which comes as close as possible to that of the illegal,
+invalid or unenforceable provisions.
+The invalidity of a provision in a particular jurisdiction shall not invalidate or render unenforceable such provision in any other jurisdiction.
+(g)
+THIS AGREEMENT AND ANY CLAIMS, CONTROVERSY, DISPUTE OR  CAUSE OF ACTION (WHETHER IN CONTRACT OR TORT OR OTHERWISE) BASED UPON, ARISING OUT OF OR RELATING TO THIS AGREEMENT AND THE TRANSACTIONS CONTEMPLATED HEREBY SHALL BE GOVERNED BY AND CONSTRUED IN ACCORDANCE WITH THE LAWS OF THE STATE OF NEW YORK.
+(h)
+The terms of Sections 11.14 and 11.15 of the Credit Agreement with respect to submission to jurisdiction, waiver of venue and waiver of jury trial are incorporated herein by reference,
+mutatis mutandis
+, and the parties hereto agree to such terms.
+[remainder of page intentionally left blank]
+Each of the parties hereto has caused a counterpart of this Agreement to be duly executed and delivered as of the date first above written.
+BORROWERS
+:
+AMEDISYS, INC.,
+a Delaware corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Chief Financial Officer and Executive Vice President
+AMEDISYS HOLDING, L.L.C.,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+GUARANTORS
+:
+ACCUMED HEALTH SERVICES, L.L.C.,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ACCUMED HOME HEALTH OF GEORGIA, L.L.C.,
+a Georgia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ADVENTA HOSPICE, L.L.C.,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ALBERT GALLATIN HOME CARE AND HOSPICE SERVICES, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS ALABAMA, L.L.C.,
+an Alabama limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS ARIZONA, L.L.C.,
+an Arizona limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS ARKANSAS, LLC,
+an Arkansas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS BA, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS DELAWARE, L.L.C.,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS FLORIDA, L.L.C.,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS GEORGIA, L.L.C.,
+a Georgia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS HEALTH CARE WEST, L.L.C.,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS HOME HEALTH OF ALABAMA, L.L.C.,
+an Alabama limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS HOME HEALTH OF SOUTH CAROLINA, L.L.C.,
+a South Carolina limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS HOME HEALTH OF VIRGINIA, L.L.C.,
+a Virginia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS HOSPICE, L.L.C.,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS IDAHO, L.L.C.,
+an Idaho limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS ILLINOIS, L.L.C.,
+an Illinois limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS INDIANA, L.L.C.,
+an Indiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS KANSAS, L.L.C.,
+a Kansas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS LA ACQUISITIONS, L.L.C.,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS LOUISIANA, L.L.C.,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS MAINE, P.L.L.C.,
+a Maine professional limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS MARYLAND, L.L.C.,
+a Maryland limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS MISSISSIPPI, L.L.C.,
+a Mississippi limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS MISSOURI, L.L.C.,
+a Missouri limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS NEW HAMPSHIRE, L.L.C.,
+a New Hampshire limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS NEW JERSEY, L.L.C.,
+a New Jersey limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS NORTH CAROLINA, L.L.C.,
+a North Carolina limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS NORTHWEST, L.L.C.,
+a Georgia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS OHIO, L.L.C.,
+an Ohio limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS OKLAHOMA, L.L.C.,
+an Oklahoma limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS OREGON, L.L.C.,
+an Oregon limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS PENNSYLVANIA, L.L.C.,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS PERSONAL CARE, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS RHODE ISLAND, L.L.C.,
+a Rhode Island limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS SC, L.L.C.,
+a South Carolina limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS SP-IN, L.L.C.,
+an Indiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS SP-KY, L.L.C.,
+a Kentucky limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS SP-OH, L.L.C.,
+an Ohio limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS SP-TN, L.L.C.,
+a Tennessee limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS TENNESSEE, L.L.C.,
+a Tennessee limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS TEXAS, L.L.C.,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS TLC ACQUISITION, L.L.C.,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS WASHINGTON, L.L.C.,
+a Washington limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS WEST VIRGINIA, L.L.C.,
+a West Virginia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS WISCONSIN, L.L.C.,
+a Wisconsin limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ANGEL WATCH HOME CARE, L.L.C.,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AVENIR VENTURES, L.L.C.,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+BEACON HOSPICE, L.L.C.,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPREHENSIVE HOME HEALTHCARE SERVICES, L.L.C.,
+a Tennessee limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+EMERALD CARE, L.L.C.,
+a North Carolina limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+FAMILY HOME HEALTH CARE, L.L.C.,
+a Kentucky limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HI-TECH CARE, INC.,
+a Florida corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HHC, L.L.C.,
+a Tennessee limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HOME HEALTH OF ALEXANDRIA, L.L.C.,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HORIZONS HOSPICE CARE, L.L.C.,
+an Alabama limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HOUSECALL HOME HEALTH, L.L.C.,
+a Tennessee limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+INFINITY HOME CARE, L.L.C.,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+INFINITY HOME CARE ACQUISITION CORP.,
+a Florida corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+INFINITY HOME CARE OF JACKSONVILLE, LLC,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+INFINITY HOME CARE OF LAKELAND, LLC,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+INFINITY HOME CARE OF OCALA, LLC,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+INFINITY HOME CARE OF PORT CHARLOTTE, LLC,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+INFINITY HOMECARE OF DISTRICT 9, LLC,
+a Florida limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+NINE PALMS 2, LLC,
+a Mississippi limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+NINE PALMS 1, L.L.C.,
+a Virginia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES
+INTERNATIONAL, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES OF ERIE
+NIAGARA, LLC,
+a New York limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES OF GEORGIA,
+LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES OF NASSAU
+SUFFOLK, LLC,
+a New York limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES OF NEW
+ENGLAND, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES OF WEST
+VIRGINIA, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES SOUTHEAST,
+LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TENDER LOVING CARE HEALTH CARE SERVICES WESTERN,
+LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TLC HEALTH CARE SERVICES, L.L.C.,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TLC HOLDINGS I, L.L.C.,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HOSPICE PREFERRED CHOICE, INC.,
+a Delaware corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HOSPICE OF EASTERN CAROLINA, INC.,
+a North Carolina corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HOMECARE PREFERRED CHOICE, INC.,
+a Delaware corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – TENNESSEE, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – SENATOBIA, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – RUSSELLVILLE, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – NEW HORIZONS, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – MONROEVILLE, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – JACKSON, LLC,
+a Delaware limited liability company
+BBy:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – HAMILTON, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASERACARE HOSPICE – DEMOPOLIS, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF DELAWARE, L.L.C.,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF THE DELMAR PENINSULA,
+LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE GROUP, INC.,
+a Florida corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF CENTRAL FLORIDA,
+INC.
+,
+a Florida corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF MIAMI DADE AND
+THE FLORIDA KEYS, INC.,
+a Florida corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF LAKE AND SUMTER,
+INC.
+,
+a Florida corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF CENTRAL GEORGIA, LLC,
+a Georgia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF NORTHERN
+GEORGIA, LLC
+,
+a Georgia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF SAVANNAH, LLC,
+a Georgia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF ILLINOIS, LLC,
+an Illinois limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF KANSAS CITY, LLC,
+a Kansas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF CENTRAL
+LOUISIANA, LLC
+,
+a Louisiana limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF MASSACHUSETTS, LLC,
+a Massachusetts limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF SOUTHEASTERN
+MASSACHUSETTS, LLC,
+a Massachusetts limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF MICHIGAN, LLC,
+a Michigan limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF MINNESOTA, LLC,
+a Minnesota limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF SOUTHERN
+MISSISSIPPI, LLC,
+a Mississippi limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+PATHWAYS TO COMPASSION, LLC,
+a Nebraska limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF NEW HAMPSHIRE,
+LLC
+,
+a New Hampshire limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF CLIFTON, L.L.C.,
+a New Jersey limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF MARLTON, L.L.C.,
+a New Jersey limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF NORTHERN NEW
+JERSEY, LLC,
+a New Jersey limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+PATHWAYS TO COMPASSION, LLC
+,
+a New Jersey limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF OHIO, LLC,
+an Ohio limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE, L.L.C.,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF GWYNEDD, L.L.C.,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF NORTHWESTERN
+PENNSYLVANIA, LLC,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF PITTSBURGH, LL
+C,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF SOUTH CAROLINA,
+LLC
+,
+a South Carolina limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF THE MIDWEST, LLC,
+a South Dakota limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF BRYAN TEXAS, LLC,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF CENTRAL TEXAS,
+LLC,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF HOUSTON, LLC,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF NORTH TEXAS, LLC,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF SOUTHEASTERN
+TEXAS, LLC
+,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF THE CHESAPEAKE BAY,
+LLC,
+a Virginia limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+COMPASSIONATE CARE HOSPICE OF WISCONSIN, LLC,
+a Wisconsin limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASANA HOSPICE CLEVELAND, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ASANA PALLIATIVE CLEVELAND, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+BEAUFORT HOME HEALTH PARTNERS, L.L.C.,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+AMEDISYS HOME HEALTH OF NEBRASKA, L.L.C.,
+a Nebraska limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HOSPICE HOLDINGS DFW, LLC,
+a Texas limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+HOSPICE HOLDINGS HARRISBURG, LLC,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+MISSOURI HOSPICE HOLDINGS, LLC,
+a Missouri limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+OHIO HOSPICE HOLDINGS, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+PENNSYLVANIA HOSPICE HOLDINGS, LLC,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TAYLOR HOSPICE HOLDINGS, LLC,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TEXAS HOSPICE HOLDINGS, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+WT HOSPICE HOLDINGS, LLC,
+a Pennsylvania limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+TUCSON HOME HEALTH, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+CONTESSA HEALTH, INC.,
+a Delaware corporation
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+CONTESSA HEALTH HOLDING COMPANY, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+CONTESSA HEALTH MANAGEMENT, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+CONTRADO CLAIM, LLC,
+a Delaware limited liability company
+By:
+/s/Scott G. Ginn
+Name:
+Scott G. Ginn
+Title:
+Vice-President and Treasurer
+ADMINISTRATIVE AGENT
+:
+BANK OF AMERICA, N.A.,
+as Administrative Agent
+By:
+/s/Carolen Alfonso
+Name: Carolen Alfonso
+Title:   Vice President
+LENDERS
+:
+BANK OF AMERICA, N.A.,
+as Lender, L/C Issuer and Swingline Lender
+By:
+/s/H. Hope Walker
+Name: H. Hope Walker
+Title:   Senior Vice President
+JPMORGAN CHASE BANK, N.A.,
+as a Lender and L/C Issuer
+By:
+/s/Helen D. Davis
+Name: Helen D. Davis
+Title:   Executive Director
+CITIZENS BANK, N.A.,
+as a Lender
+By:
+/s/Doug Cornett
+Name: Doug Cornett
+Title:   Managing Director
+FIFTH THIRD BANK, NATIONAL ASSOCIATION,
+as a Lender
+By:
+/s/John McChesney
+Name: John McChesney
+Title:   Executive Director
+PNC BANK, NATIONAL ASSOCIATION,
+as a Lender
+By:
+/s/Kristin Olson
+Name: Kristin E. Olson
+Title:   Senior Vice President
+REGIONS BANK,
+as a Lender
+By:
+/s/Allen Riley
+Name: Allen Riley
+Title:   Director
+CAPITAL ONE BANK, NATIONAL ASSOCIATION,
+as a Lender
+By:
+/s/Davin Engelson
+Name: Davin Engelson
+Title:   Duly Authorized Signatory
+WELLS FARGO BANK, NATIONAL ASSOCIATION,
+as Lender
+By:
+/s/C. Eugene Stunson Jr.
+Name: Eugene Stunson
+Title:   Executive Director
+HANCOCK WHITNEY BANK,
+as a Lender
+By:
+/s/David Bertani
+Name: David Bertani
+Title:   Director, Sponsor Finance/Healthcare Banking
+BOKF, NA DBA BANK OF TEXAS,
+as a Lender
+By:
+/s/Santiago Acuna
+Name: Santiago Acuna
+Title:   Senior Vice President

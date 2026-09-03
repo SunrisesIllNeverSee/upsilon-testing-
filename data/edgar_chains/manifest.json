@@ -1,0 +1,128 @@
+[
+  {
+    "chain": "amedisys",
+    "doc_id": "S0_AR_2018",
+    "url": "https://www.sec.gov/Archives/edgar/data/896262/000119312518210472/d676917dex101.htm",
+    "status": "downloaded",
+    "sha256": "c759b69153fb0c983ebfeb8ab79822dbc5520db8eb12c4037df99359cbfd10ac",
+    "html_bytes": 1262215,
+    "text_chars": 670759
+  },
+  {
+    "chain": "amedisys",
+    "doc_id": "A1_first_amend_2019",
+    "url": "https://www.sec.gov/Archives/edgar/data/896262/000119312519026458/d699024dex101.htm",
+    "status": "downloaded",
+    "sha256": "4cd5ac8e54a5be7f13f8c3b307718663a76c4d0bce34004bde9df217f397452a",
+    "html_bytes": 1171327,
+    "text_chars": 631208
+  },
+  {
+    "chain": "amedisys",
+    "doc_id": "A2_second_amend_2021",
+    "url": "https://www.sec.gov/Archives/edgar/data/896262/000119312521236286/d196437dex101.htm",
+    "status": "downloaded",
+    "sha256": "bfb00c61749b02934c4a936d8cddd06e1884c9c047454e524f619a97fb6ec0e2",
+    "html_bytes": 1463140,
+    "text_chars": 664007
+  },
+  {
+    "chain": "amedisys",
+    "doc_id": "A3_third_amend_2023",
+    "url": "https://www.sec.gov/Archives/edgar/data/896262/000110465923074547/tm2319648d1_ex10-1.htm",
+    "status": "downloaded",
+    "sha256": "66dcf493cb6ecbc273050c624a4aebf3165e7ecb75c9d082d83ec4b76236cbc2",
+    "html_bytes": 32675,
+    "text_chars": 14782
+  },
+  {
+    "chain": "amedisys",
+    "doc_id": "A4_fourth_amend_2025",
+    "url": "https://www.sec.gov/Archives/edgar/data/896262/000089626225000029/amed-20253103x101exhibit.htm",
+    "status": "downloaded",
+    "sha256": "7e1795e50003c7e070d2f0fe770a3dfeebe5e7c243ab1e3e8cd365962867040a",
+    "html_bytes": 353119,
+    "text_chars": 42188
+  },
+  {
+    "chain": "bausch_lomb",
+    "doc_id": "S0_credit_agreement_2022",
+    "url": "https://www.sec.gov/Archives/edgar/data/1860742/000119312522146374/d322845dex101.htm",
+    "status": "downloaded",
+    "sha256": "3c7889d8d20bbd4a4802ea0dd486f71c99165557f3575b3c6f376a17a7cd3fd6",
+    "html_bytes": 1553317,
+    "text_chars": 1030381
+  },
+  {
+    "chain": "bausch_lomb",
+    "doc_id": "A1_first_incremental_2023",
+    "url": "https://www.sec.gov/Archives/edgar/data/1860742/000119312523247434/d655401dex101.htm",
+    "status": "downloaded",
+    "sha256": "62c98f3accb6f710eb9570e0f6f7177ab62e4c544d6e3edfe356b0886c3d3a1e",
+    "html_bytes": 1690006,
+    "text_chars": 1078790
+  },
+  {
+    "chain": "bausch_lomb",
+    "doc_id": "A2_second_incremental_2024",
+    "url": "https://www.sec.gov/Archives/edgar/data/1860742/000095010324015809/dp220179_ex1001.htm",
+    "status": "downloaded",
+    "sha256": "6ee5ce8a9f8aade98469a91a37096f079b7b016cebac643f203b810ce6c58d21",
+    "html_bytes": 2067527,
+    "text_chars": 1082541
+  },
+  {
+    "chain": "bausch_lomb",
+    "doc_id": "A3_third_amend_2025",
+    "url": "https://www.sec.gov/Archives/edgar/data/1860742/000119312525149726/d932769dex101.htm",
+    "status": "downloaded",
+    "sha256": "9e832bcd3fe0946bb6479d7c43f249d1416c2cea0254d3eb8bab2733013472c1",
+    "html_bytes": 2442596,
+    "text_chars": 1236758
+  },
+  {
+    "chain": "bausch_lomb",
+    "doc_id": "A4_fourth_amend_2026",
+    "url": "https://www.sec.gov/Archives/edgar/data/1860742/000095010326000051/dp239510_ex1001.htm",
+    "status": "downloaded",
+    "sha256": "74b7751c819a63144f2aae48c58d3011c62cbc9b4970dee21bb43d878d999f82",
+    "html_bytes": 2041054,
+    "text_chars": 1090432
+  },
+  {
+    "chain": "ameresco",
+    "doc_id": "S0_fifth_AR_2022",
+    "url": "https://www.sec.gov/Archives/edgar/data/1488139/000148813922000016/exhibit101ameresco-fifth.htm",
+    "status": "downloaded",
+    "sha256": "f5d4ac6ec1a1572a8de946cdd6b4f63ba14eaa9a49badd4bc1d3fbb5781459f7",
+    "html_bytes": 670555,
+    "text_chars": 610145
+  },
+  {
+    "chain": "ameresco",
+    "doc_id": "A1_amend_2023_08",
+    "url": "https://www.sec.gov/Archives/edgar/data/1488139/000148813923000130/ex101.htm",
+    "status": "downloaded",
+    "sha256": "bfcb9dbd6e80e732c684e5c63a29785706138aac37d7e171e50d30debe697c38",
+    "html_bytes": 30293,
+    "text_chars": 26604
+  },
+  {
+    "chain": "ameresco",
+    "doc_id": "A2_amend_2023_12",
+    "url": "https://www.sec.gov/Archives/edgar/data/1488139/000148813923000185/exhibit101amendment4.htm",
+    "status": "downloaded",
+    "sha256": "0295da08153cdfdcfbbda31f3597949ac258b998d4254ad2a00f9a06c0dbe537",
+    "html_bytes": 28351,
+    "text_chars": 24321
+  },
+  {
+    "chain": "ameresco",
+    "doc_id": "A3_sixth_amend_2024",
+    "url": "https://www.sec.gov/Archives/edgar/data/1488139/000148813924000127/amendno6tofiftharcredita.htm",
+    "status": "downloaded",
+    "sha256": "23f3e80efdb0a77c53bcd6996402891fe64bef225339f4d80ce80af12a0294ff",
+    "html_bytes": 26779,
+    "text_chars": 23077
+  }
+]
