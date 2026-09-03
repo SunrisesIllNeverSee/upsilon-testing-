@@ -211,6 +211,13 @@ class ConservationFirstSpine:
         Returns a :class:`SpineResult`.  If the instruction's family
         is not activated, returns ``routed_away=True`` and the caller
         must route it through the legacy path.
+
+        Identity is resolved by the engine (Layer B) from amendment
+        evidence signals (section_ref, alias, text_match) corroborated
+        by the agreement-local address map.  The predecessor kernel
+        is selected AFTER identity resolution — NOT pre-selected by
+        ``canonical_key_hint``.  This ensures the engine is the
+        controlling semantic interpretation step.
         """
         # Route away non-activated families.
         if not self.is_activated(instruction):
@@ -221,25 +228,14 @@ class ConservationFirstSpine:
             instruction, citation_document=citation_document,
         )
 
-        # The evidence's canonical_key_hint is the parser/fixture
-        # target_key.  We use it to fetch the predecessor kernel, but
-        # identity is established via the agreement-local address map
-        # in Layer B, not via this hint alone.
-        commitment_id = evidence.canonical_key_hint or ""
-        predecessor = self.store.get_predecessor(commitment_id)
-        if predecessor is None:
-            return SpineResult(
-                rejected=True,
-                rejection_reason=(
-                    f"No authoritative predecessor for {commitment_id!r}"
-                ),
-                rejection_layer="predecessor_lookup",
-                evidence=evidence,
-            )
-
         # --- Layer B: AuthorizedTransformationEngine ---
+        # Pass ALL predecessor kernels to the engine so it can select
+        # the correct predecessor AFTER resolving identity from
+        # evidence signals.  This breaks the circular dependency
+        # where the caller pre-selects the predecessor using
+        # canonical_key_hint.
         authority = AuthorityContext(
-            predecessor_kernel=predecessor,
+            predecessor_kernels=dict(self.store.get_all_current()),
             predecessor_commitment_ids=list(self.store.get_all_current().keys()),
             amendment_number=0,
             chain_position=0,
@@ -269,8 +265,29 @@ class ConservationFirstSpine:
                 transformation=delta,
             )
 
+        # The engine resolved identity and selected the predecessor.
+        # Fetch the predecessor for downstream layers (conservation,
+        # proof, execution).
+        commitment_id = delta.commitment_id
+        predecessor = self.store.get_predecessor(commitment_id)
+        if predecessor is None:
+            return SpineResult(
+                rejected=True,
+                rejection_reason=(
+                    f"Engine resolved identity to {commitment_id!r} "
+                    f"but no predecessor kernel exists in the store"
+                ),
+                rejection_layer="predecessor_lookup",
+                evidence=evidence,
+                transformation=delta,
+            )
+
         # Re-resolve identity to obtain the IdentityResolutionResult
-        # the proof assembler needs.
+        # the proof assembler needs.  The engine already resolved
+        # identity internally; we re-resolve here to obtain the
+        # result object.  This is NOT a second identity determination
+        # — it uses the same signals and address map, so it produces
+        # the same result.
         identity_result = self.identity_resolver.resolve(
             section_ref=evidence.source_section_ref,
             alias_match=evidence.alias_match,
@@ -331,11 +348,17 @@ class ConservationFirstSpine:
         # It does NOT reinterpret text, resolve identity, or derive
         # values.  It commits exactly the validated transformation or
         # fails closed on state/version conflict.
+        #
+        # The expected_predecessor_version is carried in the proof.
+        # The executor verifies that the current predecessor version
+        # matches the version the candidate was computed against.
+        # This prevents stale-version execution.
         try:
             new_version = self.store.advance(
                 commitment_id=delta.commitment_id,
                 successor=candidate,
                 proof_id=proof.proof_id,
+                expected_predecessor_version=proof.predecessor_version,
             )
         except ValueError as exc:
             return SpineResult(
@@ -394,7 +417,7 @@ class ConservationFirstSpine:
             # NOT be promoted to authoritative current state.  We
             # roll back the kernel store to the predecessor so the
             # authoritative current state remains the predecessor.
-            self._rollback(delta.commitment_id, predecessor)
+            self.store.rollback(delta.commitment_id, predecessor)
             return SpineResult(
                 rejected=True,
                 rejection_reason=(
@@ -425,28 +448,3 @@ class ConservationFirstSpine:
             authority_decision=authority_decision,
             successor_version=new_version.version_number,
         )
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    def _rollback(
-        self, commitment_id: str, predecessor: CommitmentKernel,
-    ) -> None:
-        """Roll back the kernel store to the predecessor.
-
-        Called when the authority gate blocks promotion.  The
-        provisional successor that was advanced into the store is
-        replaced by the predecessor so authoritative current state
-        remains the predecessor.
-        """
-        # Restore the predecessor as current and drop the rolled-back
-        # version from history so version numbering stays monotonic.
-        pred_version = predecessor.version
-        self.store._current[commitment_id] = predecessor
-        if commitment_id in self.store._versions:
-            versions = self.store._versions[commitment_id]
-            if versions and versions[-1].version_number != (
-                pred_version.version_number if pred_version else 0
-            ):
-                versions.pop()

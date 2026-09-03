@@ -50,6 +50,19 @@ class AmendmentEvidence:
 
     This is the input to the AuthorizedTransformationEngine.  It
     carries the evidence signals, not the interpretation.
+
+    Value provenance:
+        - ``PARSER_EXTRACTED``: values were extracted from the
+          amendment source text by the deterministic parser.
+        - ``CURATOR_PROVIDED``: values were provided by a human
+          curator (MANUAL or MANUAL_FALLBACK provenance).  These
+          are evidence but require corroboration by the engine.
+        - ``UNKNOWN``: provenance could not be determined.
+
+    The engine uses value_provenance to weight evidence: parser-
+    extracted values are strong evidence; curator-provided values
+    are weaker evidence that the engine must corroborate against
+    predecessor state and source text.
     """
 
     source_text: str = ""
@@ -71,6 +84,9 @@ class AmendmentEvidence:
     text_match: str | None = None
     canonical_key_hint: str | None = None
 
+    # Provenance of the values (PARSER_EXTRACTED, CURATOR_PROVIDED, UNKNOWN)
+    value_provenance: str = "UNKNOWN"
+
 
 @dataclass
 class AuthorityContext:
@@ -78,12 +94,45 @@ class AuthorityContext:
 
     Carries the predecessor state and chain context that the engine
     uses as constraint evidence (not as proof of target identity).
+
+    The engine resolves target identity from amendment evidence
+    (Layer A signals: section_ref, alias, text_match) corroborated
+    by the address map and predecessor state.  The
+    ``predecessor_kernel`` field is NOT used to determine target
+    identity — it is the predecessor state that the engine consults
+    AFTER identity is resolved, to extract old values and verify
+    old-value consistency.
+
+    ``predecessor_kernels`` carries the full set of current
+    authoritative kernels so the engine can select the correct
+    predecessor after identity resolution.  This breaks the circular
+    dependency where the caller pre-selects the predecessor using
+    ``canonical_key_hint`` (which would make the engine's identity
+    resolution decorative).
     """
 
     predecessor_kernel: CommitmentKernel | None = None
     predecessor_commitment_ids: list[str] = field(default_factory=list)
+    predecessor_kernels: dict[str, CommitmentKernel] = field(default_factory=dict)
     amendment_number: int = 0
     chain_position: int = 0
+
+    def get_predecessor(self, commitment_id: str) -> CommitmentKernel | None:
+        """Get the predecessor kernel for a commitment_id.
+
+        First checks ``predecessor_kernels`` (the full set), then
+        falls back to ``predecessor_kernel`` (the single-kernel
+        shortcut, retained for backward compatibility with tests
+        that construct AuthorityContext directly).
+        """
+        if commitment_id in self.predecessor_kernels:
+            return self.predecessor_kernels[commitment_id]
+        if (
+            self.predecessor_kernel is not None
+            and self.predecessor_kernel.commitment_id == commitment_id
+        ):
+            return self.predecessor_kernel
+        return None
 
 
 @dataclass
@@ -123,8 +172,22 @@ class AuthorizedTransformationEngine:
         """Produce an authorized transformation from evidence + predecessor state.
 
         Implements the 6-step process from TRANSFORMATION_ALGEBRA.md §4.
+
+        Identity is resolved FIRST from amendment evidence signals
+        (section_ref, alias, text_match) corroborated by the address
+        map.  The predecessor kernel is then selected from the
+        resolved commitment_id — NOT pre-selected by the caller via
+        ``canonical_key_hint``.  This ensures the engine is the
+        controlling semantic interpretation step, not a decorative
+        certifier of a caller's pre-selection.
         """
-        # Step 1: Establish target identity
+        # Step 1: Establish target identity from evidence signals.
+        # The identity resolver uses the agreement-local address map
+        # (section_ref → commitment_id) as the primary mechanism.
+        # Alias/text matches supply weak corroboration evidence.
+        # canonical_key_hint is NOT used as authority — it is a
+        # weak hint that may corroborate but cannot establish
+        # identity alone.
         identity_result = self._establish_target_identity(evidence, authority)
         if identity_result.fail_closed:
             return TransformationResult(
@@ -132,6 +195,28 @@ class AuthorizedTransformationEngine:
                 rejection_reason=identity_result.failure_reason,
                 rejection_step="target_identity",
             )
+
+        # Select the predecessor kernel from the resolved identity.
+        # This is the key fix: the predecessor is selected AFTER
+        # identity resolution, not before.  The engine's identity
+        # resolution is now controlling, not decorative.
+        resolved_id = identity_result.identity
+        assert resolved_id is not None  # guarded by fail_closed check
+        predecessor = authority.get_predecessor(resolved_id.commitment_id)
+        if predecessor is None:
+            return TransformationResult(
+                rejected=True,
+                rejection_reason=(
+                    f"Resolved identity {resolved_id.commitment_id!r} "
+                    f"has no predecessor kernel in the authoritative state"
+                ),
+                rejection_step="predecessor_lookup",
+            )
+
+        # Update the authority context with the resolved predecessor
+        # so downstream steps (value extraction, old-value consistency)
+        # use the correct kernel.
+        authority.predecessor_kernel = predecessor
 
         # Step 2: Determine transformation type
         transform_type = self._determine_transformation_type(evidence)

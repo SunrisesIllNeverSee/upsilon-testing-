@@ -327,6 +327,162 @@ class TestKernelExecutionViolations:
         with pytest.raises(ValueError, match="not in kernel store"):
             store.advance("nonexistent", candidate, proof_id="PRF-test")
 
+    def test_stale_predecessor_version_raises(self):
+        """Violation: advance with stale predecessor version raises.
+
+        If the candidate was computed against predecessor version 0
+        but the current authoritative version is 1, the advance must
+        fail closed.  This prevents stale-version execution.
+        """
+        original = _ameresco_original_state()
+        store, address_map, _ = establish_authoritative_kernel(
+            original, _AMERESCO_AGREEMENT, _SECTION_REFS
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+
+        # First advance to version 1
+        from upsilon.models import CommitmentIdentity, AddressBinding
+        identity = CommitmentIdentity(
+            commitment_id="financial_covenant.leverage_ratio",
+            agreement_identity=_AMERESCO_AGREEMENT,
+            canonical_key="financial_covenant.leverage_ratio",
+            local_address=AddressBinding(
+                section_ref="Section 7.10(a)",
+                established_at_version="S0",
+            ),
+        )
+        candidate_v1 = CommitmentKernel(identity=identity, threshold=3.50)
+        store.advance(
+            "financial_covenant.leverage_ratio",
+            candidate_v1,
+            proof_id="PRF-first",
+        )
+
+        # Now try to advance with expected_predecessor_version=0
+        # (stale — current is version 1)
+        candidate_v2 = CommitmentKernel(identity=identity, threshold=3.25)
+        with pytest.raises(ValueError, match="Predecessor version mismatch"):
+            store.advance(
+                "financial_covenant.leverage_ratio",
+                candidate_v2,
+                proof_id="PRF-stale",
+                expected_predecessor_version=0,
+            )
+
+    def test_rollback_restores_predecessor(self):
+        """Positive: rollback restores the predecessor as current.
+
+        After advance + rollback, the authoritative current state
+        must be the predecessor, and the version history must not
+        contain the rolled-back version.
+        """
+        original = _ameresco_original_state()
+        store, address_map, _ = establish_authoritative_kernel(
+            original, _AMERESCO_AGREEMENT, _SECTION_REFS
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        pred_threshold = predecessor.threshold
+
+        from upsilon.models import CommitmentIdentity, AddressBinding
+        identity = CommitmentIdentity(
+            commitment_id="financial_covenant.leverage_ratio",
+            agreement_identity=_AMERESCO_AGREEMENT,
+            canonical_key="financial_covenant.leverage_ratio",
+            local_address=AddressBinding(
+                section_ref="Section 7.10(a)",
+                established_at_version="S0",
+            ),
+        )
+        candidate = CommitmentKernel(identity=identity, threshold=99.99)
+        store.advance(
+            "financial_covenant.leverage_ratio",
+            candidate,
+            proof_id="PRF-test",
+        )
+
+        # Verify the candidate is current
+        current = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        assert current.threshold == 99.99
+
+        # Roll back
+        store.rollback(
+            "financial_covenant.leverage_ratio", predecessor,
+        )
+
+        # The authoritative current state must be the predecessor
+        current = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        assert current.threshold == pred_threshold
+        assert current.threshold != 99.99
+
+        # Version history must not contain the rolled-back version
+        history = store.get_version_history(
+            "financial_covenant.leverage_ratio"
+        )
+        assert len(history) == 1
+        assert history[0].version_number == 0
+
+    def test_execution_failure_leaves_state_unchanged(self):
+        """Violation: if advance raises, the state must be unchanged.
+
+        Execution atomicity: if KernelStore.advance fails (e.g.,
+        stale predecessor version), the authoritative current state
+        must remain the predecessor.  No partial mutation.
+        """
+        original = _ameresco_original_state()
+        store, address_map, _ = establish_authoritative_kernel(
+            original, _AMERESCO_AGREEMENT, _SECTION_REFS
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        pred_applicability = predecessor.applicability
+
+        from upsilon.models import CommitmentIdentity, AddressBinding
+        identity = CommitmentIdentity(
+            commitment_id="financial_covenant.leverage_ratio",
+            agreement_identity=_AMERESCO_AGREEMENT,
+            canonical_key="financial_covenant.leverage_ratio",
+            local_address=AddressBinding(
+                section_ref="Section 7.10(a)",
+                established_at_version="S0",
+            ),
+        )
+        candidate = CommitmentKernel(
+            identity=identity, threshold=99.99,
+            applicability={"steady_state_threshold": 99.99},
+        )
+
+        # Attempt advance with a stale predecessor version — must raise
+        with pytest.raises(ValueError, match="Predecessor version mismatch"):
+            store.advance(
+                "financial_covenant.leverage_ratio",
+                candidate,
+                proof_id="PRF-stale",
+                expected_predecessor_version=99,  # stale
+            )
+
+        # The state must be unchanged
+        current = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        assert current.threshold == predecessor.threshold
+        assert current.applicability == pred_applicability
+
+        # Version history must still have only the origin version
+        history = store.get_version_history(
+            "financial_covenant.leverage_ratio"
+        )
+        assert len(history) == 1
+        assert history[0].version_number == 0
+
 
 # ---------------------------------------------------------------------------
 # Designated real EDGAR case

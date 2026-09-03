@@ -167,12 +167,24 @@ class IdentityResolver:
         Returns an IdentityResolutionResult.  If target identity cannot
         be established with sufficient confidence, the result fails
         closed (fail_closed=True, identity=None).
+
+        Identity is established from amendment evidence signals
+        (section_ref, alias, text_match) corroborated by the
+        agreement-local address map.  ``canonical_key_hint`` is a
+        WEAK hint only — it may corroborate an identity established
+        by other signals but may NOT establish identity alone.  This
+        prevents the circular dependency where the caller pre-selects
+        the target via canonical_key_hint and the resolver merely
+        certifies that pre-selection.
         """
         signals: list[str] = []
         candidate_ids: list[str] = []
         confidence = 0.0
 
         # Signal 1: agreement-local address map (strongest)
+        # This is the primary identity authority.  A section reference
+        # resolves through the agreement-local address map, NOT through
+        # global section heuristics or canonical_key_hint.
         if section_ref:
             addr_id = self._address_map.resolve_by_address(section_ref)
             if addr_id:
@@ -208,6 +220,38 @@ class IdentityResolver:
             signals.append(f"text_match({text_match})")
             if candidate_ids:
                 confidence = max(confidence, min(confidence + 0.03, 0.95))
+
+        # Signal 4: canonical_key_hint (WEAK — corroboration only)
+        # This is a hint from the parser/curator, NOT authority.  It
+        # may corroborate an identity already established by address
+        # map or predecessor evidence, but it may NOT establish
+        # identity alone.  This prevents the circular dependency
+        # where the caller pre-selects the target and the resolver
+        # merely certifies that pre-selection.
+        if canonical_key_hint:
+            if candidate_ids:
+                # Corroborate: if the hint matches a candidate, boost
+                # confidence slightly.  If it does NOT match, do not
+                # override the address-map resolution.
+                if canonical_key_hint in candidate_ids:
+                    signals.append(
+                        f"canonical_key_hint({canonical_key_hint}, corroborated)"
+                    )
+                    confidence = max(confidence, min(confidence + 0.02, 0.95))
+                else:
+                    signals.append(
+                        f"canonical_key_hint({canonical_key_hint}, "
+                        f"not corroborated by address map)"
+                    )
+            else:
+                # No candidates from address map or predecessor —
+                # canonical_key_hint alone is INSUFFICIENT.  Do not
+                # add it as a candidate.  This is the key fix: the
+                # hint cannot establish identity by itself.
+                signals.append(
+                    f"canonical_key_hint({canonical_key_hint}, "
+                    f"uncorroborated — not authoritative)"
+                )
 
         # Determine evidence level
         if confidence >= 0.85:

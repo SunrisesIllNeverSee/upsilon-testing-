@@ -166,6 +166,32 @@ class TestInstructionToEvidence:
         assert evidence.alias_match is not None
         assert "leverage" in evidence.alias_match.lower()
 
+    def test_evidence_carries_value_provenance(self):
+        """Positive: evidence carries value provenance from the instruction.
+
+        The Ameresco A1 instruction has MANUAL_FALLBACK provenance,
+        so the evidence's value_provenance must be CURATOR_PROVIDED.
+        """
+        ins = _ameresco_a1_instruction()
+        evidence = instruction_to_evidence(ins)
+
+        assert evidence.value_provenance == "CURATOR_PROVIDED"
+
+    def test_evidence_parser_provenance_for_automated_instructions(self):
+        """Positive: PARSER provenance produces PARSER_EXTRACTED evidence."""
+        ins = AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_section_ref="Section 7.10(a)",
+            field="threshold",
+            new_value=3.00,
+            source_text="Some text",
+            provenance=InstructionProvenance.PARSER,
+        )
+        evidence = instruction_to_evidence(ins)
+
+        assert evidence.value_provenance == "PARSER_EXTRACTED"
+
 
 class TestInstructionsToEvidence:
     """Test batch conversion."""

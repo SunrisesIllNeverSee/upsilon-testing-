@@ -84,6 +84,7 @@ class KernelStore:
         commitment_id: str,
         successor: CommitmentKernel,
         proof_id: str,
+        expected_predecessor_version: int | None = None,
     ) -> KernelVersion:
         """Advance a commitment to a new version.
 
@@ -93,6 +94,12 @@ class KernelStore:
         This does NOT grant authority — that is the authority gate's
         job.  This method is called only after the authority gate has
         granted AUTHORITY_GRANTED.
+
+        If ``expected_predecessor_version`` is provided, the advance
+        fails closed if the current predecessor version does not
+        match.  This prevents stale-version execution (a candidate
+        computed against an older predecessor being committed on top
+        of a newer one).
         """
         predecessor = self._current.get(commitment_id)
         if predecessor is None:
@@ -102,6 +109,18 @@ class KernelStore:
 
         pred_version = predecessor.version
         pred_version_num = pred_version.version_number if pred_version else 0
+
+        # Stale-version check: if the caller expected a specific
+        # predecessor version, verify it matches.  This prevents
+        # a candidate computed against an older predecessor from
+        # being committed on top of a newer one.
+        if expected_predecessor_version is not None:
+            if pred_version_num != expected_predecessor_version:
+                raise ValueError(
+                    f"Predecessor version mismatch for {commitment_id}: "
+                    f"expected {expected_predecessor_version}, "
+                    f"actual {pred_version_num}"
+                )
 
         new_version = KernelVersion(
             commitment_id=commitment_id,
@@ -114,6 +133,30 @@ class KernelStore:
         self._current[commitment_id] = successor
         self._versions[commitment_id].append(new_version)
         return new_version
+
+    def rollback(
+        self, commitment_id: str, predecessor: CommitmentKernel,
+    ) -> None:
+        """Roll back a commitment to a predecessor kernel.
+
+        Called when the authority gate blocks promotion after
+        ``advance`` was called.  The provisional successor that was
+        advanced into the store is replaced by the predecessor so
+        authoritative current state remains the predecessor.
+
+        This is a public API — callers must NOT reach into private
+        members (``_current``, ``_versions``) directly.  The rollback
+        restores the predecessor as current and drops the rolled-back
+        version from history so version numbering stays monotonic.
+        """
+        pred_version = predecessor.version
+        self._current[commitment_id] = predecessor
+        if commitment_id in self._versions:
+            versions = self._versions[commitment_id]
+            if versions and versions[-1].version_number != (
+                pred_version.version_number if pred_version else 0
+            ):
+                versions.pop()
 
     def get_version_history(self, commitment_id: str) -> list[KernelVersion]:
         """Get the full version history for a commitment."""

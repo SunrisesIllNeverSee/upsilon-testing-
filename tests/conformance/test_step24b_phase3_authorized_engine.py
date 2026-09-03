@@ -482,6 +482,74 @@ class TestEngineRejections:
         assert result.rejected
         assert result.rejection_step == "affected_fields"
 
+    def test_canonical_key_hint_alone_cannot_establish_identity(self):
+        """Violation: canonical_key_hint without address-map corroboration
+        is INSUFFICIENT for identity.
+
+        This is the critical anti-circularity test.  If the engine
+        accepted canonical_key_hint alone as identity authority, the
+        engine would be decorative — it would merely certify the
+        caller's pre-selection.  The engine must require address-map
+        or predecessor corroboration.
+        """
+        store, _, engine = _setup_engine()
+        # Evidence with canonical_key_hint but NO section_ref and
+        # NO address-map signal.  The alias_match alone is WEAK.
+        evidence = AmendmentEvidence(
+            source_text="Some text about leverage ratio",
+            source_section_ref=None,  # no address-map signal
+            instruction_type="REPLACE_VALUE",
+            target_field="threshold",
+            new_value=3.00,
+            canonical_key_hint="financial_covenant.leverage_ratio",
+            alias_match="leverage_ratio",
+        )
+        predecessor = store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        authority = AuthorityContext(
+            predecessor_kernel=predecessor,
+            predecessor_commitment_ids=list(store.get_all_current().keys()),
+        )
+
+        result = engine.authorize(evidence, authority)
+
+        # Must reject — canonical_key_hint alone is INSUFFICIENT
+        assert result.rejected
+        assert result.rejection_step == "target_identity"
+
+    def test_engine_resolves_identity_without_predecessor_kernel(self):
+        """Positive: engine resolves identity from address map even when
+        predecessor_kernel is not pre-selected by the caller.
+
+        This proves the engine is the controlling identity resolution
+        step, not a decorative certifier.  The caller passes all
+        predecessor kernels via predecessor_kernels, and the engine
+        selects the correct one after resolving identity from the
+        address map.
+        """
+        store, _, engine = _setup_engine()
+        ins = _ameresco_a1_instruction()
+        evidence = instruction_to_evidence(
+            ins, citation_document="Amendment No. 3, Aug 24, 2023"
+        )
+        # Do NOT pre-select the predecessor — pass all kernels
+        authority = AuthorityContext(
+            predecessor_kernels=dict(store.get_all_current()),
+            predecessor_commitment_ids=list(store.get_all_current().keys()),
+            amendment_number=1,
+            chain_position=1,
+        )
+
+        result = engine.authorize(evidence, authority)
+
+        # The engine must resolve identity from the address map
+        # (Section 7.10(a) → leverage_ratio) and select the correct
+        # predecessor from predecessor_kernels.
+        assert result.authorized
+        assert result.transformation.commitment_id == \
+            "financial_covenant.leverage_ratio"
+
 
 # ---------------------------------------------------------------------------
 # Designated real EDGAR case

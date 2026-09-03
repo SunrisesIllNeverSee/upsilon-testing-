@@ -380,6 +380,31 @@ class TestConservationViolations:
         assert not result.passed
         assert "old_value_consistency" in result.failed_invariants
 
+    def test_old_value_mismatch_fails_even_with_engine_flag(self):
+        """Violation: the invariant independently compares values.
+
+        Even if the engine's ``old_value_consistency_verified`` flag
+        is True, the invariant must independently detect a mismatch
+        between the declared old_value and the predecessor's actual
+        value.  This proves the invariant does NOT trust the engine
+        flag alone.
+        """
+        store, predecessor, delta = _setup_and_authorize()
+        candidate = apply_transformation(predecessor, delta)
+
+        # Corrupt the old_value in the affected field — set it to
+        # a value that does NOT match the predecessor.
+        delta.affected_fields[0].old_value = {"steady_state_threshold": 99.99}
+        # Leave the engine flag set to True (the engine "verified" it)
+        delta.old_value_consistency_verified = True
+
+        validator = ConservationValidator()
+        result = validator.validate(predecessor, candidate, delta)
+
+        # The invariant must independently detect the mismatch
+        assert not result.passed
+        assert "old_value_consistency" in result.failed_invariants
+
     def test_missing_source_authority_fails_lineage_continuity(self):
         """Violation: a Δ with no source_authority fails lineage_continuity."""
         store, predecessor, delta = _setup_and_authorize()

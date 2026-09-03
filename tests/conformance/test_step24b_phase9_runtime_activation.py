@@ -239,6 +239,35 @@ class TestStep24BRuntimeActivation:
             f"got {result.final_state_agreement}"
         )
 
+    def test_no_dual_execution_for_spine_controlled_commitments(self):
+        """The legacy executor must NOT process spine-controlled commitments.
+
+        This is the dual-execution-path elimination test.  When the
+        spine processes a SCALAR_REPLACEMENT instruction (whether
+        promoted or rejected), the legacy executor must NOT also
+        process a mutation targeting the same commitment.  The spine
+        is the sole semantic path for SCALAR_REPLACEMENT.
+        """
+        result = run_semantic_pipeline_v2(chain_ameresco())
+        # A1 and A2 both target financial_covenant.leverage_ratio
+        # via SCALAR_REPLACEMENT.  The spine processes both.  The
+        # legacy executor must NOT also process them.
+        for step in result.steps[:2]:
+            # The step must have spine results (spine processed them)
+            assert len(step.spine_results) > 0, (
+                "Step must have spine results for SCALAR_REPLACEMENT"
+            )
+            # The legacy executor's applied instructions must NOT
+            # include any targeting financial_covenant.leverage_ratio
+            for applied in step.execution_result.applied:
+                assert applied.target_key != (
+                    "financial_covenant.leverage_ratio"
+                ), (
+                    f"Legacy executor must not process spine-controlled "
+                    f"commitment financial_covenant.leverage_ratio, "
+                    f"but found applied instruction: {applied}"
+                )
+
 
 class TestStep24BSpineFailClosed:
     """Verify the spine fail-closed behavior on the production path."""
@@ -317,3 +346,132 @@ class TestStep24BSpineFailClosed:
             f"Authoritative state must be unchanged after rejection, "
             f"got {lr.applicability}"
         )
+
+    def test_authority_blocked_after_execution_keeps_predecessor(self):
+        """Most important atomicity test.
+
+        If the candidate/executed successor exists (was advanced into
+        the kernel store) BUT the authority gate blocks promotion, the
+        authoritative_current MUST remain the predecessor.
+
+        This test constructs a SCALAR_REPLACEMENT that passes
+        conservation validation and proof assembly but fails the
+        authority gate (by setting inherited_unresolved > 0).  The
+        spine must roll back the kernel store so the authoritative
+        current state remains the predecessor.
+        """
+        from upsilon.commitments.kernel_bridge import (
+            establish_authoritative_kernel,
+        )
+        from upsilon.commitments.identity import IdentityResolver
+        from upsilon.commitments.kernel import KernelStore
+        from upsilon.evidence.evidence_extractor import instruction_to_evidence
+        from upsilon.models.legacy_models import (
+            AmendmentInstruction,
+            CommitmentState,
+            DomainEffect,
+            InstructionProvenance,
+            InstructionType,
+        )
+        from upsilon.models import (
+            CommitmentKernel,
+            CommitmentIdentity,
+            AddressBinding,
+        )
+        from upsilon.pipeline.conservation_first_spine import (
+            ConservationFirstSpine,
+        )
+        from upsilon.transformations.authorized_change import (
+            AuthorizedTransformationEngine,
+        )
+        from datetime import datetime
+
+        _AGREEMENT = "ameresco-fifth-ar-2022"
+        original_state = {
+            "financial_covenant.leverage_ratio": CommitmentState(
+                canonical_key="financial_covenant.leverage_ratio",
+                commitment_type="financial_covenant",
+                party=["borrower"],
+                action="maintain",
+                subject="core_leverage_ratio",
+                operator="<=",
+                threshold=3.50,
+                unit="ratio",
+                frequency="quarterly",
+                applicability={
+                    "steady_state_threshold": 3.50,
+                },
+            ),
+        }
+        section_refs = {
+            "financial_covenant.leverage_ratio": "Section 7.10(a)",
+        }
+        spine = ConservationFirstSpine(
+            original_state=original_state,
+            agreement_identity=_AGREEMENT,
+            section_refs=section_refs,
+        )
+
+        # A valid SCALAR_REPLACEMENT instruction.
+        ins = AmendmentInstruction(
+            order=1,
+            instruction_type=InstructionType.REPLACE_VALUE,
+            target_key="financial_covenant.leverage_ratio",
+            target_section_ref="Section 7.10(a)",
+            field="applicability",
+            old_value={"steady_state_threshold": 3.50},
+            new_value={"steady_state_threshold": 4.00},
+            effective_start=datetime(2023, 8, 24),
+            source_text="Section 7.10 of the Credit Agreement is amended.",
+            domain_effect=DomainEffect.COVENANT_THRESHOLD_CHANGE,
+            provenance=InstructionProvenance.MANUAL_FALLBACK,
+            citation_document="Amendment No. 3, Aug 24, 2023",
+            citation_section="Section 7.10(a)",
+        )
+
+        # Process with inherited_unresolved > 0 — this causes the
+        # authority gate to block (inherited unresolved state).
+        result = spine.process_instruction(
+            ins,
+            citation_document="Amendment No. 3, Aug 24, 2023",
+            inherited_unresolved=1,  # blocks authority
+        )
+
+        # The spine must reject (authority blocked).
+        assert result.rejected, (
+            "Spine must reject when authority is blocked"
+        )
+        assert result.rejection_layer == "authority_gate", (
+            f"Rejection must be at authority_gate, "
+            f"got {result.rejection_layer}"
+        )
+
+        # The candidate and proof must exist (execution happened
+        # before the authority gate).
+        assert result.candidate is not None, (
+            "Candidate must exist (execution happened before gate)"
+        )
+        assert result.proof is not None, (
+            "Proof must exist (assembled before gate)"
+        )
+
+        # CRITICAL: the authoritative current state MUST remain
+        # the predecessor.  The rollback must have restored it.
+        current = spine.store.get_predecessor(
+            "financial_covenant.leverage_ratio"
+        )
+        assert current.applicability == {"steady_state_threshold": 3.50}, (
+            f"Authoritative current must remain predecessor after "
+            f"authority block, got {current.applicability}"
+        )
+        assert current.threshold == 3.50
+
+        # Version history must not contain the rolled-back version.
+        history = spine.store.get_version_history(
+            "financial_covenant.leverage_ratio"
+        )
+        assert len(history) == 1, (
+            f"Version history must have only the origin version, "
+            f"got {len(history)} versions"
+        )
+        assert history[0].version_number == 0

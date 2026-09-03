@@ -445,9 +445,37 @@ def run_semantic_pipeline_v2(
             for cid, state in spine_state.items():
                 current_state[cid] = state.model_copy(deep=True)
 
-        # 4. Convert mapped mutations to AmendmentInstructions
+        # 4. Convert mapped mutations to AmendmentInstructions.
+        #    Filter out mutations targeting commitments the spine
+        #    controls — the spine is the controlling semantic path
+        #    for SCALAR_REPLACEMENT, and the legacy executor must NOT
+        #    also process them.  This eliminates the dual execution
+        #    path: a spine-controlled commitment is processed by
+        #    either the spine OR the legacy executor, never both.
+        #
+        #    We collect the set of commitment_ids the spine processed
+        #    (promoted, rejected, or routed-away-but-spine-controlled)
+        #    and exclude any mapped mutation whose target_key matches.
+        #    For routed-away instructions, the spine did not process
+        #    them, so they remain in the legacy path.
+        spine_controlled_ids: set[str] = set()
+        for sr in spine_results:
+            if sr.transformation is not None:
+                spine_controlled_ids.add(sr.transformation.commitment_id)
+            elif sr.evidence is not None and sr.evidence.canonical_key_hint:
+                # The spine attempted to process this instruction but
+                # rejected it before producing a transformation.  The
+                # canonical_key_hint identifies the target commitment.
+                # We must still exclude it from the legacy path to
+                # avoid dual processing.
+                spine_controlled_ids.add(sr.evidence.canonical_key_hint)
+
         mapped_instructions: list[AmendmentInstruction] = []
         for i, mut in enumerate(mapped_mutations, 1):
+            # Skip mutations targeting commitments the spine controls.
+            # The spine is the authoritative path for these.
+            if mut.commitment_id in spine_controlled_ids:
+                continue
             mapped_instructions.append(mut.to_amendment_instruction(order=i))
 
         # 5. Execute through the FROZEN executor

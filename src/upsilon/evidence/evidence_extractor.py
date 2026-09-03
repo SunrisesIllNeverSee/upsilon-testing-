@@ -43,9 +43,48 @@ from typing import Any
 
 from upsilon.models.legacy_models import (
     AmendmentInstruction,
+    InstructionProvenance,
     InstructionType,
 )
 from upsilon.transformations.authorized_change import AmendmentEvidence
+
+
+# ---------------------------------------------------------------------------
+# Value provenance determination
+# ---------------------------------------------------------------------------
+
+# Automated extraction provenances — values come from the parser or
+# semantic mapper, not from a human curator.  These are strong evidence.
+_AUTOMATED_PROVENANCES: frozenset[InstructionProvenance] = frozenset({
+    InstructionProvenance.PARSER,
+    InstructionProvenance.SEMANTIC_MAPPER,
+    InstructionProvenance.COMPOSITE_EXTRACTION,
+})
+
+# Human-curated provenances — values were provided by a human reading
+# the amendment text.  These are evidence but require corroboration
+# by the engine against predecessor state and source text.
+_CURATED_PROVENANCES: frozenset[InstructionProvenance] = frozenset({
+    InstructionProvenance.MANUAL,
+    InstructionProvenance.MANUAL_FALLBACK,
+})
+
+
+def _determine_value_provenance(
+    provenance: InstructionProvenance,
+) -> str:
+    """Determine the value provenance from the instruction's provenance.
+
+    Returns one of:
+    - ``PARSER_EXTRACTED``: values from automated parser/mapper extraction
+    - ``CURATOR_PROVIDED``: values from human curation
+    - ``UNKNOWN``: provenance could not be determined
+    """
+    if provenance in _AUTOMATED_PROVENANCES:
+        return "PARSER_EXTRACTED"
+    if provenance in _CURATED_PROVENANCES:
+        return "CURATOR_PROVIDED"
+    return "UNKNOWN"
 
 
 def instruction_to_evidence(
@@ -69,11 +108,17 @@ def instruction_to_evidence(
     - alias_match: alias text from the source (weak signal)
     - text_match: text match from the source (weak signal)
     - canonical_key_hint: the target_key as a canonical key hint
+    - value_provenance: PARSER_EXTRACTED or CURATOR_PROVIDED
 
     The engine will use these signals to establish target identity
     and determine the transformation.  The extractor does NOT resolve
     identity, determine the field, or classify the operation beyond
     what the parser already provided.
+
+    Value provenance is determined from the instruction's
+    ``provenance`` field:
+    - PARSER / SEMANTIC_MAPPER / COMPOSITE_EXTRACTION → PARSER_EXTRACTED
+    - MANUAL / MANUAL_FALLBACK → CURATOR_PROVIDED
 
     Args:
         instruction: the legacy AmendmentInstruction from the parser.
@@ -122,6 +167,13 @@ def instruction_to_evidence(
     elif section_ref:
         source_authority = section_ref
 
+    # Determine value provenance from the instruction's provenance field.
+    # PARSER / SEMANTIC_MAPPER / COMPOSITE_EXTRACTION are automated
+    # extraction paths — values are parser-extracted evidence.
+    # MANUAL / MANUAL_FALLBACK are human-curated — values are
+    # curator-provided evidence that the engine must corroborate.
+    value_provenance = _determine_value_provenance(instruction.provenance)
+
     return AmendmentEvidence(
         source_text=source_text,
         source_section_ref=section_ref,
@@ -137,6 +189,7 @@ def instruction_to_evidence(
         alias_match=alias_match,
         text_match=text_match,
         canonical_key_hint=canonical_key_hint,
+        value_provenance=value_provenance,
     )
 
 

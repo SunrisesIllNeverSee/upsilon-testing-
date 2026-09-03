@@ -139,7 +139,19 @@ class IdentityPersistence(ConservationInvariant):
 
 
 class OldValueConsistency(ConservationInvariant):
-    """2.2: declared_old_value == C_{t-1}[field] (conservation check, not evidence)."""
+    """2.2: declared_old_value == C_{t-1}[field] (conservation check, not evidence).
+
+    This invariant independently verifies that the declared old value
+    in each affected field matches the predecessor's current value for
+    that field.  It does NOT trust the engine's
+    ``old_value_consistency_verified`` flag — it performs the
+    comparison itself.
+
+    If no old value is declared for an affected field (old_value is
+    None), the invariant passes for that field (the engine may not
+    require old-value consistency for all transformations).  If an
+    old value IS declared, it must match the predecessor's value.
+    """
 
     def __init__(self) -> None:
         super().__init__(
@@ -161,8 +173,32 @@ class OldValueConsistency(ConservationInvariant):
         successor: CommitmentKernel | None,
         delta: AuthorizedTransformation,
     ) -> tuple[bool, str]:
+        # First, verify the engine's flag is set.  If the engine
+        # did not verify old-value consistency, that's a failure.
         if not delta.old_value_consistency_verified:
             return False, "Old-value consistency was not verified by the engine"
+
+        # Then, independently verify: for each affected field with a
+        # declared old_value, compare against the predecessor's value.
+        # This is the key fix — the invariant does NOT trust the flag
+        # alone.  It performs the actual comparison.
+        if predecessor is None:
+            # No predecessor — cannot verify.  This is acceptable
+            # only for CREATE (which is not in applies_to).
+            return True, ""
+        for affected in delta.affected_fields:
+            if affected.old_value is None:
+                # No declared old value — skip (not all transformations
+                # require old-value consistency).
+                continue
+            pred_val = predecessor.field_value(affected.field_name)
+            if pred_val != affected.old_value:
+                return False, (
+                    f"Old-value consistency failed for field "
+                    f"'{affected.field_name}': declared old value "
+                    f"{affected.old_value!r} does not match predecessor "
+                    f"value {pred_val!r}"
+                )
         return True, ""
 
 
