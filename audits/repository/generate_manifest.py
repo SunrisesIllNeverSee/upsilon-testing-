@@ -52,6 +52,28 @@ MODULE_META: dict[str, dict] = {
     "discovery_validation": {"dest": "src/upsilon/ingestion/document_discovery/", "owner": "ingestion", "kind": "runtime", "reason": "validates acquired S0/GT documents are correct type"},
     "synthetic_chains": {"dest": "tests/corpus/", "owner": "evidence", "kind": "test", "reason": "synthetic oracle fixtures; test data, not runtime"},
     "moses_safety": {"dest": "src/upsilon/conservation/", "owner": "conservation", "kind": "runtime", "reason": "MOSES safety enforcement logic; partially overlaps with target conservation invariants"},
+    # --- target runtime (already in src/upsilon/, no migration needed) ---
+    "legacy_models": {"dest": "src/upsilon/models/", "owner": "models", "kind": "target", "reason": "legacy CommitmentState models; already in target home"},
+    "promotion_gate": {"dest": "src/upsilon/authority/", "owner": "authority", "kind": "target", "reason": "AuthorityGate implementation; already in target home"},
+    "identity": {"dest": "src/upsilon/commitments/", "owner": "commitments", "kind": "target", "reason": "IdentityResolver, AgreementAddressMap; already in target home"},
+    "kernel": {"dest": "src/upsilon/commitments/", "owner": "commitments", "kind": "target", "reason": "KernelStore, OriginKernelBuilder; already in target home"},
+    "invariants": {"dest": "src/upsilon/conservation/", "owner": "conservation", "kind": "target", "reason": "10 conservation invariant families; already in target home"},
+    "loss_detection": {"dest": "src/upsilon/conservation/", "owner": "conservation", "kind": "target", "reason": "LossDetector; already in target home"},
+    "validator": {"dest": "src/upsilon/conservation/", "owner": "conservation", "kind": "target", "reason": "ConservationValidator; already in target home"},
+    "graph": {"dest": "src/upsilon/lineage/", "owner": "lineage", "kind": "target", "reason": "CommitmentLineageGraph; already in target home"},
+    "queries": {"dest": "src/upsilon/lineage/", "owner": "lineage", "kind": "target", "reason": "LineageQueries; already in target home"},
+    "authority": {"dest": "src/upsilon/models/", "owner": "models", "kind": "target", "reason": "AuthorityDecision enum; already in target home"},
+    "lineage": {"dest": "src/upsilon/models/", "owner": "models", "kind": "target", "reason": "LineageEdge, NodeClass, EdgeClass; already in target home"},
+    "proof": {"dest": "src/upsilon/models/", "owner": "models", "kind": "target", "reason": "SemanticTransformationProof; already in target home"},
+    "transformation": {"dest": "src/upsilon/models/", "owner": "models", "kind": "target", "reason": "AuthorizedTransformation, TransformationFamily; already in target home"},
+    "transformation_proof": {"dest": "src/upsilon/proof/", "owner": "proof", "kind": "target", "reason": "ProofBuilder, ProofAssembler; already in target home"},
+    "apply": {"dest": "src/upsilon/transformations/", "owner": "transformations", "kind": "target", "reason": "apply_transformation; already in target home"},
+    "authorized_change": {"dest": "src/upsilon/transformations/", "owner": "transformations", "kind": "target", "reason": "AuthorizedTransformationEngine; already in target home"},
+    # --- audit generators (already in audits/repository/) ---
+    "generate_dependency_graph": {"dest": "audits/repository/", "owner": "audit", "kind": "target", "reason": "dependency graph generator; already in target home"},
+    "generate_manifest": {"dest": "audits/repository/", "owner": "audit", "kind": "target", "reason": "migration manifest generator; already in target home"},
+    "migrate_files": {"dest": "audits/repository/", "owner": "audit", "kind": "target", "reason": "one-shot migration script; already in target home"},
+
     # --- audit and study tooling ---
     "acquire_chain_study": {"dest": "src/upsilon/ingestion/", "owner": "ingestion", "kind": "research", "reason": "acquires EDGAR chain data for development study"},
     "acquire_comparison_sources": {"dest": "src/upsilon/ingestion/", "owner": "ingestion", "kind": "research", "reason": "acquires comparison source documents"},
@@ -129,6 +151,7 @@ MODULE_META: dict[str, dict] = {
     "test_step_22b_incorrect_mutation_fix": {"dest": "tests/conservation/", "owner": "conservation", "kind": "test", "reason": "tests incorrect mutation fix"},
     "test_v02_change_spec": {"dest": "tests/regression/", "owner": "legacy", "kind": "test", "reason": "tests v02 change spec"},
     "test_v02_regression": {"dest": "tests/regression/", "owner": "legacy", "kind": "test", "reason": "v02 regression tests"},
+    "test_upsilonsrc": {"dest": "tests/unit/", "owner": "upsilon", "kind": "test", "reason": "72 unit tests for the target src/upsilon/ runtime"},
     # --- Step 23G.1 governance tests ---
     "test_frozen_manifest": {"dest": "tests/governance/", "owner": "governance", "kind": "test", "reason": "regression test proving frozen-manifest verification is idempotent"},
     "test_gitignore_boundary": {"dest": "tests/governance/", "owner": "governance", "kind": "test", "reason": "verifies .gitignore frozen-source exceptions admit only .txt source evidence, not derived output"},
@@ -264,9 +287,12 @@ def generate_manifest() -> str:
     # Categorize Python modules — each module in exactly one category.
     # kind is the primary discriminator; the test_ prefix is a fallback so
     # that test modules missing from MODULE_META are still classified.
+    # Modules already in their target home (src/upsilon/ target runtime,
+    # audit generators) are classified as "target" and listed separately.
     runtime_modules: list[str] = []
     test_modules: list[str] = []
     audit_research: list[str] = []
+    target_modules: list[str] = []
     uncategorized: list[str] = []
     for m in sorted(modules):
         kind = MODULE_META.get(m, {}).get("kind")
@@ -276,14 +302,21 @@ def generate_manifest() -> str:
             test_modules.append(m)
         elif kind in ("research", "audit", "results", "data", "legacy"):
             audit_research.append(m)
+        elif kind == "target":
+            target_modules.append(m)
         else:
-            uncategorized.append(m)
+            # Check if it's a target runtime module already in src/upsilon/
+            meta = MODULE_META.get(m, {})
+            if meta.get("kind") == "target":
+                target_modules.append(m)
+            else:
+                uncategorized.append(m)
     if uncategorized:
         raise ValueError(
             f"Uncategorized Python modules (add to MODULE_META): {uncategorized}"
         )
     # Sanity: categorized count must match module count (no overlaps, no gaps)
-    categorized_count = len(runtime_modules) + len(test_modules) + len(audit_research)
+    categorized_count = len(runtime_modules) + len(test_modules) + len(audit_research) + len(target_modules)
     assert categorized_count == len(modules), (
         f"Module categorization mismatch: {categorized_count} categorized "
         f"vs {len(modules)} total (overlaps or gaps in section filters)"

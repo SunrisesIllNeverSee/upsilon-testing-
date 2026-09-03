@@ -148,8 +148,45 @@ BOUNDARY_VIOLATIONS: dict[str, dict] = {
 
 
 def _local_module_names() -> set[str]:
-    """Return the set of importable local module names (file stems)."""
-    return {p.stem for p in REPO_ROOT.glob("*.py")}
+    """Return the set of importable local module names (file stems).
+
+    Scans src/upsilon/, tests/, audits/, research/, data/, results/, archive/
+    for .py files (excluding __init__.py) and returns their file stems.
+    """
+    names: set[str] = set()
+    scan_dirs = [
+        REPO_ROOT / "src" / "upsilon",
+        REPO_ROOT / "tests",
+        REPO_ROOT / "audits",
+        REPO_ROOT / "research",
+        REPO_ROOT / "data",
+        REPO_ROOT / "results",
+        REPO_ROOT / "archive",
+    ]
+    for d in scan_dirs:
+        if d.exists():
+            for p in d.rglob("*.py"):
+                if p.stem != "__init__":
+                    names.add(p.stem)
+    return names
+
+
+def _all_py_files() -> list[Path]:
+    """Return all .py files in the scan directories, sorted."""
+    py_files: list[Path] = []
+    scan_dirs = [
+        REPO_ROOT / "src" / "upsilon",
+        REPO_ROOT / "tests",
+        REPO_ROOT / "audits",
+        REPO_ROOT / "research",
+        REPO_ROOT / "data",
+        REPO_ROOT / "results",
+        REPO_ROOT / "archive",
+    ]
+    for d in scan_dirs:
+        if d.exists():
+            py_files.extend(p for p in d.rglob("*.py") if p.stem != "__init__")
+    return sorted(py_files)
 
 
 def _extract_imports(source: str) -> tuple[list[str], list[str]]:
@@ -157,6 +194,10 @@ def _extract_imports(source: str) -> tuple[list[str], list[str]]:
 
     Only imports of *local* modules are returned.  Third-party and stdlib
     imports are filtered out by the caller using ``LOCAL_MODULES``.
+
+    Handles both bare imports (``import models``) and dotted package imports
+    (``import upsilon.models.legacy_models as models``).  For dotted imports,
+    the last component of the dotted path is matched against local module names.
     """
     try:
         tree = ast.parse(source, filename="<ast>")
@@ -169,14 +210,17 @@ def _extract_imports(source: str) -> tuple[list[str], list[str]]:
     def _record(node: ast.Import | ast.ImportFrom, sink: list[str]) -> None:
         if isinstance(node, ast.Import):
             for alias in node.names:
-                root = alias.name.split(".")[0]
-                sink.append(root)
+                # For dotted imports like upsilon.models.legacy_models,
+                # extract the last component as the module name
+                parts = alias.name.split(".")
+                sink.append(parts[-1])
         elif isinstance(node, ast.ImportFrom):
             if node.module is None:
                 return
-            root = node.module.split(".")[0]
-            # ``from . import foo`` has node.module is None; handled above.
-            sink.append(root)
+            # For `from upsilon.models.legacy_models import X`,
+            # the module is upsilon.models.legacy_models, last component is legacy_models
+            parts = node.module.split(".")
+            sink.append(parts[-1])
 
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -211,7 +255,7 @@ def _classify_risk(runtime_dependents: int, test_dependents: int) -> str:
 def build_graph() -> dict[str, dict]:
     """Build the full dependency graph and return per-module records."""
     local_modules = _local_module_names()
-    py_files = sorted(REPO_ROOT.glob("*.py"))
+    py_files = _all_py_files()
 
     # module -> {top_level_imports, deferred_imports, third_party_imports}
     raw: dict[str, dict] = {}

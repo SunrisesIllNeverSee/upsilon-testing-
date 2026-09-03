@@ -194,7 +194,7 @@ def _inventory_embedded_states(
     ``created_at`` / ``frozen_at`` are reused from ``embedded_ts`` when the
     artifact already appears in the existing manifest.
     """
-    semantic_gold_path = REPO_ROOT / "semantic_gold.py"
+    semantic_gold_path = REPO_ROOT / "tests" / "corpus" / "semantic_gold.py"
 
     now = datetime.now(UTC).isoformat()
     embedded = []

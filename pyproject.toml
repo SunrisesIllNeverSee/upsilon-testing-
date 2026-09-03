@@ -36,17 +36,13 @@ include = ["upsilon*"]
 #   Phase 1 (next):     testpaths = ["tests", "."]      (some tests moved)
 #   Phase 2 (final):    testpaths = ["tests"]           (all tests moved)
 #
-# We are at Phase 1.  The src/upsilon test suite lives under tests/unit/;
-# legacy root tests remain at the project root.  The collection boundary
-# is restricted to test_*.py files so that moving a non-test file does
-# not accidentally change test discovery.  When all root tests have moved
-# to tests/, advance to Phase 2: testpaths = ["tests"].
+# We are now at Phase 2: all tests have moved to tests/.
 #
 # Do NOT set testpaths = ["."] — that means "look everywhere" and defeats
 # the purpose of an explicit collection boundary.
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "."]
+testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -54,4 +50,4 @@ python_functions = ["test_*"]
 # resolves without requiring an external PYTHONPATH or an editable install.
 # This keeps `pytest -q` (and `make test`) working in the transitional state
 # where target tests live under tests/unit/ and legacy tests remain at root.
-pythonpath = ["src"]
+pythonpath = ["src", "."]
