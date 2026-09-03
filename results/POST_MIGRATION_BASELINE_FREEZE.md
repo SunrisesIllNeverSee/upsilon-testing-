@@ -12,9 +12,9 @@
 3. Copied untracked result files needed by audit scripts (`chain_study_v1_results.json`, `step_21_v2_study_results.json`, `step_22_unresolved_taxonomy.json`).
 4. Ran all empirical audit scripts on pre-migration code.
 5. Ran all empirical audit scripts on post-migration code.
-6. Compared 46 metrics across all audits.
+6. Compared 53 metrics across all audits (frozen-input hash verification, Step 23R, Step 23, Step 23S, defect safety record).
 
-## Result: 46 matched, 0 mismatched
+## Result: 53 matched, 0 mismatched
 
 The directory/import migration preserved all empirical behavior. Post-migration behavior is byte-identical to pre-migration.
 
@@ -125,6 +125,25 @@ The directory/import migration preserved all empirical behavior. Post-migration 
 | unknown_genre_rate < 20% | PASS (18.9%) |
 | **Total gates passed** | **4/6** |
 
+### Step 23S — MOSES Semantic Safety Enforcement
+
+The Step 23S safety audit verifies that the 7 MOSES runtime invariants (I1–I7) are enforced and that the post-fix safety metrics hold.
+
+**Conformance tests:** 33 tests covering 7 MOSES runtime invariants (I1 target-vs-reference, I2 value-extraction compatibility, I3 cross-type evidence, I4 section-alias consistency, I5 section corroboration, I6 old-value consistency, I7 minimal semantic proof + authority gate).
+
+- Pre-migration: 33 passed (root-level `test_moses_safety.py`, per `STEP_23S_FINAL_REPORT.md`)
+- Post-migration: 33 passed (`tests/conservation/test_moses_safety.py`)
+
+**Post-fix safety metrics** (sourced from `step23r_audit.json` `section_safety_metrics`, re-run after Step 23S implementation):
+
+| Metric | Value |
+|--------|-------|
+| incorrect_accepted_mutations | 0 |
+| false_authoritative_promotions | 0 |
+| OUT_OF_SCOPE accepted | 0 |
+
+All 7 MOSES invariants are ENFORCED. The 10 prior incorrect accepts (from the pre-23S baseline) are now safe rejections (UNRESOLVED). No correct accept was weakened.
+
 ### Defect safety record
 
 | Layer | Finding |
@@ -147,9 +166,10 @@ The directory/import migration preserved all empirical behavior. Post-migration 
 
 ## Audit scripts used
 
-- `data/ground_truth/frozen/generate_manifest.py verify` — frozen hash verification
+- `data/ground_truth/frozen/generate_manifest.py verify` — frozen hash verification (live subprocess call from compare_baseline.py)
 - `audits/step23r/build_step23r_audit.py` — Step 23R independent failure census
 - `audits/build_step23_audit.py` — Step 23 eligibility & semantic funnel audit
+- `pytest tests/conservation/test_moses_safety.py` — Step 23S MOSES conformance tests (live subprocess call from compare_baseline.py)
 - `audits/generate_defect_safety_record.py` — defect/safety distinction record
 - `audits/step23r/generate_step23r_deliverables.py` — Step 23R deliverables
 - `audits/repository/compare_baseline.py` — metric-by-metric comparison

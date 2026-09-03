@@ -4,15 +4,25 @@
 Extracts every critical metric from both the saved pre-migration results
 (in /tmp/pre_migration_baseline/) and the freshly-generated post-migration
 results, then reports whether they match exactly.
+
+Sections:
+  1. Frozen-input hash verification (live subprocess call)
+  2. Step 23R — Independent Failure Census
+  3. Step 23 — Eligibility & Semantic Funnel Audit
+  4. Step 23S — MOSES Semantic Safety Enforcement
+  5. Defect Safety Record
 """
 from __future__ import annotations
 
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
 PRE = Path("/tmp/pre_migration_baseline")
-POST = Path("results")
+POST = REPO_ROOT / "results"
 
 PASS = 0
 FAIL = 0
@@ -30,16 +40,70 @@ def check(label: str, pre_val, post_val) -> bool:
     return match
 
 
+def run_frozen_hash_verify() -> tuple[int, int, bool]:
+    """Run data/ground_truth/frozen/generate_manifest.py verify and parse
+    the output.  Returns (hashes_checked, failures, passed).
+    """
+    script = REPO_ROOT / "data" / "ground_truth" / "frozen" / "generate_manifest.py"
+    result = subprocess.run(
+        [sys.executable, str(script), "verify"],
+        capture_output=True,
+        text=True,
+        cwd=str(REPO_ROOT),
+        check=False,
+    )
+    output = result.stdout
+    checked_match = re.search(r"hashes checked:\s+(\d+)", output)
+    failures_match = re.search(r"failures:\s+(\d+)", output)
+    passed = "VERIFY: PASS" in output
+    checked = int(checked_match.group(1)) if checked_match else -1
+    failures = int(failures_match.group(1)) if failures_match else -1
+    return checked, failures, passed
+
+
+def run_moses_conformance_tests() -> tuple[int, int, int]:
+    """Run the Step 23S MOSES conformance test suite and return
+    (passed, failed, skipped).
+    """
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "tests/conservation/test_moses_safety.py", "-q",
+         "--no-header", "--tb=short"],
+        capture_output=True,
+        text=True,
+        cwd=str(REPO_ROOT),
+        check=False,
+    )
+    # pytest -q summary line: "33 passed in 0.10s" or "33 passed, 1 failed in 0.10s"
+    summary = result.stdout.strip().split("\n")[-1] if result.stdout.strip() else ""
+    passed_m = re.search(r"(\d+)\s+passed", summary)
+    failed_m = re.search(r"(\d+)\s+failed", summary)
+    skipped_m = re.search(r"(\d+)\s+skipped", summary)
+    passed = int(passed_m.group(1)) if passed_m else 0
+    failed = int(failed_m.group(1)) if failed_m else 0
+    skipped = int(skipped_m.group(1)) if skipped_m else 0
+    return passed, failed, skipped
+
+
 print("=" * 70)
 print("POST-MIGRATION EMPIRICAL BASELINE COMPARISON")
 print("=" * 70)
 print()
 
 # ---------------------------------------------------------------------------
-# 1. Frozen-input hash verification
+# 1. Frozen-input hash verification (live subprocess call)
 # ---------------------------------------------------------------------------
 print("1. FROZEN-INPUT HASH VERIFICATION")
-print("   (already verified: 26 hashes checked, 0 failures, VERIFY: PASS)")
+print("   (live call to data/ground_truth/frozen/generate_manifest.py verify)")
+hashes_checked, hash_failures, hash_passed = run_frozen_hash_verify()
+print(f"   hashes checked: {hashes_checked}, failures: {hash_failures}, "
+      f"VERIFY: {'PASS' if hash_passed else 'FAIL'}")
+# Frozen-input hash verification is a precondition, not a pre-vs-post
+# comparison: it confirms the frozen ground-truth inputs are intact in
+# the post-migration tree.  The pre-migration baseline used the same
+# frozen inputs (tracked in git, unchanged by the migration).
+check("frozen_hashes_checked", 26, hashes_checked)
+check("frozen_hash_failures", 0, hash_failures)
+check("frozen_hash_verify_passed", True, hash_passed)
 print()
 
 # ---------------------------------------------------------------------------
@@ -153,9 +217,34 @@ check("23h_gates_passed", pre_h["gates_passed"], post_h["gates_passed"])
 print()
 
 # ---------------------------------------------------------------------------
-# 4. Defect Safety Record
+# 4. Step 23S — MOSES Semantic Safety Enforcement
 # ---------------------------------------------------------------------------
-print("4. DEFECT SAFETY RECORD")
+print("4. STEP 23S — MOSES SEMANTIC SAFETY ENFORCEMENT")
+print("   (conformance tests run live; safety metrics from step23r_audit.json)")
+# Step 23S conformance tests: 33 tests covering 7 MOSES runtime invariants
+# (I1 target-vs-reference, I2 value-extraction compatibility, I3 cross-type
+# evidence, I4 section-alias consistency, I5 section corroboration, I6
+# old-value consistency, I7 minimal semantic proof + authority gate).
+# Pre-migration: 33 passed (root-level test_moses_safety.py, per
+# STEP_23S_FINAL_REPORT.md).  Post-migration: tests/conservation/test_moses_safety.py.
+PRE_CONFORMANCE_PASSED = 33  # from STEP_23S_FINAL_REPORT.md section B
+post_passed, post_failed, post_skipped = run_moses_conformance_tests()
+print(f"   post-migration conformance: {post_passed} passed, {post_failed} failed, {post_skipped} skipped")
+check("23S_conformance_tests_passed", PRE_CONFORMANCE_PASSED, post_passed)
+check("23S_conformance_tests_failed", 0, post_failed)
+
+# Step 23S post-fix safety metrics (sourced from step23r_audit.json
+# section_safety_metrics, re-run after Step 23S implementation).
+# These are the same values checked in section 2 but explicitly
+# cross-referenced here as the Step 23S safety audit outputs.
+check("23S_incorrect_accepted_mutations", 0, post_s["incorrect_accepted_mutations"])
+check("23S_false_authoritative_promotions", 0, post_s["false_authoritative_promotions"])
+print()
+
+# ---------------------------------------------------------------------------
+# 5. Defect Safety Record
+# ---------------------------------------------------------------------------
+print("5. DEFECT SAFETY RECORD")
 pre_defect = json.loads((PRE / "step_19b_mutation_defect_analysis.json").read_text())
 post_defect = json.loads((POST / "step_19b_mutation_defect_analysis.json").read_text())
 check("defect_count", len(pre_defect["mutations"]), len(post_defect["mutations"]))
