@@ -334,7 +334,7 @@ CommitmentLineageGraph, AuthorityGate).
 ## STEP 24B ACCEPTANCE
 
 ```
-STEP 24B STATUS: ACCEPTED
+STEP 24B STATUS: ACCEPTED (SCALAR_REPLACEMENT activated)
 
 All phase gates passed:
   Phase 0: PASS (runtime wiring audit)
@@ -346,7 +346,22 @@ All phase gates passed:
   Phase 6: PASS (kernel execution path)
   Phase 7: PASS (lineage as required runtime output)
   Phase 8: PASS (authority gate as only promotion path)
-  Phase 9: PASS (empirical integration verification)
+  Phase 9: PASS (empirical integration verification + runtime activation)
+
+Phase 8 gap closure:
+  AuthorityGate.evaluate now requires lineage_valid=True (default
+  False, fail-closed).  A step with no lineage edge cannot be
+  promoted to authoritative.  The spine passes lineage_valid after
+  confirming the lineage edge is reachable from origin.
+
+Phase 9 runtime activation:
+  The conservation-first spine (ConservationFirstSpine) is wired
+  into the production pipeline (run_semantic_pipeline_v2).
+  SCALAR_REPLACEMENT amendments route through Layers A–G:
+    evidence → engine → apply → conservation → proof →
+    kernel.advance → lineage → AuthorityGate
+  Other transformation families are routed away to the legacy path
+  until migrated in follow-up steps.
 
 Safety metrics:
   incorrect_accepted_mutations: 0
@@ -354,15 +369,87 @@ Safety metrics:
   correct accepts preserved: 2
 
 Test evidence:
-  Step 24B conformance: 137 passed / 0 failed / 0 skipped
+  Step 24B conformance: 153 passed / 0 failed / 0 skipped
+    (137 original + 16 Phase 9 integration tests)
   Safety/regression:    122 passed / 0 failed / 0 skipped
-  Full suite:          1189 passed / 0 failed / 14 skipped
+  Full suite:          1206 passed / 0 failed / 14 skipped
 
-Designated real EDGAR case: Ameresco A1 Section 7.10(a) — PASS
+Designated real EDGAR case: Ameresco A1/A2 Section 7.10(a) — PASS
+  A1: SCALAR_REPLACEMENT promoted through spine, AUTHORITY_GRANTED
+  A2: SCALAR_REPLACEMENT promoted through spine, AUTHORITY_GRANTED
+  A3: ADD routed away (CREATE not yet activated)
 
-Bypass analysis: All 5 legacy bypasses identified and documented.
-  Legacy paths explicitly retained for compatibility.
-  New conservation-first path verified and ready for wiring.
+Bypass analysis:
+  SCALAR_REPLACEMENT: spine is controlling path (activated)
+  All other families: legacy path retained (explicitly routed away)
+  The spine's is_activated() method is the single routing decision
+  point.  Adding a family requires adding it to _ACTIVATED_FAMILIES
+  and verifying the engine classifies it correctly.
 
-STEP 24B ACCEPTED
+Remaining work (not blocking Step 24B acceptance):
+  - Activate CREATE family (A3 junior credit agreement)
+  - Activate remaining 11 transformation families
+  - Retire legacy resolver/executor for activated families
+
+STEP 24B ACCEPTED (SCALAR_REPLACEMENT)
 ```
+
+---
+
+## Phase 9 Runtime Activation Details
+
+**New module:** `src/upsilon/pipeline/conservation_first_spine.py`
+
+The `ConservationFirstSpine` class orchestrates the full Layer A–G
+path for a single amendment instruction:
+
+1. **Layer A** — `instruction_to_evidence`: extracts evidence from
+   the curated `AmendmentInstruction`, separating evidence from
+   interpretation.
+2. **Layer B** — `AuthorizedTransformationEngine.authorize`:
+   produces an authorized transformation delta only if evidence and
+   identity are sufficient.  Verifies old-value consistency.
+3. **Layer C** — `apply_transformation`: produces a candidate
+   successor kernel by applying the authorized delta to the
+   predecessor.
+4. **Layer D** — `ConservationValidator.validate`: validates all
+   applicable conservation invariants (identity persistence,
+   old-value consistency, unchanged field preservation, etc.).
+5. **Layer E** — `ProofAssembler.assemble_pre_execution`: assembles
+   a semantic transformation proof.  `proof.may_proceed_to_execution()`
+   is required before execution.
+6. **Layer F** — `KernelStore.advance`: thin executor that commits
+   the validated candidate successor.  Does NOT reinterpret text,
+   resolve identity, or derive values.
+7. **Lineage** — `CommitmentLineageGraph.add_edge`: records an
+   append-only lineage edge.  `is_reachable_from_origin` confirms
+   lineage validity.
+8. **Layer G** — `AuthorityGate.evaluate`: the only promotion path.
+   Requires `lineage_valid=True` (Phase 8 gap closure).  Grants
+   AUTHORITY_GRANTED only if all conditions are satisfied.
+
+**Pipeline wiring:** `src/upsilon/pipeline/semantic_pipeline_v2.py`
+
+The `run_semantic_pipeline_v2` function now:
+- Constructs a `ConservationFirstSpine` from the chain's
+  `original_state` and section refs derived from curated
+  instructions.
+- For each amendment step, partitions curated instructions into
+  spine-eligible (SCALAR_REPLACEMENT) and legacy (everything else).
+- Routes spine-eligible instructions through the spine.
+- Synchronizes the pipeline's `current_state` with the spine's
+  authoritative state for spine-controlled commitments.
+- Tracks spine promotions, rejections, and routed-away counts in
+  `SemanticStepResultV2` and `SemanticPipelineResultV2`.
+
+**Phase 9 integration tests:**
+`tests/conformance/test_step24b_phase9_runtime_activation.py` — 16
+tests that verify the production pipeline activates the spine,
+promotes Ameresco A1/A2, routes away A3, records lineage, consumes
+lineage validity in the authority gate, and fail-closes on
+conservation failure.
+
+**Phase 9 artifacts:**
+- `results/current/step24b_runtime_activation.json`
+- `results/current/step24b_phase9_report.md`
+

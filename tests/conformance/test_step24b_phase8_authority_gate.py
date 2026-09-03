@@ -213,6 +213,7 @@ class TestAuthorityGateGrants:
             execution_result=execution_summary,
             proof=proof,
             inherited_unresolved=0,
+            lineage_valid=True,
         )
 
         assert isinstance(result, AuthorityGateResult)
@@ -232,6 +233,7 @@ class TestAuthorityGateGrants:
             execution_result=execution_summary,
             proof=proof,
             inherited_unresolved=0,
+            lineage_valid=True,
         )
 
         assert result.decision == AuthorityDecision.AUTHORITY_GRANTED
@@ -251,6 +253,7 @@ class TestAuthorityGateGrants:
         result = gate.evaluate(
             execution_result=execution_summary,
             proof=proof,
+            lineage_valid=True,
         )
 
         assert result.proof_id == proof.proof_id
@@ -387,10 +390,37 @@ class TestAuthorityGateBlocks:
             execution_result=execution_summary,
             proof=proof,
             inherited_unresolved=2,
+            lineage_valid=True,
         )
 
         assert result.decision == AuthorityDecision.AUTHORITY_BLOCKED
         assert "Inherited unresolved" in result.reason
+
+    def test_missing_lineage_blocks(self):
+        """Violation: missing lineage → AUTHORITY_BLOCKED.
+
+        Lineage validity is a required precondition (Step 24B Phase 8
+        gap closure).  A step with no lineage edge must not be promoted
+        even if every other condition is satisfied.
+        """
+        store, proof, validation = _setup_full_path_with_proof()
+        gate = AuthorityGate()
+
+        execution_summary = ExecutionResultSummary(
+            applied=True,
+            status="COMPLETE",
+            state_changed=True,
+        )
+
+        result = gate.evaluate(
+            execution_result=execution_summary,
+            proof=proof,
+            inherited_unresolved=0,
+            lineage_valid=False,
+        )
+
+        assert result.decision == AuthorityDecision.AUTHORITY_BLOCKED
+        assert "Lineage" in result.reason
 
     def test_insufficient_evidence_blocks(self):
         """Violation: INSUFFICIENT evidence → AUTHORITY_BLOCKED."""
@@ -411,6 +441,7 @@ class TestAuthorityGateBlocks:
         result = gate.evaluate(
             execution_result=execution_summary,
             proof=proof,
+            lineage_valid=True,
         )
 
         assert result.decision == AuthorityDecision.AUTHORITY_BLOCKED
@@ -433,6 +464,7 @@ class TestAuthorityGateBlocks:
         result = gate.evaluate(
             execution_result=execution_summary,
             proof=proof,
+            lineage_valid=True,
         )
 
         assert result.decision == AuthorityDecision.VALIDATION_REQUIRED
@@ -457,6 +489,7 @@ class TestAuthorityGateBlocks:
         result = gate.evaluate(
             execution_result=execution_summary,
             proof=proof,
+            lineage_valid=True,
         )
 
         assert result.decision == AuthorityDecision.VALIDATION_REQUIRED
@@ -478,6 +511,7 @@ class TestAuthorityGateBlocks:
         result = gate.evaluate(
             execution_result=execution_summary,
             proof=proof,
+            lineage_valid=True,
         )
 
         assert result.decision == AuthorityDecision.VALIDATION_REQUIRED
@@ -512,6 +546,7 @@ class TestAmerescoA1AuthorityGate:
             execution_result=execution_summary,
             proof=proof,
             inherited_unresolved=0,
+            lineage_valid=True,
         )
 
         assert result.decision == AuthorityDecision.AUTHORITY_GRANTED

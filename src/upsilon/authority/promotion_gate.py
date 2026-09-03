@@ -62,12 +62,20 @@ class AuthorityGate:
             IF proof_record.completeness == INCOMPLETE: -> AUTHORITY_BLOCKED
             IF proof_record.validity == INVALID: -> AUTHORITY_BLOCKED
             IF any conservation_check FAILED: -> AUTHORITY_BLOCKED
+            IF lineage is missing or invalid: -> AUTHORITY_BLOCKED
             IF inherited_unresolved > 0: -> AUTHORITY_BLOCKED
             IF proof_record.evidence_status == INSUFFICIENT: -> AUTHORITY_BLOCKED
             IF proof_record.uncertainty_status == HIGH: -> VALIDATION_REQUIRED
             IF target_identity_evidence.evidence_level == WEAK: -> VALIDATION_REQUIRED
             IF proof_record.validity == INDETERMINATE: -> VALIDATION_REQUIRED
             ELSE: -> AUTHORITY_GRANTED
+
+    Lineage validity is a required precondition (Step 24B Phase 8 gap
+    closure).  Missing or invalid lineage blocks authority.  The caller
+    must affirmatively provide ``lineage_valid=True`` after confirming
+    the lineage edge was created and is reachable from origin.  The
+    default is ``False`` (fail-closed) so a caller that forgets to
+    pass lineage validity cannot accidentally promote a step.
     """
 
     def evaluate(
@@ -75,8 +83,20 @@ class AuthorityGate:
         execution_result: ExecutionResultSummary,
         proof: SemanticTransformationProof,
         inherited_unresolved: int = 0,
+        lineage_valid: bool = False,
     ) -> AuthorityGateResult:
-        """Evaluate whether a step may be promoted to authoritative."""
+        """Evaluate whether a step may be promoted to authoritative.
+
+        Args:
+            execution_result: summary of the execution outcome.
+            proof: the semantic transformation proof record.
+            inherited_unresolved: count of unresolved state inherited
+                from prior steps.
+            lineage_valid: whether a valid lineage edge was created for
+                this transformation and is reachable from origin.
+                Defaults to False (fail-closed).  The caller must
+                affirmatively confirm lineage validity.
+        """
         # Execution status checks
         if execution_result.status == "UNRESOLVED":
             return AuthorityGateResult(
@@ -122,6 +142,15 @@ class AuthorityGate:
             return AuthorityGateResult(
                 decision=AuthorityDecision.AUTHORITY_BLOCKED,
                 reason=f"Conservation checks failed: {names}",
+                proof_id=proof.proof_id,
+            )
+
+        # Lineage validity check (Step 24B Phase 8 gap closure).
+        # Missing or invalid lineage blocks authority promotion.
+        if not lineage_valid:
+            return AuthorityGateResult(
+                decision=AuthorityDecision.AUTHORITY_BLOCKED,
+                reason="Lineage is missing or invalid",
                 proof_id=proof.proof_id,
             )
 

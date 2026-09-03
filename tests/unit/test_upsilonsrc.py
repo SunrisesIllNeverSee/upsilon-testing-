@@ -763,7 +763,7 @@ class TestAuthorityGate:
             validation=validation, predecessor_version=0, successor_version=1,
         )
         exec_result = ExecutionResultSummary(applied=True, status="COMPLETE", state_changed=True)
-        gate_result = gate.evaluate(exec_result, proof, inherited_unresolved=0)
+        gate_result = gate.evaluate(exec_result, proof, inherited_unresolved=0, lineage_valid=True)
         assert gate_result.decision == AuthorityDecision.AUTHORITY_GRANTED
 
     def test_block_when_proof_invalid(self, gate):
@@ -813,7 +813,7 @@ class TestAuthorityGate:
             proof_validity=ProofValidity.VALID,
         )
         exec_result = ExecutionResultSummary(applied=True, status="COMPLETE")
-        gate_result = gate.evaluate(exec_result, proof, inherited_unresolved=1)
+        gate_result = gate.evaluate(exec_result, proof, inherited_unresolved=1, lineage_valid=True)
         assert gate_result.decision == AuthorityDecision.AUTHORITY_BLOCKED
 
     def test_validation_required_when_indeterminate(self, gate):
@@ -829,7 +829,7 @@ class TestAuthorityGate:
             evidence_status=EvidenceStatus.SUFFICIENT,
         )
         exec_result = ExecutionResultSummary(applied=True, status="COMPLETE")
-        gate_result = gate.evaluate(exec_result, proof)
+        gate_result = gate.evaluate(exec_result, proof, lineage_valid=True)
         assert gate_result.decision == AuthorityDecision.VALIDATION_REQUIRED
 
     def test_validation_required_when_high_uncertainty(self, gate):
@@ -846,7 +846,7 @@ class TestAuthorityGate:
             evidence_status=EvidenceStatus.SUFFICIENT,
         )
         exec_result = ExecutionResultSummary(applied=True, status="COMPLETE")
-        gate_result = gate.evaluate(exec_result, proof)
+        gate_result = gate.evaluate(exec_result, proof, lineage_valid=True)
         assert gate_result.decision == AuthorityDecision.VALIDATION_REQUIRED
 
 
@@ -1126,7 +1126,7 @@ class TestEndToEndPipeline:
 
         # 5. Authority
         exec_result = ExecutionResultSummary(applied=True, status="COMPLETE", state_changed=True)
-        gate_result = gate.evaluate(exec_result, proof, inherited_unresolved=0)
+        gate_result = gate.evaluate(exec_result, proof, inherited_unresolved=0, lineage_valid=True)
         assert gate_result.is_authoritative
 
         # 6. Lineage

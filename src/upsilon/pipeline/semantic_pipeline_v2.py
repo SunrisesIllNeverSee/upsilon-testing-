@@ -53,6 +53,7 @@ from upsilon.models.legacy_models import (
 from upsilon.parsing.pattern_classifier import AmendmentPattern, classify_amendment
 from upsilon.transformations.semantic_mapper import AmbiguityReason, StructuredMutation
 from upsilon.transformations.semantic_resolver_v2 import resolve_instruction
+from upsilon.pipeline.conservation_first_spine import ConservationFirstSpine, SpineResult
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +88,19 @@ class SemanticStepResultV2:
     #     instruction denominator.
     mapped_from_parser: int = 0
     mapped_from_extraction: int = 0
+    # Step 24B conservation-first spine tracking.
+    #   spine_promoted: number of curated instructions promoted to
+    #     authoritative state through the conservation-first spine
+    #     (Layer A–G).  These bypass the legacy resolver/executor.
+    #   spine_rejected: number of curated instructions the spine
+    #     rejected (fail-closed).  These are recorded as unresolved.
+    #   spine_routed_away: number of curated instructions whose
+    #     transformation family is not yet activated in the spine;
+    #     they were routed to the legacy path.
+    spine_promoted: int = 0
+    spine_rejected: int = 0
+    spine_routed_away: int = 0
+    spine_results: list[SpineResult] = field(default_factory=list)
 
 
 @dataclass
@@ -123,6 +137,14 @@ class SemanticPipelineResultV2:
     # authoritative at index N is a false promotion only if an
     # incorrect mutation was applied at step <= N.
     incorrect_pair_steps: list[tuple[tuple[str, str | None], int]] = field(default_factory=list)
+    # Step 24B conservation-first spine aggregate tracking.
+    spine_total_promoted: int = 0
+    spine_total_rejected: int = 0
+    spine_total_routed_away: int = 0
+    # The conservation-first spine instance, retained so callers
+    # (Phase 9 integration verification) can inspect the final
+    # authoritative kernel state, lineage graph, and proofs.
+    spine: ConservationFirstSpine | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -288,6 +310,33 @@ def run_semantic_pipeline_v2(
     incorrect_mutations: list[str] = []
     genre_dist: dict[str, int] = {}
 
+    # --- Step 24B: conservation-first spine initialization ---
+    # Build section_refs from the curated instructions so the
+    # agreement-local address map can resolve target identity for
+    # SCALAR_REPLACEMENT amendments.  Commitments without a section
+    # ref in the curated instructions are not registered in the
+    # address map; the spine will fail-closed for them (correct
+    # behavior — identity cannot be established without an address).
+    section_refs: dict[str, str] = {}
+    for _step in chain.amendments:
+        for _ins in _step.instructions:
+            if _ins.target_key and _ins.target_section_ref:
+                section_refs.setdefault(_ins.target_key, _ins.target_section_ref)
+    spine = ConservationFirstSpine(
+        original_state=chain.original_state,
+        agreement_identity=chain.chain_id,
+        section_refs=section_refs,
+    )
+    spine_total_promoted = 0
+    spine_total_rejected = 0
+    spine_total_routed_away = 0
+    # Spine-specific inherited unresolved: counts spine rejections
+    # from prior steps.  This is separate from the legacy parser's
+    # unresolved count because the spine's authority assessment is
+    # about the specific commitments it controls, not the overall
+    # amendment's unresolved non-covenant instructions.
+    spine_inherited_unresolved = 0
+
     for step in chain.amendments:
         # 1. Load source text
         source_path = step.source_document_path
@@ -348,6 +397,54 @@ def run_semantic_pipeline_v2(
         total_mapped_from_extraction += step_mapped_from_extraction
         total_unresolved += len(unresolved_mutations)
 
+        # --- Step 24B: route curated SCALAR_REPLACEMENT instructions
+        # through the conservation-first spine (Layers A–G). ---
+        # The spine is the controlling semantic path for
+        # SCALAR_REPLACEMENT.  Curated instructions whose
+        # transformation family is activated in the spine are
+        # processed through the full conservation-first architecture
+        # (evidence → engine → candidate → conservation → proof →
+        # execution → lineage → authority gate).  Instructions whose
+        # family is not yet activated are routed away to the legacy
+        # path below.
+        #
+        # The spine advances its own authoritative kernel state
+        # independently.  After the spine processes its instructions,
+        # we synchronize the pipeline's current_state with the
+        # spine's authoritative state for spine-controlled
+        # commitments so the legacy executor sees the updated state.
+        spine_results: list[SpineResult] = []
+        spine_promoted = 0
+        spine_rejected = 0
+        spine_routed_away = 0
+        # Use the spine-specific inherited unresolved count, not the
+        # legacy parser's unresolved count.  The spine's authority
+        # assessment is about the specific commitments it controls.
+        for ins in step.instructions:
+            if not spine.is_activated(ins):
+                spine_routed_away += 1
+                continue
+            spine_result = spine.process_instruction(
+                ins,
+                citation_document=step.description,
+                inherited_unresolved=spine_inherited_unresolved,
+            )
+            spine_results.append(spine_result)
+            if spine_result.promoted:
+                spine_promoted += 1
+            elif spine_result.routed_away:
+                spine_routed_away += 1
+            else:
+                spine_rejected += 1
+        # Synchronize current_state with the spine's authoritative
+        # state for commitments the spine controls.  This ensures the
+        # legacy executor and ground-truth comparison see the
+        # conservation-first authoritative state.
+        if spine_promoted > 0:
+            spine_state = spine.authoritative_state()
+            for cid, state in spine_state.items():
+                current_state[cid] = state.model_copy(deep=True)
+
         # 4. Convert mapped mutations to AmendmentInstructions
         mapped_instructions: list[AmendmentInstruction] = []
         for i, mut in enumerate(mapped_mutations, 1):
@@ -369,9 +466,16 @@ def run_semantic_pipeline_v2(
         # (execution complete + no unresolved) with semantic proof
         # and conservation preconditions.  See SEMANTIC_AUTHORITY_GATE.md
         # §5 for the full decision logic.
+        #
+        # Step 24B: spine rejections also count as own unresolved for
+        # the legacy authority assessment.  A spine rejection means
+        # the conservation-first spine fail-closed on a curated
+        # SCALAR_REPLACEMENT instruction; the step must not be
+        # promoted to authoritative for that commitment.
         still_inherited = inherited_unresolved
         own_unresolved_count = (
             len(unresolved_mutations) + len(execution_result.unresolved)
+            + spine_rejected
         )
         # Collect semantic proofs from all candidates (mapped + unresolved).
         # Mapped mutations carry VALID proofs (the resolver only maps
@@ -422,13 +526,35 @@ def run_semantic_pipeline_v2(
             is_authoritative=is_authoritative,
             inherited_unresolved_count=len(still_inherited),
             adapter_notes=adapter_result.notes,
+            spine_promoted=spine_promoted,
+            spine_rejected=spine_rejected,
+            spine_routed_away=spine_routed_away,
+            spine_results=spine_results,
         ))
 
-        # Carry state forward
+        # Carry state forward.
+        # Start from the legacy executor's state, then overlay the
+        # spine's authoritative state for spine-controlled
+        # commitments.  This ensures the spine's conservation-first
+        # authoritative state persists across steps for the
+        # commitments it controls, while the legacy executor's state
+        # persists for everything else.
         current_state = {
             k: v.model_copy(deep=True)
             for k, v in execution_result.state.items()
         }
+        if spine_promoted > 0 or spine_total_promoted > 0:
+            spine_state = spine.authoritative_state()
+            for cid, state in spine_state.items():
+                current_state[cid] = state.model_copy(deep=True)
+
+        # Aggregate spine tracking across all steps.
+        spine_total_promoted += spine_promoted
+        spine_total_rejected += spine_rejected
+        spine_total_routed_away += spine_routed_away
+        # Spine rejections become inherited unresolved for the next
+        # step's spine authority assessment.
+        spine_inherited_unresolved += spine_rejected
 
     # Compare final state to ground truth
     ground_truth = chain.ground_truth_state or {}
@@ -602,4 +728,8 @@ def run_semantic_pipeline_v2(
         incorrect_mutations=incorrect_mutations,
         state_mismatches=state_mismatches,
         incorrect_pair_steps=incorrect_pair_steps,
+        spine_total_promoted=spine_total_promoted,
+        spine_total_rejected=spine_total_rejected,
+        spine_total_routed_away=spine_total_routed_away,
+        spine=spine,
     )
