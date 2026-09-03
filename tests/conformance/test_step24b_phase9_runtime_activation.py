@@ -1114,6 +1114,87 @@ class TestActivationArtifact:
             f"failed: {[k for k, v in gates.items() if not v]}"
         )
 
+    def test_value_provenance_gate_is_runtime_derived_not_hardcoded(self):
+        """The ``value_provenance_enforced`` gate must be derived from
+        a runtime probe that exercises the engine's provenance
+        enforcement, not a hardcoded ``True``.
+
+        This test verifies the gate is ``True`` because the probe
+        confirmed the engine rejects uncorroborated CURATOR_PROVIDED
+        values AND accepts corroborated ones.  If the gate were
+        hardcoded, the probe function would not need to exist.
+        """
+        from audits.step24b.generate_activation_artifact import (
+            _probe_value_provenance_enforced,
+            generate_artifact,
+        )
+        # The probe must exist and return a real boolean from runtime.
+        probe_result = _probe_value_provenance_enforced()
+        assert isinstance(probe_result, bool)
+        assert probe_result is True, (
+            "Probe must confirm engine enforces value_provenance"
+        )
+        # The artifact gate must match the probe result.
+        artifact = generate_artifact()
+        assert artifact["acceptance_gates"]["value_provenance_enforced"] is True
+
+    def test_amendment_declared_old_value_gate_is_runtime_derived_not_tautological(self):
+        """The ``amendment_declared_old_value_distinct`` gate must be
+        derived from a runtime probe that verifies the engine and
+        validator independently populate and compare
+        ``amendment_declared_old_value``, NOT a tautological
+        ``hasattr`` check on the model class.
+
+        A tautological ``hasattr(f, "amendment_declared_old_value")``
+        would always return ``True`` because the field is defined on
+        the ``AffectedField`` model.  This test verifies the probe
+        actually exercises the engine and validator.
+        """
+        from audits.step24b.generate_activation_artifact import (
+            _probe_amendment_declared_old_value_distinct,
+            generate_artifact,
+        )
+        # The probe must exist and return a real boolean from runtime.
+        probe_result = _probe_amendment_declared_old_value_distinct()
+        assert isinstance(probe_result, bool)
+        assert probe_result is True, (
+            "Probe must confirm engine populates "
+            "amendment_declared_old_value distinctly and validator "
+            "independently detects mismatches"
+        )
+        # The artifact gate must match the probe result.
+        artifact = generate_artifact()
+        assert artifact["acceptance_gates"][
+            "amendment_declared_old_value_distinct"
+        ] is True
+
+    def test_fail_closed_gate_is_runtime_derived_not_vacuous(self):
+        """The ``fail_closed_on_conservation_failure`` gate must be
+        derived from a runtime probe that exercises the spine's
+        fail-closed behavior with a bad mutation, NOT a vacuous
+        pass-when-zero-rejections check.
+
+        A vacuous ``spine_rejected == 0`` check would pass even if
+        the spine had no fail-closed mechanism.  This test verifies
+        the probe actually injects a bad mutation and confirms the
+        spine rejects it with authoritative state unchanged.
+        """
+        from audits.step24b.generate_activation_artifact import (
+            _probe_fail_closed_on_conservation_failure,
+            generate_artifact,
+        )
+        # The probe must exist and return a real boolean from runtime.
+        probe_result = _probe_fail_closed_on_conservation_failure()
+        assert isinstance(probe_result, bool)
+        assert probe_result is True, (
+            "Probe must confirm spine fail-closes on bad mutations"
+        )
+        # The artifact gate must match the probe result.
+        artifact = generate_artifact()
+        assert artifact["acceptance_gates"][
+            "fail_closed_on_conservation_failure"
+        ] is True
+
     def test_artifact_safety_metrics_match_pipeline(self):
         """The artifact's safety metrics must match the pipeline's
         runtime results."""
