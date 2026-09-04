@@ -61,3 +61,23 @@ Allowed paths: ~/Developer, ~/.config/devin, ~/.config/sigrank, ~/Desktop
 
 For single-file reads and edits, native tools are acceptable. For multi-file
 operations, directory exploration, and structural changes, use the Filesystem MCP.
+
+
+## MCP Server Recommendations for This Repo
+
+Full index: `Moses_Enterprise_B2BPilot_/_workspace/MCP_INDEX.md`
+
+**Primary (use regularly):**
+- `ds-server` — Plotly charts for financial integrity data, correlation heatmaps, distributions
+- `context7` — verify Python/Pydantic patterns before writing runtime code
+- `repomix` — pack the codebase for architecture audits and migration planning
+- `codebase-memory` — index the mixed transitional codebase to trace cross-file dependencies
+
+**Secondary (use as needed):**
+- `brave-search` — research financial integrity methodologies and prior work
+- `knowledge-graph` — map the 13 commitment classes and their relationships
+- `markitdown` — convert source documents to markdown for ingestion
+
+**Not needed here:**
+- `supabase` / `vercel` / `posthog` / `gsc-seo-*` — not a deployed product
+- `blender` / `worldmonitor` — unrelated
