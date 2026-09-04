@@ -150,7 +150,7 @@ _COVENANT_SECTION_RE = re.compile(
 _NONSTANDARD_COVENANT_SECTION_RE = re.compile(
     r"(?:(?:Section|SECTION|ARTICLE)\s+)?"
     r"([\d.]+|[IVX]+)\s+"
-    r"(?:Certain\s+)?Financial\s+Condition",
+    r"(?:Certain\s+)?Financial\s+(?:Condition|Performance\s+Covenants)",
     re.IGNORECASE,
 )
 
@@ -207,8 +207,20 @@ def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
 
     # V02-002: Helper to find the end of a section (next section header).
     def _find_section_end(text: str, match_end: int, section_num: str) -> int:
+        # V02-004: Roman-to-Arabic mapping for subsection prefix matching.
+        # When the parent section uses Roman numerals (e.g., "V") but
+        # subsections use Arabic numerals (e.g., "5.1"), we need to
+        # convert the Roman numeral to its Arabic equivalent to correctly
+        # identify subsections of the current section.
+        _ROMAN_TO_ARABIC = {
+            "I": "1", "II": "2", "III": "3", "IV": "4", "V": "5",
+            "VI": "6", "VII": "7", "VIII": "8", "IX": "9", "X": "10",
+            "XI": "11", "XII": "12", "XIII": "13", "XIV": "14", "XV": "15",
+            "XVI": "16", "XVII": "17", "XVIII": "18", "XIX": "19", "XX": "20",
+        }
         remaining = text[match_end:]
         current_num = section_num
+        current_num_arabic = _ROMAN_TO_ARABIC.get(current_num, current_num)
         for sm in re.finditer(
             r"(?:(?:Section|SECTION|ARTICLE)\s+)?"
             r"(\d+(?:\.\d+)?|[IVX]+)\s*\.?\s*"
@@ -223,10 +235,25 @@ def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
             # are subsections OF the current section, not new sections.
             if "." in candidate_num and candidate_num.split(".")[0] == current_num:
                 continue
+            # V02-004: Also skip subsections when the parent uses Roman
+            # numerals (e.g., "5.1" is a subsection of Article "V").
+            if "." in candidate_num and candidate_num.split(".")[0] == current_num_arabic:
+                continue
             if not candidate_num.startswith(tuple("0123456789")) or \
                "." in candidate_num:
                 pass
             elif len(candidate_num) == 1 and \
+                 not re.match(r"(?:Section|SECTION|ARTICLE)\s+",
+                              remaining[sm.start():sm.start()+20],
+                              re.IGNORECASE):
+                continue
+            # V02-004: Skip bare multi-digit numbers (len > 2) without
+            # a dot and without a Section/ARTICLE prefix. These are
+            # almost certainly page numbers or other artifacts, not
+            # section headers (e.g., "177" in HELD-014 is a page number
+            # embedded in the text that was incorrectly matched as a
+            # section boundary).
+            elif len(candidate_num) > 2 and \
                  not re.match(r"(?:Section|SECTION|ARTICLE)\s+",
                               remaining[sm.start():sm.start()+20],
                               re.IGNORECASE):
@@ -311,15 +338,20 @@ def _find_covenant_sections(text: str) -> list[tuple[str, int, int]]:
         # Avoid duplicates with standard matches
         if section_num in section_matches:
             continue
-        # Content-based validation: peek at the section content to
+        # Content-based validation: search the full section body to
         # confirm it contains ratio thresholds or covenant verbs before
         # treating it as a covenant section. This avoids false positives
         # from "Negative Covenants" sections that only contain operational
         # restrictions (no financial thresholds).
-        peek_end = min(len(text), m.end() + 3000)
-        peek_text = text[m.end():peek_end]
-        has_ratio = bool(_RATIO_THRESHOLD_RE.search(peek_text))
-        has_verb = bool(_COVENANT_VERB_RE.search(peek_text))
+        # V02-004: Use _find_section_end to determine the actual section
+        # boundary instead of a fixed 3000-char lookahead. Some credit
+        # agreements place financial covenants deep within a covenant
+        # article (e.g., HELD-008 has the ratio threshold 4600+ chars
+        # after the "NEGATIVE COVENANTS" header).
+        section_end = _find_section_end(text, m.end(), section_num)
+        section_text = text[m.end():section_end]
+        has_ratio = bool(_RATIO_THRESHOLD_RE.search(section_text))
+        has_verb = bool(_COVENANT_VERB_RE.search(section_text))
         if not (has_ratio or has_verb):
             continue
         section_matches.setdefault(section_num, []).append(m)
@@ -478,6 +510,15 @@ def _extract_clauses_from_section(
         # already have a dot, "5.04" is the NEXT section, not a subsection.
         section_num = section_ref.replace("Section ", "").strip()
         is_top_level = "." not in section_num
+        # V02-004: Convert Roman numeral section numbers to Arabic for
+        # subsection prefix matching (e.g., "V" -> "5" so "5.1" matches).
+        _ROMAN_TO_ARABIC_SEC = {
+            "I": "1", "II": "2", "III": "3", "IV": "4", "V": "5",
+            "VI": "6", "VII": "7", "VIII": "8", "IX": "9", "X": "10",
+            "XI": "11", "XII": "12", "XIII": "13", "XIV": "14", "XV": "15",
+            "XVI": "16", "XVII": "17", "XVIII": "18", "XIX": "19", "XX": "20",
+        }
+        section_num_arabic = _ROMAN_TO_ARABIC_SEC.get(section_num, section_num)
         for m in _NUMBERED_CLAUSE_RE.finditer(section_text):
             clause_num = m.group(1)
             # Skip if this is the section header itself
@@ -491,7 +532,10 @@ def _extract_clauses_from_section(
             if not is_top_level:
                 continue
             if not clause_num.startswith(section_num + "."):
-                continue
+                # V02-004: Also check Arabic equivalent for Roman numeral
+                # parent sections (e.g., "5.1" is a subsection of "V").
+                if not clause_num.startswith(section_num_arabic + "."):
+                    continue
             clause_name = m.group(2).strip()
             clause_body = m.group(3).strip()
             clause_start = start + m.start()
@@ -1011,8 +1055,17 @@ _COVENANT_NAME_MAP: list[tuple[str, str, str, str]] = [
      "financial_covenant.leverage_ratio", "leverage_ratio", "ratio"),
     (r"Debt to EBITDAX|Ratio of Debt to EBITDAX",
      "financial_covenant.leverage_ratio", "debt_to_ebitdax", "ratio"),
+    # V02-004: "Consolidated Total Debt to Consolidated EBITDAX Ratio"
+    # (HELD-014 pattern) — a leverage ratio variant with "Consolidated"
+    # prefix on both sides.
+    (r"Consolidated Total Debt to Consolidated EBITDAX",
+     "financial_covenant.leverage_ratio", "consolidated_total_debt_to_ebitdax", "ratio"),
     (r"Total Leverage Ratio|Total Leverage",
      "financial_covenant.leverage_ratio", "total_leverage_ratio", "ratio"),
+    # V02-004: "Total Debt Ratio" (HELD-008 pattern) — a leverage ratio
+    # variant used in incurrence covenants.
+    (r"Total Debt Ratio",
+     "financial_covenant.leverage_ratio", "total_debt_ratio", "ratio"),
     # V02-001: Additional leverage ratio patterns from development chains
     (r"Senior Funded Debt to EBITDA",
      "financial_covenant.leverage_ratio", "senior_funded_debt_to_ebitda", "ratio"),

@@ -4,17 +4,17 @@
 
 This is NOT a new held-out confirmatory result. The corpus was previously inspected and its failures influenced subsequent development.
 
-**JSON artifact SHA-256:** `37491812db3d8942945edfce871aa51d616f35eefcca8be7aecc11228aa93fb3`
+**JSON artifact SHA-256:** `8bb4b3d6ae71fbc0cbcb524cb1be2508db26427803083aaa15d4b3c92377d881`
 **Baseline JSON SHA-256:** `9be51d60fa439d3deef3dcdfc07dd64b8928adf4b7cb31ff9c2735ccdb5bfe0f`
 **Baseline Markdown SHA-256:** `dafdba102ba87f3afbfb5f19d02feb22fb5d2c91293dac36d20bd26eb2a233ba`
 
 ## 1. Run identity
 
 - **Branch:** `main`
-- **Commit:** `85c5d316189198c47abe31147f35bbcf492b80ed`
-- **Corpus manifest SHA-256:** `3c39a08bd9a841c60be1d2fe3f4864724d59fe001c439b86e63d2133bb034a27`
+- **Commit:** `bdea9709ada604c1490e49c151e7a19cdc8aba46`
+- **Corpus manifest SHA-256:** `95fe85a3da0e5374ec414624308bb7aa28208498fc566b9a95ae58b70ce0c5ce`
 - **Frozen GT manifest SHA-256:** `8fa3994a23a5ef8ec131b82ba1269eb261f19b9dbffbfa21e38f813b256a8316`
-- **Timestamp:** `2026-09-04T00:51:26.431111+00:00`
+- **Timestamp:** `2026-09-04T02:02:16.153905+00:00`
 - **Pipeline:** `run_semantic_pipeline_v2`
 
 ## 2. Corpus
@@ -53,9 +53,9 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| S0 extraction success | 13 | 25 | 52.00% |
-| Total S0 commitments extracted | 18 | — | — |
-| Avg S0 extraction coverage | — | — | 31.95% |
+| S0 extraction success | 23 | 25 | 92.00% |
+| Total S0 commitments extracted | 40 | — | — |
+| Avg S0 extraction coverage | — | — | 43.07% |
 
 ### 4.2 GT extraction
 
@@ -63,7 +63,7 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 |---|---:|---:|---|
 | GT extraction success | 2 | 3 | 66.67% |
 | Total GT commitments extracted | 3 | — | — |
-| Avg GT extraction coverage | — | — | 38.89% |
+| Avg GT extraction coverage | — | — | 27.78% |
 
 ### 4.3 Parser
 
@@ -76,9 +76,9 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| Mapped (total) | 60 | 302 | — |
+| Mapped (total) | 30 | 302 | — |
 | Mapped from parser | 3 | 302 | 0.99% |
-| Mapped from extraction | 57 | — | — |
+| Mapped from extraction | 27 | — | — |
 | Unresolved | 299 | 302 | 99.01% |
 
 ### 4.5 MOSES spine
@@ -87,14 +87,14 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 |---|---:|
 | Promoted | 0 |
 | Rejected | 3 |
-| Routed away | 57 |
+| Routed away | 27 |
 
 ### 4.6 Safety (CORRECTED: actual applied, not mapped)
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| Mapped count | 60 | — | — |
-| Accepted count | 60 | — | — |
+| Mapped count | 30 | — | — |
+| Accepted count | 30 | — | — |
 | Applied mutation count | 0 | — | — |
 | Authoritative promotion count | 0 | — | — |
 | Incorrect applied mutations | 0 | 0 | N/A |
@@ -106,11 +106,11 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| Mapped predictions | 60 | — | — |
+| Mapped predictions | 30 | — | — |
 | Independently scorable | 0 | — | — |
 | Verified correct | 0 | — | — |
 | Verified incorrect | 0 | — | — |
-| Unscored | 60 | — | — |
+| Unscored | 30 | — | — |
 | Overall precision | — | — | N/A |
 | Parser-derived precision | — | — | N/A |
 | Extraction-derived precision | — | — | N/A |
@@ -129,15 +129,15 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| Lineage complete | 15 | 25 | 60.00% |
-| Lineage incomplete | 10 | — | — |
+| Lineage complete | 18 | 25 | 72.00% |
+| Lineage incomplete | 7 | — | — |
 
 ## 5. Step 19B vs current comparison
 
 | Metric | Step 19B | Current | Absolute change | Relative change |
 |---|---:|---:|---:|---:|
-| S0 extraction success | 28.00% | 52.00% | +24.00% | — |
-| S0 avg coverage | 16.31% | 31.95% | +15.64% | — |
+| S0 extraction success | 28.00% | 92.00% | +64.00% | — |
+| S0 avg coverage | 16.31% | 43.07% | +26.76% | — |
 | GT extraction success | 66.67% | 66.67% | +0.00% | — |
 | Amendments with parser instructions | 12.03% | 53.16% | +41.13% | — |
 | Semantic mapping coverage | 0.96% | 0.99% | +0.03% | — |
@@ -147,13 +147,13 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 | Supported-field GT agreement | 50.00% | 50.00% | — | — |
 | Exact GT-chain reconstruction | 50.00% | 50.00% | — | — |
 | Exact reconstruction overall | 4.00% | 4.00% | +0.00% | — |
-| Lineage completeness | 88.00% | 60.00% | +-28.00% | — |
+| Lineage completeness | 88.00% | 72.00% | +-16.00% | — |
 | False authoritative promotion rate | 0.00% | 0.00% | +0.00% | — |
 
 ## 6. Candidate ledger reconciliation
 
-Total candidates: 60
-Sum of terminal dispositions: 60
+Total candidates: 30
+Sum of terminal dispositions: 30
 Conservation holds: True
 
 Terminal dispositions:
@@ -161,33 +161,33 @@ Terminal dispositions:
 | Disposition | Count |
 |---|---:|
 | REJECTED | 3 |
-| ROUTED+LEGACY_UNRESOLVED | 57 |
+| ROUTED+LEGACY_UNRESOLVED | 27 |
 
 ### Row-by-row reconciliation: 3 parser + 57 extraction = 60 mapped
 
 Parser-derived: 3 candidates
-Extraction-derived: 57 candidates
-Total: 60
+Extraction-derived: 27 candidates
+Total: 30
 
 Parser-derived candidates (all 3):
 
 | ID | Chain | Amend | Family | Target | MOSES | Legacy | Mutated | Correct |
 |---|---|---|---|---|---|---|---|---|
 | CAND-0002 | HELD-009 | 2 | SCALAR_REPLACEMENT | facility.credit_agreement | rejected | not_attempted | False | not_scorable |
-| CAND-0006 | HELD-012 | 10 | SCALAR_REPLACEMENT | facility.credit_agreement | rejected | not_attempted | False | not_scorable |
-| CAND-0028 | HELD-016 | 9 | SCALAR_REPLACEMENT | facility.credit_agreement | rejected | not_attempted | False | not_scorable |
+| CAND-0003 | HELD-012 | 10 | SCALAR_REPLACEMENT | facility.credit_agreement | rejected | not_attempted | False | not_scorable |
+| CAND-0009 | HELD-016 | 9 | SCALAR_REPLACEMENT | facility.credit_agreement | rejected | not_attempted | False | not_scorable |
 
 ## 7. Chain reconstruction funnel
 
 | Stage | Count | % of 25 |
 |---|---:|---:|
 | Total Chains | 25 | 100.0% |
-| S0 Established | 13 | 52.0% |
-| Instructions Available | 9 | 36.0% |
-| At Least One Target Resolved | 5 | 20.0% |
+| S0 Established | 23 | 92.0% |
+| Instructions Available | 19 | 76.0% |
+| At Least One Target Resolved | 10 | 40.0% |
 | Executable Transformation Available | 0 | 0.0% |
 | Successful State Transition | 0 | 0.0% |
-| Complete Lineage | 15 | 60.0% |
+| Complete Lineage | 18 | 72.0% |
 | Independently Gt Scorable | 2 | 8.0% |
 | Exact Reconstruction | 1 | 4.0% |
 
@@ -211,16 +211,16 @@ Parser-derived candidates (all 3):
 
 | Stage | Count |
 |---|---:|
-| Extraction Derived Candidates | 57 |
-| Classified | 57 |
-| Target Resolved | 57 |
-| Moses Candidate | 57 |
+| Extraction Derived Candidates | 27 |
+| Classified | 27 |
+| Target Resolved | 27 |
+| Moses Candidate | 27 |
 | Moses Promoted | 0 |
 | Moses Rejected | 0 |
-| Moses Routed | 57 |
-| Legacy Attempted | 57 |
+| Moses Routed | 27 |
+| Legacy Attempted | 27 |
 | Legacy Applied | 0 |
-| Legacy Unresolved | 57 |
+| Legacy Unresolved | 27 |
 | Authoritative | 0 |
 | Independently Scorable | 0 |
 
@@ -228,7 +228,7 @@ Parser-derived candidates (all 3):
 
 | Family | Total | Parser | Extract | MOSES_cand | Prom | Rej | Routed | Legacy_att | Legacy_appl | Legacy_unres | GT_scor | Correct | Incorrect |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| CREATE | 57 | 0 | 57 | 57 | 0 | 0 | 57 | 57 | 0 | 57 | 0 | 0 | 0 |
+| CREATE | 27 | 0 | 27 | 27 | 0 | 0 | 27 | 27 | 0 | 27 | 0 | 0 | 0 |
 | SCALAR_REPLACEMENT | 3 | 3 | 0 | 3 | 0 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ## 10. Lineage reconciliation
@@ -242,26 +242,26 @@ Parser-derived candidates (all 3):
 | HELD-005 | 2 | 1 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 2 | True | False | False | TARGET_RESOLUTION |
 | HELD-006 | 2 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | True | False | False | INSTRUCTION_DETECTION |
 | HELD-007 | 2 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | True | False | False | INSTRUCTION_DETECTION |
-| HELD-008 | 2 | 0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 2 | True | False | False | S0_EXTRACTION |
+| HELD-008 | 2 | 1 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 2 | True | False | False | TARGET_RESOLUTION |
 | HELD-009 | 2 | 1 | 4 | 1 | 1 | 0 | 1 | 0 | 0 | 3 | True | False | False | CONSERVATION_VALIDATION |
-| HELD-010 | 14 | 1 | 82 | 0 | 0 | 0 | 0 | 0 | 0 | 82 | True | False | False | TARGET_RESOLUTION |
-| HELD-011 | 13 | 0 | 30 | 0 | 0 | 0 | 0 | 0 | 0 | 30 | True | False | False | S0_EXTRACTION |
-| HELD-012 | 11 | 0 | 9 | 4 | 4 | 0 | 1 | 3 | 0 | 8 | False | False | False | S0_EXTRACTION |
-| HELD-013 | 11 | 0 | 4 | 16 | 16 | 0 | 0 | 16 | 0 | 4 | False | False | False | S0_EXTRACTION |
-| HELD-014 | 11 | 0 | 24 | 5 | 5 | 0 | 0 | 5 | 0 | 24 | False | False | False | S0_EXTRACTION |
-| HELD-015 | 10 | 0 | 42 | 0 | 0 | 0 | 0 | 0 | 0 | 42 | True | False | False | S0_EXTRACTION |
-| HELD-016 | 10 | 0 | 15 | 1 | 1 | 0 | 1 | 0 | 0 | 14 | True | False | False | S0_EXTRACTION |
+| HELD-010 | 14 | 2 | 82 | 0 | 0 | 0 | 0 | 0 | 0 | 82 | True | False | False | TARGET_RESOLUTION |
+| HELD-011 | 13 | 2 | 30 | 0 | 0 | 0 | 0 | 0 | 0 | 30 | True | False | False | TARGET_RESOLUTION |
+| HELD-012 | 11 | 3 | 9 | 1 | 1 | 0 | 1 | 0 | 0 | 8 | True | False | False | CONSERVATION_VALIDATION |
+| HELD-013 | 11 | 3 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 4 | True | False | False | TARGET_RESOLUTION |
+| HELD-014 | 11 | 2 | 24 | 5 | 5 | 0 | 0 | 5 | 0 | 24 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
+| HELD-015 | 10 | 3 | 42 | 0 | 0 | 0 | 0 | 0 | 0 | 42 | True | False | False | TARGET_RESOLUTION |
+| HELD-016 | 10 | 2 | 15 | 1 | 1 | 0 | 1 | 0 | 0 | 14 | True | False | False | CONSERVATION_VALIDATION |
 | HELD-017 | 9 | 4 | 9 | 5 | 5 | 0 | 0 | 5 | 0 | 9 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
 | HELD-018 | 9 | 0 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 6 | True | False | False | S0_EXTRACTION |
 | HELD-019 | 6 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 4 | True | False | False | S0_EXTRACTION |
-| HELD-020 | 9 | 0 | 4 | 1 | 1 | 0 | 0 | 1 | 0 | 4 | False | False | False | S0_EXTRACTION |
-| HELD-021 | 6 | 0 | 2 | 16 | 16 | 0 | 0 | 16 | 0 | 2 | False | False | False | S0_EXTRACTION |
+| HELD-020 | 9 | 1 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 4 | True | False | False | TARGET_RESOLUTION |
+| HELD-021 | 6 | 2 | 2 | 10 | 10 | 0 | 0 | 10 | 0 | 2 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
 | HELD-022 | 8 | 1 | 30 | 0 | 0 | 0 | 0 | 0 | 0 | 30 | True | False | False | TARGET_RESOLUTION |
 | HELD-023 | 2 | 1 | 0 | 2 | 2 | 0 | 0 | 2 | 0 | 0 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
-| HELD-024 | 7 | 0 | 5 | 7 | 7 | 0 | 0 | 7 | 0 | 5 | False | False | False | S0_EXTRACTION |
+| HELD-024 | 7 | 2 | 5 | 3 | 3 | 0 | 0 | 3 | 0 | 5 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
 | HELD-025 | 4 | 1 | 8 | 1 | 1 | 0 | 0 | 1 | 0 | 8 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
 
-Lineage complete: 15/25 = 60.00%
+Lineage complete: 18/25 = 72.00%
 
 ### Step 19B → current lineage change: 88% → 60%
 
@@ -279,21 +279,21 @@ The lineage completeness decrease is caused by:
 
 | Failure Stage | Chains | Denominator | % |
 |---|---:|---:|---:|
-| S0_EXTRACTION | 12 | 25 | 48.0% |
+| TARGET_RESOLUTION | 9 | 25 | 36.0% |
+| TRANSFORMATION_FAMILY_EXECUTION | 7 | 25 | 28.0% |
 | INSTRUCTION_DETECTION | 4 | 25 | 16.0% |
-| TARGET_RESOLUTION | 4 | 25 | 16.0% |
-| TRANSFORMATION_FAMILY_EXECUTION | 4 | 25 | 16.0% |
-| CONSERVATION_VALIDATION | 1 | 25 | 4.0% |
+| CONSERVATION_VALIDATION | 3 | 25 | 12.0% |
+| S0_EXTRACTION | 2 | 25 | 8.0% |
 
 ## 12. Recoverable engineering-opportunity ranking
 
 | Family | Blocked | Denom | Affected chains | Scorable | Recoverable | Evidence level | Next blocker |
 |---|---:|---:|---:|---:|---:|---|---|
-| TRANSFORMATION_FAMILY_EXECUTION | 57 | 60 | 10 | 1 | 0 | BOUNDED_UPPER_LIMIT | VALUE_EXTRACTION and CONSERVATION_VALIDATION — routed candidates have not been evaluated through the MOSES spine, so their conservation and value correctness are unknown. |
+| TRANSFORMATION_FAMILY_EXECUTION | 27 | 30 | 7 | 1 | 0 | BOUNDED_UPPER_LIMIT | VALUE_EXTRACTION and CONSERVATION_VALIDATION — routed candidates have not been evaluated through the MOSES spine, so their conservation and value correctness are unknown. |
 | GROUND_TRUTH_COVERAGE | 23 | 25 | 23 | 0 | 0 | BOUNDED_UPPER_LIMIT | N/A (observability, not runtime) |
-| S0_EXTRACTION | 12 | 25 | 12 | 0 | 12 | BOUNDED_UPPER_LIMIT | TARGET_RESOLUTION (for chains with instructions) or INSTRUCTION_DETECTION (for chains without) |
+| TARGET_RESOLUTION | 9 | 25 | 9 | 0 | 0 | BOUNDED_UPPER_LIMIT | VALUE_EXTRACTION |
 | INSTRUCTION_DETECTION | 4 | 25 | 4 | 1 | 0 | BOUNDED_UPPER_LIMIT | TARGET_RESOLUTION |
-| TARGET_RESOLUTION | 4 | 25 | 4 | 0 | 0 | BOUNDED_UPPER_LIMIT | VALUE_EXTRACTION |
+| S0_EXTRACTION | 2 | 25 | 2 | 0 | 2 | BOUNDED_UPPER_LIMIT | TARGET_RESOLUTION (for chains with instructions) or INSTRUCTION_DETECTION (for chains without) |
 
 ## 13. Evaluation observability / GT coverage
 
