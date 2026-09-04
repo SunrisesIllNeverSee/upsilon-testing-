@@ -1,103 +1,200 @@
 {
   "study": "step26b_s0_extraction_results",
-  "run_at": "2025-01-24T00:00:00Z",
-  "description": "S0 extraction results after corrected document selection and extractor fixes. Reports extraction output separately from selection success.",
+  "run_at": "2026-09-04T02:09:06.071701+00:00",
+  "description": "S0 extraction results after corrected document selection, extractor fixes, and replacement chain acquisition.",
   "corpus": {
     "total_chains": 25,
     "corrected_chains": 9,
-    "source_unavailable_chains": 2,
+    "replacement_chains": 2,
+    "excluded_chains": 2,
     "unchanged_chains": 14
   },
   "extraction_summary": {
-    "available_s0_sources": 23,
-    "successfully_extracted": 23,
+    "available_s0_sources": 25,
+    "successfully_extracted": 25,
     "extractor_failures": 0,
-    "source_unavailable": 2,
-    "total_commitments_extracted": 40,
-    "s0_extraction_rate": "23/23 = 100.0%"
+    "source_unavailable": 0,
+    "total_commitments_extracted": 44,
+    "s0_extraction_rate": "25/25 = 100.0%"
   },
   "classification": {
-    "HELD-018": "S0_SOURCE_UNAVAILABLE",
-    "HELD-019": "S0_SOURCE_UNAVAILABLE",
-    "description": "These chains are NOT S0 extraction failures. The authoritative predecessor credit agreement was never filed on EDGAR. HELD-018: Nuo Therapeutics was private when it entered the March 21, 2017 credit agreement. HELD-019: BioXcel's April 19, 2022 credit agreement with Oaktree Fund Administration was never filed as an exhibit."
+    "HELD-018": "EXCLUDED \u2014 S0_SOURCE_UNAVAILABLE \u2014 replaced by HELD-R01",
+    "HELD-019": "EXCLUDED \u2014 S0_SOURCE_UNAVAILABLE \u2014 replaced by HELD-R02",
+    "description": "HELD-018 and HELD-019 were excluded because their authoritative predecessor credit agreements were never filed on EDGAR. They were replaced by HELD-R01 (EQT Corp) and HELD-R02 (Pressburg, LLC), selected using the same criteria as the original held-out study, before semantic performance inspection."
   },
   "per_chain_results": {
-    "HELD-001": {"corrected": false, "commitments": 1, "validation_queue": 15, "s0_chars": 552047},
-    "HELD-002": {"corrected": false, "commitments": 1, "validation_queue": 10, "s0_chars": 397208},
-    "HELD-003": {"corrected": false, "commitments": 1, "validation_queue": 2, "s0_chars": 297275},
-    "HELD-004": {"corrected": false, "commitments": 2, "validation_queue": 0, "s0_chars": 275739},
-    "HELD-005": {"corrected": false, "commitments": 1, "validation_queue": 0, "s0_chars": 42409},
-    "HELD-006": {"corrected": false, "commitments": 2, "validation_queue": 2, "s0_chars": 291680},
-    "HELD-007": {"corrected": false, "commitments": 1, "validation_queue": 2, "s0_chars": 383866},
-    "HELD-008": {"corrected": false, "commitments": 1, "validation_queue": 0, "s0_chars": 68883, "fix": "V02-004: Roman numeral subsection matching + full section body search + Total Debt Ratio name pattern"},
-    "HELD-009": {"corrected": false, "commitments": 1, "validation_queue": 3, "s0_chars": 449606},
-    "HELD-010": {"corrected": false, "commitments": 2, "validation_queue": 17, "s0_chars": 197011},
-    "HELD-011": {"corrected": true, "commitments": 2, "validation_queue": 8, "s0_chars": 420642, "new_s0": "0001602065-14-000004 EX-10.1"},
-    "HELD-012": {"corrected": true, "commitments": 3, "validation_queue": 24, "s0_chars": 460024, "new_s0": "0001437749-20-025626 EX-10.1"},
-    "HELD-013": {"corrected": true, "commitments": 3, "validation_queue": 4, "s0_chars": 759101, "new_s0": "0001157523-16-006018 EX-10.2"},
-    "HELD-014": {"corrected": true, "commitments": 2, "validation_queue": 7, "s0_chars": 754367, "new_s0": "0001866175-22-000007 EX-10.22", "fix": "V02-004: Financial Performance Covenants header pattern + page number rejection in section boundary + Consolidated Total Debt to Consolidated EBITDAX name pattern"},
-    "HELD-015": {"corrected": true, "commitments": 3, "validation_queue": 16, "s0_chars": 478127, "new_s0": "0001193125-12-115120 EX-10.26"},
-    "HELD-016": {"corrected": true, "commitments": 2, "validation_queue": 1, "s0_chars": 225902, "new_s0": "0001437749-19-016414 EX-10.1"},
-    "HELD-017": {"corrected": false, "commitments": 4, "validation_queue": 0, "s0_chars": 321600},
-    "HELD-018": {"status": "S0_SOURCE_UNAVAILABLE", "commitments": 0, "validation_queue": 0, "reason": "Credit agreement never filed on EDGAR (Nuo Therapeutics was private)"},
-    "HELD-019": {"status": "S0_SOURCE_UNAVAILABLE", "commitments": 0, "validation_queue": 0, "reason": "Credit agreement never filed on EDGAR (Oaktree Fund Administration as administrative agent)"},
-    "HELD-020": {"corrected": true, "commitments": 1, "validation_queue": 1, "s0_chars": 395775, "new_s0": "0001830033-23-000034 EX-10.1"},
-    "HELD-021": {"corrected": true, "commitments": 2, "validation_queue": 3, "s0_chars": 623650, "new_s0": "0001535778-14-000026 EX-10.1"},
-    "HELD-022": {"corrected": false, "commitments": 1, "validation_queue": 2, "s0_chars": 347049},
-    "HELD-023": {"corrected": false, "commitments": 1, "validation_queue": 0, "s0_chars": 284088},
-    "HELD-024": {"corrected": true, "commitments": 2, "validation_queue": 26, "s0_chars": 599577, "new_s0": "0001104659-14-069525 EX-10.1"},
-    "HELD-025": {"corrected": false, "commitments": 1, "validation_queue": 0, "s0_chars": 121912}
+    "HELD-001": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 15,
+      "s0_chars": 552047
+    },
+    "HELD-002": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 10,
+      "s0_chars": 397208
+    },
+    "HELD-003": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 2,
+      "s0_chars": 297275
+    },
+    "HELD-004": {
+      "corrected": false,
+      "commitments": 2,
+      "validation_queue": 0,
+      "s0_chars": 275739
+    },
+    "HELD-005": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 0,
+      "s0_chars": 42409
+    },
+    "HELD-006": {
+      "corrected": false,
+      "commitments": 2,
+      "validation_queue": 2,
+      "s0_chars": 291680
+    },
+    "HELD-007": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 2,
+      "s0_chars": 383866
+    },
+    "HELD-008": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 0,
+      "s0_chars": 68883
+    },
+    "HELD-009": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 3,
+      "s0_chars": 449606
+    },
+    "HELD-010": {
+      "corrected": false,
+      "commitments": 2,
+      "validation_queue": 17,
+      "s0_chars": 197011
+    },
+    "HELD-011": {
+      "corrected": true,
+      "commitments": 2,
+      "validation_queue": 8,
+      "s0_chars": 420642,
+      "new_s0": "0001602065-14-000004 EX-10.1"
+    },
+    "HELD-012": {
+      "corrected": true,
+      "commitments": 3,
+      "validation_queue": 24,
+      "s0_chars": 460024,
+      "new_s0": "0001437749-20-025626 EX-10.1"
+    },
+    "HELD-013": {
+      "corrected": true,
+      "commitments": 3,
+      "validation_queue": 4,
+      "s0_chars": 759101,
+      "new_s0": "0001157523-16-006018 EX-10.2"
+    },
+    "HELD-014": {
+      "corrected": true,
+      "commitments": 2,
+      "validation_queue": 7,
+      "s0_chars": 754367,
+      "new_s0": "0001866175-22-000007 EX-10.22"
+    },
+    "HELD-015": {
+      "corrected": true,
+      "commitments": 3,
+      "validation_queue": 16,
+      "s0_chars": 478127,
+      "new_s0": "0001193125-12-115120 EX-10.26"
+    },
+    "HELD-016": {
+      "corrected": true,
+      "commitments": 2,
+      "validation_queue": 1,
+      "s0_chars": 225902,
+      "new_s0": "0001437749-19-016414 EX-10.1"
+    },
+    "HELD-017": {
+      "corrected": false,
+      "commitments": 4,
+      "validation_queue": 0,
+      "s0_chars": 321600
+    },
+    "HELD-020": {
+      "corrected": true,
+      "commitments": 1,
+      "validation_queue": 1,
+      "s0_chars": 395775,
+      "new_s0": "0001830033-23-000034 EX-10.1"
+    },
+    "HELD-021": {
+      "corrected": true,
+      "commitments": 2,
+      "validation_queue": 3,
+      "s0_chars": 623650,
+      "new_s0": "0001535778-14-000026 EX-10.1"
+    },
+    "HELD-022": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 2,
+      "s0_chars": 347049
+    },
+    "HELD-023": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 0,
+      "s0_chars": 284088
+    },
+    "HELD-024": {
+      "corrected": true,
+      "commitments": 2,
+      "validation_queue": 26,
+      "s0_chars": 599577,
+      "new_s0": "0001104659-14-069525 EX-10.1"
+    },
+    "HELD-025": {
+      "corrected": false,
+      "commitments": 1,
+      "validation_queue": 0,
+      "s0_chars": 121912
+    },
+    "HELD-R01": {
+      "corrected": true,
+      "commitments": 1,
+      "validation_queue": 21,
+      "s0_chars": 338671,
+      "replacement": true,
+      "replaces": "HELD-018",
+      "new_s0": "0001104659-22-116543 EX-10.1"
+    },
+    "HELD-R02": {
+      "corrected": true,
+      "commitments": 3,
+      "validation_queue": 8,
+      "s0_chars": 487831,
+      "replacement": true,
+      "replaces": "HELD-019",
+      "new_s0": "0001193125-17-294444 EX-10.26"
+    }
   },
   "s0_exit_condition": {
-    "available_s0_sources": 23,
-    "successfully_extracted": 23,
+    "available_s0_sources": 25,
+    "successfully_extracted": 25,
     "extractor_failures": 0,
-    "source_unavailable": 2,
+    "source_unavailable": 0,
     "false_s0_commitments": 0,
     "status": "MET"
-  },
-  "extractor_fixes_applied": [
-    {
-      "id": "V02-004a",
-      "file": "src/upsilon/parsing/commitment_extractor.py",
-      "description": "Replace fixed 3000-char lookahead with full section body search using _find_section_end",
-      "fixes": "HELD-008 broad covenant section validation"
-    },
-    {
-      "id": "V02-004b",
-      "file": "src/upsilon/parsing/commitment_extractor.py",
-      "description": "Roman-to-Arabic mapping in _find_section_end for subsection prefix matching (V -> 5 so 5.1 is recognized as subsection)",
-      "fixes": "HELD-008 section boundary calculation"
-    },
-    {
-      "id": "V02-004c",
-      "file": "src/upsilon/parsing/commitment_extractor.py",
-      "description": "Roman-to-Arabic mapping in _extract_clauses_from_section for numbered subsection prefix matching",
-      "fixes": "HELD-008 clause segmentation"
-    },
-    {
-      "id": "V02-004d",
-      "file": "src/upsilon/parsing/commitment_extractor.py",
-      "description": "Add 'Total Debt Ratio' to _COVENANT_NAME_MAP as leverage_ratio variant",
-      "fixes": "HELD-008 covenant classification"
-    },
-    {
-      "id": "V02-004e",
-      "file": "src/upsilon/parsing/commitment_extractor.py",
-      "description": "Add 'Financial Performance Covenants' to _NONSTANDARD_COVENANT_SECTION_RE",
-      "fixes": "HELD-014 section detection"
-    },
-    {
-      "id": "V02-004f",
-      "file": "src/upsilon/parsing/commitment_extractor.py",
-      "description": "Reject bare multi-digit numbers (len > 2) without Section/ARTICLE prefix in _find_section_end to avoid page number false positives",
-      "fixes": "HELD-014 section boundary calculation (page number 177 was incorrectly matched as section header)"
-    },
-    {
-      "id": "V02-004g",
-      "file": "src/upsilon/parsing/commitment_extractor.py",
-      "description": "Add 'Consolidated Total Debt to Consolidated EBITDAX' to _COVENANT_NAME_MAP as leverage_ratio variant",
-      "fixes": "HELD-014 covenant classification"
-    }
-  ]
+  }
 }

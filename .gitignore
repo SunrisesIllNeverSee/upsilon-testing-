@@ -62,6 +62,7 @@ results/*
 !results/step26b_s0_provenance_frozen.json
 !results/step26b_s0_extraction_results.json
 !results/step26a_s0_selection_audit.json
+!results/step26c_replacement_acquisition.json
 
 # Step 26B corrected held-out manifest (provenance for corrected S0 selections):
 !data/held_out/

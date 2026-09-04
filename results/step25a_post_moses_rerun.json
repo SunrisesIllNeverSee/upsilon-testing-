@@ -1,14 +1,14 @@
 {
   "study": "step25a_post_moses_rerun",
   "label": "POST-MOSES RE-RUN / FIXED REGRESSION CORPUS (STEP 25B RECONCILED)",
-  "run_at": "2026-09-04T02:02:16.153905+00:00",
+  "run_at": "2026-09-04T02:08:49.684392+00:00",
   "branch": "main",
-  "commit": "bdea9709ada604c1490e49c151e7a19cdc8aba46",
+  "commit": "a16c9ae8db58cb412846e190eabffbd487f45465",
   "baseline_commit": "85c5d316189198c47abe31147f35bbcf492b80ed",
   "baseline_json_sha256": "9be51d60fa439d3deef3dcdfc07dd64b8928adf4b7cb31ff9c2735ccdb5bfe0f",
   "baseline_markdown_sha256": "dafdba102ba87f3afbfb5f19d02feb22fb5d2c91293dac36d20bd26eb2a233ba",
   "corpus_manifest_path": "data/held_out/manifest.json",
-  "corpus_manifest_sha256": "95fe85a3da0e5374ec414624308bb7aa28208498fc566b9a95ae58b70ce0c5ce",
+  "corpus_manifest_sha256": "2ef28f4e496b5d4dbe9d05b5dc1f993c8b562031f744787ddec67de646d00611",
   "frozen_gt_manifest_sha256": "8fa3994a23a5ef8ec131b82ba1269eb261f19b9dbffbfa21e38f813b256a8316",
   "pipeline": "run_semantic_pipeline_v2",
   "determinism_proof": "Determinism gate: 64 matched, 0 mismatched. ALL METRICS MATCH \u2014 deterministic.",
@@ -32,26 +32,26 @@
   "metrics": {
     "chains_attempted": 25,
     "chains_completed": 25,
-    "amendments": 158,
-    "documents": 186,
+    "amendments": 152,
+    "documents": 180,
     "cmp_documents": 3,
-    "s0_extraction_success": 23,
-    "s0_extraction_success_rate": 0.92,
-    "total_s0_commitments_extracted": 40,
-    "s0_avg_coverage": 0.4307,
+    "s0_extraction_success": 25,
+    "s0_extraction_success_rate": 1.0,
+    "total_s0_commitments_extracted": 44,
+    "s0_avg_coverage": 0.4434,
     "gt_extraction_success": 2,
     "gt_extraction_success_rate": 0.6667,
     "total_gt_commitments_extracted": 3,
     "gt_avg_coverage": 0.2778,
-    "total_parser_instructions": 302,
-    "amendments_with_instructions": 84,
-    "instruction_detection_rate": 0.5316,
+    "total_parser_instructions": 306,
+    "amendments_with_instructions": 81,
+    "instruction_detection_rate": 0.5329,
     "mapped": 30,
     "mapped_from_parser": 3,
     "mapped_from_extraction": 27,
-    "unresolved": 299,
-    "semantic_mapping_coverage": 0.0099,
-    "unresolved_rate": 0.9901,
+    "unresolved": 303,
+    "semantic_mapping_coverage": 0.0098,
+    "unresolved_rate": 0.9902,
     "moses_spine_promoted": 0,
     "moses_spine_rejected": 3,
     "moses_spine_routed_away": 27,
@@ -89,8 +89,8 @@
     "lineage_completeness": 0.72,
     "chain_reconstruction_funnel": {
       "total_chains": 25,
-      "s0_established": 23,
-      "instructions_available": 19,
+      "s0_established": 25,
+      "instructions_available": 20,
       "at_least_one_target_resolved": 10,
       "executable_transformation_available": 0,
       "successful_state_transition": 0,
@@ -99,7 +99,7 @@
       "exact_reconstruction": 1
     },
     "parser_funnel": {
-      "parser_instructions": 302,
+      "parser_instructions": 306,
       "parser_derived_mappings": 3,
       "moses_candidates": 3,
       "moses_promoted": 0,
@@ -156,11 +156,10 @@
       }
     },
     "chain_level_first_failure": {
-      "INSTRUCTION_DETECTION": 4,
-      "TARGET_RESOLUTION": 9,
+      "INSTRUCTION_DETECTION": 5,
+      "TARGET_RESOLUTION": 10,
       "TRANSFORMATION_FAMILY_EXECUTION": 7,
-      "CONSERVATION_VALIDATION": 3,
-      "S0_EXTRACTION": 2
+      "CONSERVATION_VALIDATION": 3
     },
     "recoverable_opportunities": [
       {
@@ -168,13 +167,13 @@
         "blocked_opportunities": 27,
         "denominator": 30,
         "affected_chains": [
-          "HELD-025",
-          "HELD-014",
-          "HELD-024",
-          "HELD-004",
-          "HELD-017",
           "HELD-023",
-          "HELD-021"
+          "HELD-014",
+          "HELD-004",
+          "HELD-021",
+          "HELD-017",
+          "HELD-024",
+          "HELD-025"
         ],
         "affected_amendments": 41,
         "independently_scorable_subset": 1,
@@ -203,16 +202,16 @@
           "HELD-015",
           "HELD-016",
           "HELD-017",
-          "HELD-018",
-          "HELD-019",
           "HELD-020",
           "HELD-021",
           "HELD-022",
           "HELD-023",
           "HELD-024",
-          "HELD-025"
+          "HELD-025",
+          "HELD-R01",
+          "HELD-R02"
         ],
-        "affected_amendments": 154,
+        "affected_amendments": 148,
         "independently_scorable_subset": 0,
         "estimated_directly_recoverable_cases": 0,
         "evidence_level": "BOUNDED_UPPER_LIMIT",
@@ -221,7 +220,7 @@
       },
       {
         "opportunity_family": "TARGET_RESOLUTION",
-        "blocked_opportunities": 9,
+        "blocked_opportunities": 10,
         "denominator": 25,
         "affected_chains": [
           "HELD-003",
@@ -232,46 +231,45 @@
           "HELD-013",
           "HELD-015",
           "HELD-020",
-          "HELD-022"
+          "HELD-022",
+          "HELD-R02"
         ],
-        "affected_amendments": 71,
+        "affected_amendments": 76,
         "independently_scorable_subset": 0,
         "estimated_directly_recoverable_cases": 0,
         "evidence_level": "BOUNDED_UPPER_LIMIT",
         "known_next_downstream_blocker": "VALUE_EXTRACTION",
-        "evidence_supporting_recoverability": "9 chains with instructions but no resolved mappings. The semantic mapper could not resolve any instruction to a target commitment. Recovering target resolution would produce mapped candidates, but downstream conservation and value extraction are unknown."
+        "evidence_supporting_recoverability": "10 chains with instructions but no resolved mappings. The semantic mapper could not resolve any instruction to a target commitment. Recovering target resolution would produce mapped candidates, but downstream conservation and value extraction are unknown."
       },
       {
         "opportunity_family": "INSTRUCTION_DETECTION",
-        "blocked_opportunities": 4,
+        "blocked_opportunities": 5,
         "denominator": 25,
         "affected_chains": [
           "HELD-001",
           "HELD-002",
           "HELD-006",
-          "HELD-007"
+          "HELD-007",
+          "HELD-R01"
         ],
-        "affected_amendments": 8,
+        "affected_amendments": 12,
         "independently_scorable_subset": 1,
         "estimated_directly_recoverable_cases": 0,
         "evidence_level": "BOUNDED_UPPER_LIMIT",
         "known_next_downstream_blocker": "TARGET_RESOLUTION",
-        "evidence_supporting_recoverability": "4 chains with S0 established but no parser instructions detected. The amendment documents exist but the parser found no instructions. Recovering instruction detection would expose these amendments to the semantic layer, but downstream resolution is unknown."
+        "evidence_supporting_recoverability": "5 chains with S0 established but no parser instructions detected. The amendment documents exist but the parser found no instructions. Recovering instruction detection would expose these amendments to the semantic layer, but downstream resolution is unknown."
       },
       {
         "opportunity_family": "S0_EXTRACTION",
-        "blocked_opportunities": 2,
+        "blocked_opportunities": 0,
         "denominator": 25,
-        "affected_chains": [
-          "HELD-018",
-          "HELD-019"
-        ],
-        "affected_amendments": 15,
+        "affected_chains": [],
+        "affected_amendments": 0,
         "independently_scorable_subset": 0,
-        "estimated_directly_recoverable_cases": 2,
+        "estimated_directly_recoverable_cases": 0,
         "evidence_level": "BOUNDED_UPPER_LIMIT",
         "known_next_downstream_blocker": "TARGET_RESOLUTION (for chains with instructions) or INSTRUCTION_DETECTION (for chains without)",
-        "evidence_supporting_recoverability": "2 of 2 S0-failed chains have parser instructions, meaning the amendment evidence exists but cannot be used without an origin state. Recovering S0 extraction would unblock these chains at the reconstruction stage."
+        "evidence_supporting_recoverability": "0 of 0 S0-failed chains have parser instructions, meaning the amendment evidence exists but cannot be used without an origin state. Recovering S0 extraction would unblock these chains at the reconstruction stage."
       }
     ],
     "candidate_conservation_gate": {
@@ -307,7 +305,9 @@
         "HELD-022",
         "HELD-023",
         "HELD-024",
-        "HELD-025"
+        "HELD-025",
+        "HELD-R01",
+        "HELD-R02"
       ],
       "instruction_detected_chain_ids": [
         "HELD-003",
@@ -323,14 +323,13 @@
         "HELD-015",
         "HELD-016",
         "HELD-017",
-        "HELD-018",
-        "HELD-019",
         "HELD-020",
         "HELD-021",
         "HELD-022",
         "HELD-023",
         "HELD-024",
-        "HELD-025"
+        "HELD-025",
+        "HELD-R02"
       ],
       "mapped_candidate_ids": [
         "CAND-0001",
@@ -415,10 +414,10 @@
         "HELD-013",
         "HELD-015",
         "HELD-016",
-        "HELD-018",
-        "HELD-019",
         "HELD-020",
-        "HELD-022"
+        "HELD-022",
+        "HELD-R01",
+        "HELD-R02"
       ],
       "gt_scorable_chain_ids": [
         "HELD-002",
@@ -753,44 +752,6 @@
         "first_runtime_failure": "TRANSFORMATION_FAMILY_EXECUTION"
       },
       {
-        "chain_id": "HELD-018",
-        "amendments": 9,
-        "s0_commitments": 0,
-        "parser_instructions": 6,
-        "mapped": 0,
-        "mapped_from_parser": 0,
-        "mapped_from_extraction": 0,
-        "moses_candidate": 0,
-        "moses_promoted": 0,
-        "moses_rejected": 0,
-        "moses_routed": 0,
-        "legacy_applied": 0,
-        "unresolved": 6,
-        "lineage_complete": true,
-        "gt_available": false,
-        "exact_reconstruction": false,
-        "first_runtime_failure": "S0_EXTRACTION"
-      },
-      {
-        "chain_id": "HELD-019",
-        "amendments": 6,
-        "s0_commitments": 0,
-        "parser_instructions": 4,
-        "mapped": 0,
-        "mapped_from_parser": 0,
-        "mapped_from_extraction": 0,
-        "moses_candidate": 0,
-        "moses_promoted": 0,
-        "moses_rejected": 0,
-        "moses_routed": 0,
-        "legacy_applied": 0,
-        "unresolved": 4,
-        "lineage_complete": true,
-        "gt_available": false,
-        "exact_reconstruction": false,
-        "first_runtime_failure": "S0_EXTRACTION"
-      },
-      {
         "chain_id": "HELD-020",
         "amendments": 9,
         "s0_commitments": 1,
@@ -903,6 +864,44 @@
         "gt_available": false,
         "exact_reconstruction": false,
         "first_runtime_failure": "TRANSFORMATION_FAMILY_EXECUTION"
+      },
+      {
+        "chain_id": "HELD-R01",
+        "amendments": 4,
+        "s0_commitments": 1,
+        "parser_instructions": 0,
+        "mapped": 0,
+        "mapped_from_parser": 0,
+        "mapped_from_extraction": 0,
+        "moses_candidate": 0,
+        "moses_promoted": 0,
+        "moses_rejected": 0,
+        "moses_routed": 0,
+        "legacy_applied": 0,
+        "unresolved": 0,
+        "lineage_complete": true,
+        "gt_available": false,
+        "exact_reconstruction": false,
+        "first_runtime_failure": "INSTRUCTION_DETECTION"
+      },
+      {
+        "chain_id": "HELD-R02",
+        "amendments": 5,
+        "s0_commitments": 3,
+        "parser_instructions": 14,
+        "mapped": 0,
+        "mapped_from_parser": 0,
+        "mapped_from_extraction": 0,
+        "moses_candidate": 0,
+        "moses_promoted": 0,
+        "moses_rejected": 0,
+        "moses_routed": 0,
+        "legacy_applied": 0,
+        "unresolved": 14,
+        "lineage_complete": true,
+        "gt_available": false,
+        "exact_reconstruction": false,
+        "first_runtime_failure": "TARGET_RESOLUTION"
       }
     ],
     "candidate_ledger": [
@@ -1508,5 +1507,5 @@
       }
     ]
   },
-  "artifact_sha256": "8bb4b3d6ae71fbc0cbcb524cb1be2508db26427803083aaa15d4b3c92377d881"
+  "artifact_sha256": "2801288ca304c5739c94a6b2ee81fd32f7a07e6ce650c19c608fb0d774d1f329"
 }

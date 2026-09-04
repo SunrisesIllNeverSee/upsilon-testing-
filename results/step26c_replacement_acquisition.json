@@ -1,0 +1,48 @@
+{
+  "study": "step26c_replacement_acquisition",
+  "run_at": "2026-09-04T02:07:48.458945+00:00",
+  "replacements": [
+    {
+      "chain_id": "HELD-R01",
+      "replaces": "HELD-018",
+      "cik": "0000033213",
+      "issuer": "EQT Corp",
+      "ca_date": "November 9, 2022",
+      "s0_accession": "0001104659-22-116543",
+      "s0_file_date": "2022-11-09",
+      "s0_exhibit_type": "EX-10.1",
+      "s0_text_chars": 338671,
+      "s0_html_sha256": "fbafbeee9b667a8de1f9ec92dc3e862e6a0dd8ae7badceddd50438710b577d10",
+      "s0_text_sha256": "10e2ae1127ca118e68a72ed6d4fe2a06fcf114ee730b3b133974c6b094511ccb",
+      "amendment_count": 4,
+      "selection_rule": "Same criteria as original held-out study. Selected before semantic performance inspection."
+    },
+    {
+      "chain_id": "HELD-R02",
+      "replaces": "HELD-019",
+      "cik": "0001326428",
+      "issuer": "Pressburg, LLC",
+      "ca_date": "September 5, 2017",
+      "s0_accession": "0001193125-17-294444",
+      "s0_file_date": "2017-09-26",
+      "s0_exhibit_type": "EX-10.26",
+      "s0_text_chars": 487831,
+      "s0_html_sha256": "a710aef92ceff9ad3e8636c56f4e54aa4bfae0958868b2fb16ede16cfb00cb59",
+      "s0_text_sha256": "fbcbaa1b37059f8de3ffc269e47f7fc8f02907f866660918b40067cec11545bd",
+      "amendment_count": 5,
+      "selection_rule": "Same criteria as original held-out study. Selected before semantic performance inspection."
+    }
+  ],
+  "excluded_chains": [
+    {
+      "chain_id": "HELD-018",
+      "reason": "S0_SOURCE_UNAVAILABLE",
+      "detail": "Credit agreement never filed on EDGAR (Nuo Therapeutics was private)"
+    },
+    {
+      "chain_id": "HELD-019",
+      "reason": "S0_SOURCE_UNAVAILABLE",
+      "detail": "Credit agreement never filed on EDGAR (Oaktree Fund Administration as administrative agent)"
+    }
+  ]
+}

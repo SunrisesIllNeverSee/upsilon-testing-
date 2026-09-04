@@ -4,17 +4,17 @@
 
 This is NOT a new held-out confirmatory result. The corpus was previously inspected and its failures influenced subsequent development.
 
-**JSON artifact SHA-256:** `8bb4b3d6ae71fbc0cbcb524cb1be2508db26427803083aaa15d4b3c92377d881`
+**JSON artifact SHA-256:** `2801288ca304c5739c94a6b2ee81fd32f7a07e6ce650c19c608fb0d774d1f329`
 **Baseline JSON SHA-256:** `9be51d60fa439d3deef3dcdfc07dd64b8928adf4b7cb31ff9c2735ccdb5bfe0f`
 **Baseline Markdown SHA-256:** `dafdba102ba87f3afbfb5f19d02feb22fb5d2c91293dac36d20bd26eb2a233ba`
 
 ## 1. Run identity
 
 - **Branch:** `main`
-- **Commit:** `bdea9709ada604c1490e49c151e7a19cdc8aba46`
-- **Corpus manifest SHA-256:** `95fe85a3da0e5374ec414624308bb7aa28208498fc566b9a95ae58b70ce0c5ce`
+- **Commit:** `a16c9ae8db58cb412846e190eabffbd487f45465`
+- **Corpus manifest SHA-256:** `2ef28f4e496b5d4dbe9d05b5dc1f993c8b562031f744787ddec67de646d00611`
 - **Frozen GT manifest SHA-256:** `8fa3994a23a5ef8ec131b82ba1269eb261f19b9dbffbfa21e38f813b256a8316`
-- **Timestamp:** `2026-09-04T02:02:16.153905+00:00`
+- **Timestamp:** `2026-09-04T02:08:49.684392+00:00`
 - **Pipeline:** `run_semantic_pipeline_v2`
 
 ## 2. Corpus
@@ -23,8 +23,8 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 |---|---:|
 | Chains attempted | 25 |
 | Chains completed | 25 |
-| Amendments | 158 |
-| Documents | 186 |
+| Amendments | 152 |
+| Documents | 180 |
 | CMP/composite validation documents | 3 |
 
 ## 3. Step 19B baseline
@@ -53,9 +53,9 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| S0 extraction success | 23 | 25 | 92.00% |
-| Total S0 commitments extracted | 40 | — | — |
-| Avg S0 extraction coverage | — | — | 43.07% |
+| S0 extraction success | 25 | 25 | 100.00% |
+| Total S0 commitments extracted | 44 | — | — |
+| Avg S0 extraction coverage | — | — | 44.34% |
 
 ### 4.2 GT extraction
 
@@ -69,17 +69,17 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| Total parser instructions | 302 | — | — |
-| Amendments with ≥1 instruction | 84 | 158 | 53.16% |
+| Total parser instructions | 306 | — | — |
+| Amendments with ≥1 instruction | 81 | 152 | 53.29% |
 
 ### 4.4 Semantic interpretation (mapped ≠ accepted ≠ applied ≠ promoted)
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| Mapped (total) | 30 | 302 | — |
-| Mapped from parser | 3 | 302 | 0.99% |
+| Mapped (total) | 30 | 306 | — |
+| Mapped from parser | 3 | 306 | 0.98% |
 | Mapped from extraction | 27 | — | — |
-| Unresolved | 299 | 302 | 99.01% |
+| Unresolved | 303 | 306 | 99.02% |
 
 ### 4.5 MOSES spine
 
@@ -136,14 +136,14 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Step 19B | Current | Absolute change | Relative change |
 |---|---:|---:|---:|---:|
-| S0 extraction success | 28.00% | 92.00% | +64.00% | — |
-| S0 avg coverage | 16.31% | 43.07% | +26.76% | — |
+| S0 extraction success | 28.00% | 100.00% | +72.00% | — |
+| S0 avg coverage | 16.31% | 44.34% | +28.03% | — |
 | GT extraction success | 66.67% | 66.67% | +0.00% | — |
-| Amendments with parser instructions | 12.03% | 53.16% | +41.13% | — |
-| Semantic mapping coverage | 0.96% | 0.99% | +0.03% | — |
+| Amendments with parser instructions | 12.03% | 53.29% | +41.26% | — |
+| Semantic mapping coverage | 0.96% | 0.98% | +0.02% | — |
 | Mapping precision | 0.00% | N/A | NOT DIRECTLY COMPARABLE | — |
 | Incorrect accepted mutation rate | 100.00% | N/A | NOT DIRECTLY COMPARABLE | — |
-| Unresolved rate | 99.04% | 99.01% | +-0.03% | — |
+| Unresolved rate | 99.04% | 99.02% | +-0.02% | — |
 | Supported-field GT agreement | 50.00% | 50.00% | — | — |
 | Exact GT-chain reconstruction | 50.00% | 50.00% | — | — |
 | Exact reconstruction overall | 4.00% | 4.00% | +0.00% | — |
@@ -182,8 +182,8 @@ Parser-derived candidates (all 3):
 | Stage | Count | % of 25 |
 |---|---:|---:|
 | Total Chains | 25 | 100.0% |
-| S0 Established | 23 | 92.0% |
-| Instructions Available | 19 | 76.0% |
+| S0 Established | 25 | 100.0% |
+| Instructions Available | 20 | 80.0% |
 | At Least One Target Resolved | 10 | 40.0% |
 | Executable Transformation Available | 0 | 0.0% |
 | Successful State Transition | 0 | 0.0% |
@@ -197,7 +197,7 @@ Parser-derived candidates (all 3):
 
 | Stage | Count |
 |---|---:|
-| Parser Instructions | 302 |
+| Parser Instructions | 306 |
 | Parser Derived Mappings | 3 |
 | Moses Candidates | 3 |
 | Moses Promoted | 0 |
@@ -252,14 +252,14 @@ Parser-derived candidates (all 3):
 | HELD-015 | 10 | 3 | 42 | 0 | 0 | 0 | 0 | 0 | 0 | 42 | True | False | False | TARGET_RESOLUTION |
 | HELD-016 | 10 | 2 | 15 | 1 | 1 | 0 | 1 | 0 | 0 | 14 | True | False | False | CONSERVATION_VALIDATION |
 | HELD-017 | 9 | 4 | 9 | 5 | 5 | 0 | 0 | 5 | 0 | 9 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
-| HELD-018 | 9 | 0 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 6 | True | False | False | S0_EXTRACTION |
-| HELD-019 | 6 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 4 | True | False | False | S0_EXTRACTION |
 | HELD-020 | 9 | 1 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 4 | True | False | False | TARGET_RESOLUTION |
 | HELD-021 | 6 | 2 | 2 | 10 | 10 | 0 | 0 | 10 | 0 | 2 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
 | HELD-022 | 8 | 1 | 30 | 0 | 0 | 0 | 0 | 0 | 0 | 30 | True | False | False | TARGET_RESOLUTION |
 | HELD-023 | 2 | 1 | 0 | 2 | 2 | 0 | 0 | 2 | 0 | 0 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
 | HELD-024 | 7 | 2 | 5 | 3 | 3 | 0 | 0 | 3 | 0 | 5 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
 | HELD-025 | 4 | 1 | 8 | 1 | 1 | 0 | 0 | 1 | 0 | 8 | False | False | False | TRANSFORMATION_FAMILY_EXECUTION |
+| HELD-R01 | 4 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | True | False | False | INSTRUCTION_DETECTION |
+| HELD-R02 | 5 | 3 | 14 | 0 | 0 | 0 | 0 | 0 | 0 | 14 | True | False | False | TARGET_RESOLUTION |
 
 Lineage complete: 18/25 = 72.00%
 
@@ -279,11 +279,10 @@ The lineage completeness decrease is caused by:
 
 | Failure Stage | Chains | Denominator | % |
 |---|---:|---:|---:|
-| TARGET_RESOLUTION | 9 | 25 | 36.0% |
+| TARGET_RESOLUTION | 10 | 25 | 40.0% |
 | TRANSFORMATION_FAMILY_EXECUTION | 7 | 25 | 28.0% |
-| INSTRUCTION_DETECTION | 4 | 25 | 16.0% |
+| INSTRUCTION_DETECTION | 5 | 25 | 20.0% |
 | CONSERVATION_VALIDATION | 3 | 25 | 12.0% |
-| S0_EXTRACTION | 2 | 25 | 8.0% |
 
 ## 12. Recoverable engineering-opportunity ranking
 
@@ -291,9 +290,9 @@ The lineage completeness decrease is caused by:
 |---|---:|---:|---:|---:|---:|---|---|
 | TRANSFORMATION_FAMILY_EXECUTION | 27 | 30 | 7 | 1 | 0 | BOUNDED_UPPER_LIMIT | VALUE_EXTRACTION and CONSERVATION_VALIDATION — routed candidates have not been evaluated through the MOSES spine, so their conservation and value correctness are unknown. |
 | GROUND_TRUTH_COVERAGE | 23 | 25 | 23 | 0 | 0 | BOUNDED_UPPER_LIMIT | N/A (observability, not runtime) |
-| TARGET_RESOLUTION | 9 | 25 | 9 | 0 | 0 | BOUNDED_UPPER_LIMIT | VALUE_EXTRACTION |
-| INSTRUCTION_DETECTION | 4 | 25 | 4 | 1 | 0 | BOUNDED_UPPER_LIMIT | TARGET_RESOLUTION |
-| S0_EXTRACTION | 2 | 25 | 2 | 0 | 2 | BOUNDED_UPPER_LIMIT | TARGET_RESOLUTION (for chains with instructions) or INSTRUCTION_DETECTION (for chains without) |
+| TARGET_RESOLUTION | 10 | 25 | 10 | 0 | 0 | BOUNDED_UPPER_LIMIT | VALUE_EXTRACTION |
+| INSTRUCTION_DETECTION | 5 | 25 | 5 | 1 | 0 | BOUNDED_UPPER_LIMIT | TARGET_RESOLUTION |
+| S0_EXTRACTION | 0 | 25 | 0 | 0 | 0 | BOUNDED_UPPER_LIMIT | TARGET_RESOLUTION (for chains with instructions) or INSTRUCTION_DETECTION (for chains without) |
 
 ## 13. Evaluation observability / GT coverage
 
