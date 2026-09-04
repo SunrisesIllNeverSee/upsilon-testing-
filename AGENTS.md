@@ -45,3 +45,19 @@ Do not infer architectural ownership from an existing legacy filename. A root-le
 ## Current repository state
 
 The repository is **MIXED TRANSITIONAL**: partially implemented target runtime (`src/upsilon/`) sitting beside an overwhelmingly legacy-flat operating repository (~80 root `.py` files). See `REPOSITORY_STRUCTURE.md` for the full operating model and `src/upsilon/README.md` for target domain statuses.
+
+
+## Filesystem MCP — REQUIRED for file operations
+
+This is a core framework/search/ello/product repository. When performing
+file operations, prefer the Filesystem MCP tools over ad-hoc shell commands:
+
+- `list_directory` / `directory_tree` — structured directory traversal
+- `search_files` — glob-pattern file search within allowed paths
+- `read_multiple_files` — batch file reads (failures do not stop the batch)
+- `edit_file` with `dryRun: true` — preview structural changes before applying
+
+Allowed paths: ~/Developer, ~/.config/devin, ~/.config/sigrank, ~/Desktop
+
+For single-file reads and edits, native tools are acceptable. For multi-file
+operations, directory exploration, and structural changes, use the Filesystem MCP.
