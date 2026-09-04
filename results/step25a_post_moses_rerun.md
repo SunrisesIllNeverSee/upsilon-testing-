@@ -4,17 +4,17 @@
 
 This is NOT a new held-out confirmatory result. The corpus was previously inspected and its failures influenced subsequent development.
 
-**JSON artifact SHA-256:** `2801288ca304c5739c94a6b2ee81fd32f7a07e6ce650c19c608fb0d774d1f329`
+**JSON artifact SHA-256:** `f4ac9a0606ea0eb163c67611c8e396e49be1341c3707b94277de40759ff697bd`
 **Baseline JSON SHA-256:** `9be51d60fa439d3deef3dcdfc07dd64b8928adf4b7cb31ff9c2735ccdb5bfe0f`
 **Baseline Markdown SHA-256:** `dafdba102ba87f3afbfb5f19d02feb22fb5d2c91293dac36d20bd26eb2a233ba`
 
 ## 1. Run identity
 
 - **Branch:** `main`
-- **Commit:** `a16c9ae8db58cb412846e190eabffbd487f45465`
+- **Commit:** `dd003179e07fb3f4244f1bcc35346852a3d2577a`
 - **Corpus manifest SHA-256:** `2ef28f4e496b5d4dbe9d05b5dc1f993c8b562031f744787ddec67de646d00611`
 - **Frozen GT manifest SHA-256:** `8fa3994a23a5ef8ec131b82ba1269eb261f19b9dbffbfa21e38f813b256a8316`
-- **Timestamp:** `2026-09-04T02:08:49.684392+00:00`
+- **Timestamp:** `2026-09-04T03:02:24.194403+00:00`
 - **Pipeline:** `run_semantic_pipeline_v2`
 
 ## 2. Corpus
@@ -76,7 +76,7 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 
 | Metric | Numerator | Denominator | Rate |
 |---|---:|---:|---|
-| Mapped (total) | 30 | 306 | — |
+| Mapped (total) | 30 | 306 | 9.80% |
 | Mapped from parser | 3 | 306 | 0.98% |
 | Mapped from extraction | 27 | — | — |
 | Unresolved | 303 | 306 | 99.02% |
@@ -140,7 +140,7 @@ This is NOT a new held-out confirmatory result. The corpus was previously inspec
 | S0 avg coverage | 16.31% | 44.34% | +28.03% | — |
 | GT extraction success | 66.67% | 66.67% | +0.00% | — |
 | Amendments with parser instructions | 12.03% | 53.29% | +41.26% | — |
-| Semantic mapping coverage | 0.96% | 0.98% | +0.02% | — |
+| Semantic mapping coverage | 0.96% (parser-only) | 9.80% (total) | DEFINITION CHANGED | — |
 | Mapping precision | 0.00% | N/A | NOT DIRECTLY COMPARABLE | — |
 | Incorrect accepted mutation rate | 100.00% | N/A | NOT DIRECTLY COMPARABLE | — |
 | Unresolved rate | 99.04% | 99.02% | +-0.02% | — |
@@ -308,7 +308,7 @@ successfully but cannot be scored for reconstruction correctness.
 
 ## 14. Determinism proof
 
-Determinism gate: 64 matched, 0 mismatched. ALL METRICS MATCH — deterministic.
+Determinism gate: 65 matched, 0 mismatched. ALL METRICS MATCH — deterministic.
 
 ## 15. Tests
 

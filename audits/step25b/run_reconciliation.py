@@ -785,6 +785,9 @@ def compute_reconciled_metrics(
         "mapped_from_extraction": mapped_extraction,
         "unresolved": total_unresolved,
         "semantic_mapping_coverage": round(
+            total_mapped / total_parser, 4
+        ) if total_parser > 0 else 0.0,
+        "parser_mapping_coverage": round(
             mapped_parser / total_parser, 4
         ) if total_parser > 0 else 0.0,
         "unresolved_rate": round(
@@ -1184,8 +1187,8 @@ def generate_markdown(artifact: dict[str, Any]) -> str:
     lines.append("")
     lines.append(f"| Metric | Numerator | Denominator | Rate |")
     lines.append(f"|---|---:|---:|---|")
-    lines.append(f"| Mapped (total) | {m['mapped']} | {m['total_parser_instructions']} | — |")
-    lines.append(f"| Mapped from parser | {m['mapped_from_parser']} | {m['total_parser_instructions']} | {m['semantic_mapping_coverage']:.2%} |")
+    lines.append(f"| Mapped (total) | {m['mapped']} | {m['total_parser_instructions']} | {m['semantic_mapping_coverage']:.2%} |")
+    lines.append(f"| Mapped from parser | {m['mapped_from_parser']} | {m['total_parser_instructions']} | {m['parser_mapping_coverage']:.2%} |")
     lines.append(f"| Mapped from extraction | {m['mapped_from_extraction']} | — | — |")
     lines.append(f"| Unresolved | {m['unresolved']} | {m['total_parser_instructions']} | {m['unresolved_rate']:.2%} |")
     lines.append("")
@@ -1260,7 +1263,7 @@ def generate_markdown(artifact: dict[str, Any]) -> str:
     lines.append(f"| S0 avg coverage | 16.31% | {m['s0_avg_coverage']:.2%} | +{m['s0_avg_coverage']-0.1631:.2%} | — |")
     lines.append(f"| GT extraction success | 66.67% | {m['gt_extraction_success_rate']:.2%} | +{m['gt_extraction_success_rate']-0.6667:.2%} | — |")
     lines.append(f"| Amendments with parser instructions | 12.03% | {m['instruction_detection_rate']:.2%} | +{m['instruction_detection_rate']-0.1203:.2%} | — |")
-    lines.append(f"| Semantic mapping coverage | 0.96% | {m['semantic_mapping_coverage']:.2%} | +{m['semantic_mapping_coverage']-0.0096:.2%} | — |")
+    lines.append(f"| Semantic mapping coverage | 0.96% (parser-only) | {m['semantic_mapping_coverage']:.2%} (total) | DEFINITION CHANGED | — |")
     lines.append(f"| Mapping precision | 0.00% | {_fmt_rate(m['overall_precision'])} | NOT DIRECTLY COMPARABLE | — |")
     lines.append(f"| Incorrect accepted mutation rate | 100.00% | {_fmt_rate(m['incorrect_accepted_mutation_rate'])} | NOT DIRECTLY COMPARABLE | — |")
     lines.append(f"| Unresolved rate | 99.04% | {m['unresolved_rate']:.2%} | +{m['unresolved_rate']-0.9904:.2%} | — |")

@@ -1,9 +1,9 @@
 {
   "study": "step25a_post_moses_rerun",
   "label": "POST-MOSES RE-RUN / FIXED REGRESSION CORPUS (STEP 25B RECONCILED)",
-  "run_at": "2026-09-04T02:08:49.684392+00:00",
+  "run_at": "2026-09-04T03:02:24.194403+00:00",
   "branch": "main",
-  "commit": "a16c9ae8db58cb412846e190eabffbd487f45465",
+  "commit": "dd003179e07fb3f4244f1bcc35346852a3d2577a",
   "baseline_commit": "85c5d316189198c47abe31147f35bbcf492b80ed",
   "baseline_json_sha256": "9be51d60fa439d3deef3dcdfc07dd64b8928adf4b7cb31ff9c2735ccdb5bfe0f",
   "baseline_markdown_sha256": "dafdba102ba87f3afbfb5f19d02feb22fb5d2c91293dac36d20bd26eb2a233ba",
@@ -11,7 +11,7 @@
   "corpus_manifest_sha256": "2ef28f4e496b5d4dbe9d05b5dc1f993c8b562031f744787ddec67de646d00611",
   "frozen_gt_manifest_sha256": "8fa3994a23a5ef8ec131b82ba1269eb261f19b9dbffbfa21e38f813b256a8316",
   "pipeline": "run_semantic_pipeline_v2",
-  "determinism_proof": "Determinism gate: 64 matched, 0 mismatched. ALL METRICS MATCH \u2014 deterministic.",
+  "determinism_proof": "Determinism gate: 65 matched, 0 mismatched. ALL METRICS MATCH \u2014 deterministic.",
   "metric_definitions": {
     "s0_established": "A chain has >=1 commitment in its original_state (extracted from S0).",
     "instruction_detected": "An amendment step has >=1 parser instruction detected by the genre adapter.",
@@ -50,7 +50,8 @@
     "mapped_from_parser": 3,
     "mapped_from_extraction": 27,
     "unresolved": 303,
-    "semantic_mapping_coverage": 0.0098,
+    "semantic_mapping_coverage": 0.098,
+    "parser_mapping_coverage": 0.0098,
     "unresolved_rate": 0.9902,
     "moses_spine_promoted": 0,
     "moses_spine_rejected": 3,
@@ -167,13 +168,13 @@
         "blocked_opportunities": 27,
         "denominator": 30,
         "affected_chains": [
+          "HELD-021",
+          "HELD-025",
           "HELD-023",
           "HELD-014",
-          "HELD-004",
-          "HELD-021",
           "HELD-017",
-          "HELD-024",
-          "HELD-025"
+          "HELD-004",
+          "HELD-024"
         ],
         "affected_amendments": 41,
         "independently_scorable_subset": 1,
@@ -1507,5 +1508,5 @@
       }
     ]
   },
-  "artifact_sha256": "2801288ca304c5739c94a6b2ee81fd32f7a07e6ce650c19c608fb0d774d1f329"
+  "artifact_sha256": "f4ac9a0606ea0eb163c67611c8e396e49be1341c3707b94277de40759ff697bd"
 }
