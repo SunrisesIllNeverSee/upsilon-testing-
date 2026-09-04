@@ -1,0 +1,2693 @@
+{
+  "study": "step26a_s0_selection_audit",
+  "run_at": "2026-09-04T01:21:24.629961+00:00",
+  "failed_chains": [
+    "HELD-011",
+    "HELD-012",
+    "HELD-013",
+    "HELD-014",
+    "HELD-015",
+    "HELD-016",
+    "HELD-018",
+    "HELD-019",
+    "HELD-020",
+    "HELD-021",
+    "HELD-024"
+  ],
+  "results": [
+    {
+      "chain_id": "HELD-011",
+      "issuer": "Viper Energy Partners LP  (VNOM)",
+      "cik": "0001602065",
+      "current_s0": {
+        "accession": "0001193125-14-245558",
+        "file_date": "2014-06-23",
+        "exhibit_description": "EX-10.1",
+        "text_chars": 15840
+      },
+      "cross_ref_ca_date": "JUNE 21, 2016",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001602065-16-000051",
+          "file_date": "2016-06-27",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1602065/000160206516000051/viperexhibit101-6x27x16.htm",
+          "text_chars": 23247,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 viperexhibit101-6x27x16.htm EXHIBIT 10.1 Exhibit Exhibit 10.1 THIRD AMENDMENT TO CREDIT AGREEMENT DATED AS OF JUNE 21, 2016 AMONG VIPER ENERGY PARTNERS LP, AS BORROWER, THE GUARANTORS, WELLS"
+          },
+          "text_sha256": "5854e46c9eccffcd2d7c8bc71024399fc2873597a95c165aabcf18edbe40c4ef"
+        },
+        {
+          "accession": "0001602065-16-000051",
+          "file_date": "2016-06-27",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1602065/000160206516000051/viperexhibit101-6x27x16.htm",
+          "text_chars": 23247,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 viperexhibit101-6x27x16.htm EXHIBIT 10.1 Exhibit Exhibit 10.1 THIRD AMENDMENT TO CREDIT AGREEMENT DATED AS OF JUNE 21, 2016 AMONG VIPER ENERGY PARTNERS LP, AS BORROWER, THE GUARANTORS, WELLS"
+          },
+          "text_sha256": "5854e46c9eccffcd2d7c8bc71024399fc2873597a95c165aabcf18edbe40c4ef"
+        }
+      ],
+      "best_s0_candidate": null,
+      "verdict": "NOT_FOUND"
+    },
+    {
+      "chain_id": "HELD-012",
+      "issuer": "HighPeak Energy, Inc.  (HPK, HPKEW)",
+      "cik": "0001792849",
+      "current_s0": {
+        "accession": "0001437749-20-018850",
+        "file_date": "2020-08-27",
+        "exhibit_description": "EXHIBIT 10.1",
+        "text_chars": 67824
+      },
+      "cross_ref_ca_date": "December 17, 2020",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001437749-20-025626",
+          "file_date": "2020-12-18",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1792849/000143774920025626/ex_218259.htm",
+          "text_chars": 460024,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_218259.htm EXHIBIT 10.1 ex_218259.htm Exhibit 10.1 Credit Agreement dated as of December 17, 2020 among HIGHPEAK ENERGY, INC., as Borrower, FIFTH THIRD BANK, NATIONAL ASSOCIATION, as Admi"
+          },
+          "text_sha256": "513ee28517933faa2a162830f8896f34cf6dfd3417801691abe29c1146270424"
+        },
+        {
+          "accession": "0001437749-20-025626",
+          "file_date": "2020-12-18",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1792849/000143774920025626/ex_218259.htm",
+          "text_chars": 460024,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_218259.htm EXHIBIT 10.1 ex_218259.htm Exhibit 10.1 Credit Agreement dated as of December 17, 2020 among HIGHPEAK ENERGY, INC., as Borrower, FIFTH THIRD BANK, NATIONAL ASSOCIATION, as Admi"
+          },
+          "text_sha256": "513ee28517933faa2a162830f8896f34cf6dfd3417801691abe29c1146270424"
+        }
+      ],
+      "best_s0_candidate": {
+        "accession": "0001437749-20-025626",
+        "file_date": "2020-12-18",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EXHIBIT 10.1",
+        "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1792849/000143774920025626/ex_218259.htm",
+        "text_chars": 460024,
+        "has_ca_in_desc": false,
+        "is_credit_agreement": true,
+        "is_amendment": false,
+        "mentions_cross_ref_date": true,
+        "verification": {
+          "is_credit_agreement": true,
+          "signals_found": [
+            "signal_0",
+            "signal_1",
+            "signal_2",
+            "signal_3"
+          ],
+          "anti_signals_found": [],
+          "first_200_chars": "EX-10.1 2 ex_218259.htm EXHIBIT 10.1 ex_218259.htm Exhibit 10.1 Credit Agreement dated as of December 17, 2020 among HIGHPEAK ENERGY, INC., as Borrower, FIFTH THIRD BANK, NATIONAL ASSOCIATION, as Admi"
+        },
+        "text_sha256": "513ee28517933faa2a162830f8896f34cf6dfd3417801691abe29c1146270424"
+      },
+      "verdict": "FOUND"
+    },
+    {
+      "chain_id": "HELD-013",
+      "issuer": "WEX Inc.  (WEX)",
+      "cik": "0001309108",
+      "current_s0": {
+        "accession": "0000950123-10-088119",
+        "file_date": "2010-09-22",
+        "exhibit_description": "EX-10.1",
+        "text_chars": 5541
+      },
+      "cross_ref_ca_date": "July 1, 2016",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001309108-16-000226",
+          "file_date": "2016-05-23",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1309108/000130910816000226/exhibit101wex-secondamendm.htm",
+          "text_chars": 17046,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 exhibit101wex-secondamendm.htm EXHIBIT 10.1 SEC Exhibit SECOND AMENDMENT TO SECOND AMENDED AND RESTATED CREDIT AGREEMENT This SECOND AMENDMENT TO SECOND AMENDED AND RESTATED CREDIT AGREEMENT"
+          },
+          "text_sha256": "8a0eb7f5f58afeff5315525f7cd076f19bc742e079043f6b5f2ce7d1206f2003"
+        },
+        {
+          "accession": "0001157523-16-006018",
+          "file_date": "2016-07-01",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1309108/000115752316006018/a51372248ex10_1.htm",
+          "text_chars": 151120,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 4 a51372248ex10_1.htm EXHIBIT 10.1 Exhibit 10.1 INVESTOR RIGHTS AGREEMENT BY AND AMONG WARBURG PINCUS PRIVATE EQUITY (E&P) XI \u2013 B, L.P., WARBURG PINCUS PRIVATE EQUITY XI\u2013C, L.P., WP XI PARTNER"
+          },
+          "text_sha256": "d36b0c8ec54da3ae85e4efbf9962437b8d40036014db168bbf816012fe15a4d0"
+        },
+        {
+          "accession": "0001157523-16-006018",
+          "file_date": "2016-07-01",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1309108/000115752316006018/a51372248_ex102.htm",
+          "text_chars": 759101,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 5 a51372248_ex102.htm EXHIBIT 10.2 Exhibit 10.2 Execution Version Published CUSIP Number: 96208UAG6 CREDIT AGREEMENT Dated as of July 1, 2016 among WEX INC. and CERTAIN SUBSIDIARIES , as Borro"
+          },
+          "text_sha256": "a35c4cd04a9f867fc225c16d7349d4abfc6511d2bc07dd51cca45cebfd572e7f"
+        },
+        {
+          "accession": "0001309108-16-000226",
+          "file_date": "2016-05-23",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1309108/000130910816000226/exhibit101wex-secondamendm.htm",
+          "text_chars": 17046,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 exhibit101wex-secondamendm.htm EXHIBIT 10.1 SEC Exhibit SECOND AMENDMENT TO SECOND AMENDED AND RESTATED CREDIT AGREEMENT This SECOND AMENDMENT TO SECOND AMENDED AND RESTATED CREDIT AGREEMENT"
+          },
+          "text_sha256": "8a0eb7f5f58afeff5315525f7cd076f19bc742e079043f6b5f2ce7d1206f2003"
+        },
+        {
+          "accession": "0001157523-16-006018",
+          "file_date": "2016-07-01",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1309108/000115752316006018/a51372248ex10_1.htm",
+          "text_chars": 151120,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 4 a51372248ex10_1.htm EXHIBIT 10.1 Exhibit 10.1 INVESTOR RIGHTS AGREEMENT BY AND AMONG WARBURG PINCUS PRIVATE EQUITY (E&P) XI \u2013 B, L.P., WARBURG PINCUS PRIVATE EQUITY XI\u2013C, L.P., WP XI PARTNER"
+          },
+          "text_sha256": "d36b0c8ec54da3ae85e4efbf9962437b8d40036014db168bbf816012fe15a4d0"
+        },
+        {
+          "accession": "0001157523-16-006018",
+          "file_date": "2016-07-01",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1309108/000115752316006018/a51372248_ex102.htm",
+          "text_chars": 759101,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 5 a51372248_ex102.htm EXHIBIT 10.2 Exhibit 10.2 Execution Version Published CUSIP Number: 96208UAG6 CREDIT AGREEMENT Dated as of July 1, 2016 among WEX INC. and CERTAIN SUBSIDIARIES , as Borro"
+          },
+          "text_sha256": "a35c4cd04a9f867fc225c16d7349d4abfc6511d2bc07dd51cca45cebfd572e7f"
+        }
+      ],
+      "best_s0_candidate": null,
+      "verdict": "NOT_FOUND"
+    },
+    {
+      "chain_id": "HELD-014",
+      "issuer": "Crescent Energy Co  (CRGY)",
+      "cik": "0001866175",
+      "current_s0": {
+        "accession": "0001193125-21-350544",
+        "file_date": "2021-12-08",
+        "exhibit_description": "EX-10.1",
+        "text_chars": 84292
+      },
+      "cross_ref_ca_date": "May 6, 2021",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [],
+      "best_s0_candidate": null,
+      "verdict": "NOT_FOUND"
+    },
+    {
+      "chain_id": "HELD-015",
+      "issuer": "GLOBAL POWER EQUIPMENT GROUP INC.  (WLMSQ)",
+      "cik": "0001136294",
+      "current_s0": {
+        "accession": "0001193125-13-476098",
+        "file_date": "2013-12-17",
+        "exhibit_description": "EX-10.1",
+        "text_chars": 16553
+      },
+      "cross_ref_ca_date": "February 21, 2012",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [],
+      "best_s0_candidate": null,
+      "verdict": "NOT_FOUND"
+    },
+    {
+      "chain_id": "HELD-016",
+      "issuer": "BOSTON OMAHA Corp  (BOC)",
+      "cik": "0001494582",
+      "current_s0": {
+        "accession": "0001437749-18-003328",
+        "file_date": "2018-02-26",
+        "exhibit_description": "EXHIBIT 10.1",
+        "text_chars": 201410
+      },
+      "cross_ref_ca_date": "August 12, 2019",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001437749-19-020837",
+          "file_date": "2019-10-29",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919020837/ex_161805.htm",
+          "text_chars": 14861,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_161805.htm EXHIBIT 10.1 ex_161805.htm Exhibit 10.1 FIRST AMENDMENT TO CREDIT AGREEMENT THIS FIRST AMENDMENT TO CREDIT AGREEMENT (this \u201cAmendment\u201d) is entered into and made effective as of"
+          },
+          "text_sha256": "4ebb4323d2cea20a1a45540e8cc1ba75330471636686d7764ac3061cacd5a853"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+          "text_chars": 225902,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+          },
+          "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154728.htm",
+          "text_chars": 135209,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 ex_154728.htm EXHIBIT 10.2 ex_154728.htm Exhibit 10.2 SECURITY AGREEMENT by and among LINK MEDIA HOLDINGS, LLC, as Borrower and The Other Grantors From Time to Time Party Hereto in favor of "
+          },
+          "text_sha256": "a359f57971e4d57c978dc070a01dcb879a2c6539c2045a72ffd90593360ee0ae"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.3",
+          "exhibit_description": "EXHIBIT 10.3",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154729.htm",
+          "text_chars": 42318,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.3 4 ex_154729.htm EXHIBIT 10.3 ex_154729.htm EXHIBIT 10.3 SUBSIDIARIES GUARANTY by and among LINK MEDIA ALABAMA, LLC ; LINK MEDIA FLORIDA, LLC; LINK MEDIA GEORGIA, LLC; LINK MEDIA MIDWEST, LLC; "
+          },
+          "text_sha256": "89cd5f3a784b1892941e7053b4736f7fca8fb24506a77411a6943c24816c090f"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.4",
+          "exhibit_description": "EXHIBIT 10.4",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154730.htm",
+          "text_chars": 3337,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.4 5 ex_154730.htm EXHIBIT 10.4 ex_154730.htm Exhibit 10.4 REVO L V ING NOTE $5,000,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrowe"
+          },
+          "text_sha256": "7732805e3c0940351fd79add800bd570e2e9105a173f3b9723939bcfc5776263"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.5",
+          "exhibit_description": "EXHIBIT 10.5",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154731.htm",
+          "text_chars": 3481,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.5 6 ex_154731.htm EXHIBIT 10.5 ex_154731.htm Exhibit 10.5 TERM LOAN 1 NO T E $24,900,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorro"
+          },
+          "text_sha256": "5fa6678e7ee442cefe4f6e6a55f66bc1a4d83d44be7916c15e28fe8ebb7306ad"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.6",
+          "exhibit_description": "EXHIBIT 10.6",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154732.htm",
+          "text_chars": 3370,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.6 7 ex_154732.htm EXHIBIT 10.6 ex_154732.htm Exhibit 10.6 TERM LOAN 2 NO T E $[_____] ________ __, 2020 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrower\u201d"
+          },
+          "text_sha256": "3c9a55943aa9c1c3964a68f3af83cfcb1a329915fb4eef1e184a80b44dc5b6de"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+          "text_chars": 225902,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+          },
+          "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154728.htm",
+          "text_chars": 135209,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 ex_154728.htm EXHIBIT 10.2 ex_154728.htm Exhibit 10.2 SECURITY AGREEMENT by and among LINK MEDIA HOLDINGS, LLC, as Borrower and The Other Grantors From Time to Time Party Hereto in favor of "
+          },
+          "text_sha256": "a359f57971e4d57c978dc070a01dcb879a2c6539c2045a72ffd90593360ee0ae"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.3",
+          "exhibit_description": "EXHIBIT 10.3",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154729.htm",
+          "text_chars": 42318,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.3 4 ex_154729.htm EXHIBIT 10.3 ex_154729.htm EXHIBIT 10.3 SUBSIDIARIES GUARANTY by and among LINK MEDIA ALABAMA, LLC ; LINK MEDIA FLORIDA, LLC; LINK MEDIA GEORGIA, LLC; LINK MEDIA MIDWEST, LLC; "
+          },
+          "text_sha256": "89cd5f3a784b1892941e7053b4736f7fca8fb24506a77411a6943c24816c090f"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.4",
+          "exhibit_description": "EXHIBIT 10.4",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154730.htm",
+          "text_chars": 3337,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.4 5 ex_154730.htm EXHIBIT 10.4 ex_154730.htm Exhibit 10.4 REVO L V ING NOTE $5,000,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrowe"
+          },
+          "text_sha256": "7732805e3c0940351fd79add800bd570e2e9105a173f3b9723939bcfc5776263"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.5",
+          "exhibit_description": "EXHIBIT 10.5",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154731.htm",
+          "text_chars": 3481,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.5 6 ex_154731.htm EXHIBIT 10.5 ex_154731.htm Exhibit 10.5 TERM LOAN 1 NO T E $24,900,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorro"
+          },
+          "text_sha256": "5fa6678e7ee442cefe4f6e6a55f66bc1a4d83d44be7916c15e28fe8ebb7306ad"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.6",
+          "exhibit_description": "EXHIBIT 10.6",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154732.htm",
+          "text_chars": 3370,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.6 7 ex_154732.htm EXHIBIT 10.6 ex_154732.htm Exhibit 10.6 TERM LOAN 2 NO T E $[_____] ________ __, 2020 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrower\u201d"
+          },
+          "text_sha256": "3c9a55943aa9c1c3964a68f3af83cfcb1a329915fb4eef1e184a80b44dc5b6de"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+          "text_chars": 225902,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+          },
+          "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154728.htm",
+          "text_chars": 135209,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 ex_154728.htm EXHIBIT 10.2 ex_154728.htm Exhibit 10.2 SECURITY AGREEMENT by and among LINK MEDIA HOLDINGS, LLC, as Borrower and The Other Grantors From Time to Time Party Hereto in favor of "
+          },
+          "text_sha256": "a359f57971e4d57c978dc070a01dcb879a2c6539c2045a72ffd90593360ee0ae"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.3",
+          "exhibit_description": "EXHIBIT 10.3",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154729.htm",
+          "text_chars": 42318,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.3 4 ex_154729.htm EXHIBIT 10.3 ex_154729.htm EXHIBIT 10.3 SUBSIDIARIES GUARANTY by and among LINK MEDIA ALABAMA, LLC ; LINK MEDIA FLORIDA, LLC; LINK MEDIA GEORGIA, LLC; LINK MEDIA MIDWEST, LLC; "
+          },
+          "text_sha256": "89cd5f3a784b1892941e7053b4736f7fca8fb24506a77411a6943c24816c090f"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.4",
+          "exhibit_description": "EXHIBIT 10.4",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154730.htm",
+          "text_chars": 3337,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.4 5 ex_154730.htm EXHIBIT 10.4 ex_154730.htm Exhibit 10.4 REVO L V ING NOTE $5,000,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrowe"
+          },
+          "text_sha256": "7732805e3c0940351fd79add800bd570e2e9105a173f3b9723939bcfc5776263"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.5",
+          "exhibit_description": "EXHIBIT 10.5",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154731.htm",
+          "text_chars": 3481,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.5 6 ex_154731.htm EXHIBIT 10.5 ex_154731.htm Exhibit 10.5 TERM LOAN 1 NO T E $24,900,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorro"
+          },
+          "text_sha256": "5fa6678e7ee442cefe4f6e6a55f66bc1a4d83d44be7916c15e28fe8ebb7306ad"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.6",
+          "exhibit_description": "EXHIBIT 10.6",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154732.htm",
+          "text_chars": 3370,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.6 7 ex_154732.htm EXHIBIT 10.6 ex_154732.htm Exhibit 10.6 TERM LOAN 2 NO T E $[_____] ________ __, 2020 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrower\u201d"
+          },
+          "text_sha256": "3c9a55943aa9c1c3964a68f3af83cfcb1a329915fb4eef1e184a80b44dc5b6de"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+          "text_chars": 225902,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+          },
+          "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154728.htm",
+          "text_chars": 135209,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 ex_154728.htm EXHIBIT 10.2 ex_154728.htm Exhibit 10.2 SECURITY AGREEMENT by and among LINK MEDIA HOLDINGS, LLC, as Borrower and The Other Grantors From Time to Time Party Hereto in favor of "
+          },
+          "text_sha256": "a359f57971e4d57c978dc070a01dcb879a2c6539c2045a72ffd90593360ee0ae"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.3",
+          "exhibit_description": "EXHIBIT 10.3",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154729.htm",
+          "text_chars": 42318,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.3 4 ex_154729.htm EXHIBIT 10.3 ex_154729.htm EXHIBIT 10.3 SUBSIDIARIES GUARANTY by and among LINK MEDIA ALABAMA, LLC ; LINK MEDIA FLORIDA, LLC; LINK MEDIA GEORGIA, LLC; LINK MEDIA MIDWEST, LLC; "
+          },
+          "text_sha256": "89cd5f3a784b1892941e7053b4736f7fca8fb24506a77411a6943c24816c090f"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.4",
+          "exhibit_description": "EXHIBIT 10.4",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154730.htm",
+          "text_chars": 3337,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.4 5 ex_154730.htm EXHIBIT 10.4 ex_154730.htm Exhibit 10.4 REVO L V ING NOTE $5,000,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrowe"
+          },
+          "text_sha256": "7732805e3c0940351fd79add800bd570e2e9105a173f3b9723939bcfc5776263"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.5",
+          "exhibit_description": "EXHIBIT 10.5",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154731.htm",
+          "text_chars": 3481,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.5 6 ex_154731.htm EXHIBIT 10.5 ex_154731.htm Exhibit 10.5 TERM LOAN 1 NO T E $24,900,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorro"
+          },
+          "text_sha256": "5fa6678e7ee442cefe4f6e6a55f66bc1a4d83d44be7916c15e28fe8ebb7306ad"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.6",
+          "exhibit_description": "EXHIBIT 10.6",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154732.htm",
+          "text_chars": 3370,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.6 7 ex_154732.htm EXHIBIT 10.6 ex_154732.htm Exhibit 10.6 TERM LOAN 2 NO T E $[_____] ________ __, 2020 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrower\u201d"
+          },
+          "text_sha256": "3c9a55943aa9c1c3964a68f3af83cfcb1a329915fb4eef1e184a80b44dc5b6de"
+        },
+        {
+          "accession": "0001437749-19-020837",
+          "file_date": "2019-10-29",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919020837/ex_161805.htm",
+          "text_chars": 14861,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_161805.htm EXHIBIT 10.1 ex_161805.htm Exhibit 10.1 FIRST AMENDMENT TO CREDIT AGREEMENT THIS FIRST AMENDMENT TO CREDIT AGREEMENT (this \u201cAmendment\u201d) is entered into and made effective as of"
+          },
+          "text_sha256": "4ebb4323d2cea20a1a45540e8cc1ba75330471636686d7764ac3061cacd5a853"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+          "text_chars": 225902,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+          },
+          "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154728.htm",
+          "text_chars": 135209,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 ex_154728.htm EXHIBIT 10.2 ex_154728.htm Exhibit 10.2 SECURITY AGREEMENT by and among LINK MEDIA HOLDINGS, LLC, as Borrower and The Other Grantors From Time to Time Party Hereto in favor of "
+          },
+          "text_sha256": "a359f57971e4d57c978dc070a01dcb879a2c6539c2045a72ffd90593360ee0ae"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.3",
+          "exhibit_description": "EXHIBIT 10.3",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154729.htm",
+          "text_chars": 42318,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.3 4 ex_154729.htm EXHIBIT 10.3 ex_154729.htm EXHIBIT 10.3 SUBSIDIARIES GUARANTY by and among LINK MEDIA ALABAMA, LLC ; LINK MEDIA FLORIDA, LLC; LINK MEDIA GEORGIA, LLC; LINK MEDIA MIDWEST, LLC; "
+          },
+          "text_sha256": "89cd5f3a784b1892941e7053b4736f7fca8fb24506a77411a6943c24816c090f"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.4",
+          "exhibit_description": "EXHIBIT 10.4",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154730.htm",
+          "text_chars": 3337,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.4 5 ex_154730.htm EXHIBIT 10.4 ex_154730.htm Exhibit 10.4 REVO L V ING NOTE $5,000,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrowe"
+          },
+          "text_sha256": "7732805e3c0940351fd79add800bd570e2e9105a173f3b9723939bcfc5776263"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.5",
+          "exhibit_description": "EXHIBIT 10.5",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154731.htm",
+          "text_chars": 3481,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.5 6 ex_154731.htm EXHIBIT 10.5 ex_154731.htm Exhibit 10.5 TERM LOAN 1 NO T E $24,900,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorro"
+          },
+          "text_sha256": "5fa6678e7ee442cefe4f6e6a55f66bc1a4d83d44be7916c15e28fe8ebb7306ad"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.6",
+          "exhibit_description": "EXHIBIT 10.6",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154732.htm",
+          "text_chars": 3370,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.6 7 ex_154732.htm EXHIBIT 10.6 ex_154732.htm Exhibit 10.6 TERM LOAN 2 NO T E $[_____] ________ __, 2020 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrower\u201d"
+          },
+          "text_sha256": "3c9a55943aa9c1c3964a68f3af83cfcb1a329915fb4eef1e184a80b44dc5b6de"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+          "text_chars": 225902,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+          },
+          "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154728.htm",
+          "text_chars": 135209,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 ex_154728.htm EXHIBIT 10.2 ex_154728.htm Exhibit 10.2 SECURITY AGREEMENT by and among LINK MEDIA HOLDINGS, LLC, as Borrower and The Other Grantors From Time to Time Party Hereto in favor of "
+          },
+          "text_sha256": "a359f57971e4d57c978dc070a01dcb879a2c6539c2045a72ffd90593360ee0ae"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.3",
+          "exhibit_description": "EXHIBIT 10.3",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154729.htm",
+          "text_chars": 42318,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.3 4 ex_154729.htm EXHIBIT 10.3 ex_154729.htm EXHIBIT 10.3 SUBSIDIARIES GUARANTY by and among LINK MEDIA ALABAMA, LLC ; LINK MEDIA FLORIDA, LLC; LINK MEDIA GEORGIA, LLC; LINK MEDIA MIDWEST, LLC; "
+          },
+          "text_sha256": "89cd5f3a784b1892941e7053b4736f7fca8fb24506a77411a6943c24816c090f"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.4",
+          "exhibit_description": "EXHIBIT 10.4",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154730.htm",
+          "text_chars": 3337,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.4 5 ex_154730.htm EXHIBIT 10.4 ex_154730.htm Exhibit 10.4 REVO L V ING NOTE $5,000,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrowe"
+          },
+          "text_sha256": "7732805e3c0940351fd79add800bd570e2e9105a173f3b9723939bcfc5776263"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.5",
+          "exhibit_description": "EXHIBIT 10.5",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154731.htm",
+          "text_chars": 3481,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.5 6 ex_154731.htm EXHIBIT 10.5 ex_154731.htm Exhibit 10.5 TERM LOAN 1 NO T E $24,900,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorro"
+          },
+          "text_sha256": "5fa6678e7ee442cefe4f6e6a55f66bc1a4d83d44be7916c15e28fe8ebb7306ad"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.6",
+          "exhibit_description": "EXHIBIT 10.6",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154732.htm",
+          "text_chars": 3370,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.6 7 ex_154732.htm EXHIBIT 10.6 ex_154732.htm Exhibit 10.6 TERM LOAN 2 NO T E $[_____] ________ __, 2020 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrower\u201d"
+          },
+          "text_sha256": "3c9a55943aa9c1c3964a68f3af83cfcb1a329915fb4eef1e184a80b44dc5b6de"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+          "text_chars": 225902,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+          },
+          "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154728.htm",
+          "text_chars": 135209,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 ex_154728.htm EXHIBIT 10.2 ex_154728.htm Exhibit 10.2 SECURITY AGREEMENT by and among LINK MEDIA HOLDINGS, LLC, as Borrower and The Other Grantors From Time to Time Party Hereto in favor of "
+          },
+          "text_sha256": "a359f57971e4d57c978dc070a01dcb879a2c6539c2045a72ffd90593360ee0ae"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.3",
+          "exhibit_description": "EXHIBIT 10.3",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154729.htm",
+          "text_chars": 42318,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.3 4 ex_154729.htm EXHIBIT 10.3 ex_154729.htm EXHIBIT 10.3 SUBSIDIARIES GUARANTY by and among LINK MEDIA ALABAMA, LLC ; LINK MEDIA FLORIDA, LLC; LINK MEDIA GEORGIA, LLC; LINK MEDIA MIDWEST, LLC; "
+          },
+          "text_sha256": "89cd5f3a784b1892941e7053b4736f7fca8fb24506a77411a6943c24816c090f"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.4",
+          "exhibit_description": "EXHIBIT 10.4",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154730.htm",
+          "text_chars": 3337,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.4 5 ex_154730.htm EXHIBIT 10.4 ex_154730.htm Exhibit 10.4 REVO L V ING NOTE $5,000,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrowe"
+          },
+          "text_sha256": "7732805e3c0940351fd79add800bd570e2e9105a173f3b9723939bcfc5776263"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.5",
+          "exhibit_description": "EXHIBIT 10.5",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154731.htm",
+          "text_chars": 3481,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.5 6 ex_154731.htm EXHIBIT 10.5 ex_154731.htm Exhibit 10.5 TERM LOAN 1 NO T E $24,900,000.00 August 12, 2019 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorro"
+          },
+          "text_sha256": "5fa6678e7ee442cefe4f6e6a55f66bc1a4d83d44be7916c15e28fe8ebb7306ad"
+        },
+        {
+          "accession": "0001437749-19-016414",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.6",
+          "exhibit_description": "EXHIBIT 10.6",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154732.htm",
+          "text_chars": 3370,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.6 7 ex_154732.htm EXHIBIT 10.6 ex_154732.htm Exhibit 10.6 TERM LOAN 2 NO T E $[_____] ________ __, 2020 Omaha, Nebraska Link Media Holdings, LLC, a Delaware limited liability company (\u201cBorrower\u201d"
+          },
+          "text_sha256": "3c9a55943aa9c1c3964a68f3af83cfcb1a329915fb4eef1e184a80b44dc5b6de"
+        },
+        {
+          "accession": "0001437749-19-016477",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016477/ex_154949.htm",
+          "text_chars": 120410,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 3 ex_154949.htm EXHIBIT 10.1 ex_154949.htm Exhibit 10.1 EXECUTION VERSION BOSTON OMAHA CORPORATION $75,000,000 CLASS A COMMON STOCK, PAR VALUE $0.001 PER SHARE SALES AGREEMENT August 13, 2019 "
+          },
+          "text_sha256": "a13da257c42c9e1b15e7fce1bd5f738ea8a4c1720928b96442f53a9ae3e618c3"
+        },
+        {
+          "accession": "0001437749-19-016477",
+          "file_date": "2019-08-13",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016477/ex_154949.htm",
+          "text_chars": 120410,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 3 ex_154949.htm EXHIBIT 10.1 ex_154949.htm Exhibit 10.1 EXECUTION VERSION BOSTON OMAHA CORPORATION $75,000,000 CLASS A COMMON STOCK, PAR VALUE $0.001 PER SHARE SALES AGREEMENT August 13, 2019 "
+          },
+          "text_sha256": "a13da257c42c9e1b15e7fce1bd5f738ea8a4c1720928b96442f53a9ae3e618c3"
+        }
+      ],
+      "best_s0_candidate": {
+        "accession": "0001437749-19-016414",
+        "file_date": "2019-08-13",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EXHIBIT 10.1",
+        "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1494582/000143774919016414/ex_154727.htm",
+        "text_chars": 225902,
+        "has_ca_in_desc": false,
+        "is_credit_agreement": true,
+        "is_amendment": false,
+        "mentions_cross_ref_date": true,
+        "verification": {
+          "is_credit_agreement": true,
+          "signals_found": [
+            "signal_0",
+            "signal_1",
+            "signal_2",
+            "signal_3"
+          ],
+          "anti_signals_found": [],
+          "first_200_chars": "EX-10.1 2 ex_154727.htm EXHIBIT 10.1 ex_154727.htm Exhibit 10.1 CREDIT AGREEMENT by and between LINK MEDIA HOLDINGS, LLC, as Borrower, and FIRST NATIONAL BANK OF OMAHA, as Lender _____________________"
+        },
+        "text_sha256": "8115c770c465035e76168cfdfbd562842e38040f58be3d6edf38db2c36b3bbd3"
+      },
+      "verdict": "FOUND"
+    },
+    {
+      "chain_id": "HELD-018",
+      "issuer": "Organogenesis Holdings Inc.  (ORGO)",
+      "cik": "0001661181",
+      "current_s0": {
+        "accession": "0001104659-17-052981",
+        "file_date": "2017-08-22",
+        "exhibit_description": "EX-10.10",
+        "text_chars": 5059
+      },
+      "cross_ref_ca_date": "March 21, 2017",
+      "cross_ref_source": "A2",
+      "edgar_candidates": [],
+      "best_s0_candidate": null,
+      "verdict": "NOT_FOUND"
+    },
+    {
+      "chain_id": "HELD-019",
+      "issuer": "BioXcel Therapeutics, Inc.  (BTAI)",
+      "cik": "0001720893",
+      "current_s0": {
+        "accession": "0001104659-18-053383",
+        "file_date": "2018-08-23",
+        "exhibit_description": "EX-10.1",
+        "text_chars": 198378
+      },
+      "cross_ref_ca_date": "April 19, 2022",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419.xsd",
+          "text_chars": 90,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "00000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "780fdf762193e87af3e115a06a6150dcf4eeef1df263d2f4220f68100d999d6a"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419_lab.xml",
+          "text_chars": 1626,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Cover [Abstract] Document Type Amendment Flag Amendment Description Document Registration Statement Document Annual Report Document Quarterly Report Document Transition Report Document Shell Company R"
+          },
+          "text_sha256": "6e71aa299ccfe5a3a6855a2cfdb7ff1670da79661148d90c8b0104fb778bae90"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419.xsd",
+          "text_chars": 90,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "00000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "780fdf762193e87af3e115a06a6150dcf4eeef1df263d2f4220f68100d999d6a"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419_lab.xml",
+          "text_chars": 1626,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Cover [Abstract] Document Type Amendment Flag Amendment Description Document Registration Statement Document Annual Report Document Quarterly Report Document Transition Report Document Shell Company R"
+          },
+          "text_sha256": "6e71aa299ccfe5a3a6855a2cfdb7ff1670da79661148d90c8b0104fb778bae90"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419.xsd",
+          "text_chars": 90,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "00000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "780fdf762193e87af3e115a06a6150dcf4eeef1df263d2f4220f68100d999d6a"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419_lab.xml",
+          "text_chars": 1626,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Cover [Abstract] Document Type Amendment Flag Amendment Description Document Registration Statement Document Annual Report Document Quarterly Report Document Transition Report Document Shell Company R"
+          },
+          "text_sha256": "6e71aa299ccfe5a3a6855a2cfdb7ff1670da79661148d90c8b0104fb778bae90"
+        },
+        {
+          "accession": "0001104659-22-047105",
+          "file_date": "2022-04-19",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1720893/000110465922047105/btai-20220419_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "best_s0_candidate": null,
+      "verdict": "NOT_FOUND"
+    },
+    {
+      "chain_id": "HELD-020",
+      "issuer": "PureCycle Technologies, Inc.  (PCT, PCTTU, PCTTW)",
+      "cik": "0001830033",
+      "current_s0": {
+        "accession": "0001830033-22-000009",
+        "file_date": "2022-03-09",
+        "exhibit_description": "EX-10.1",
+        "text_chars": 175338
+      },
+      "cross_ref_ca_date": "May 8, 2023",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pctq12023ex101pureplasticp.htm",
+          "text_chars": 395775,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 pctq12023ex101pureplasticp.htm EX-10.1 Document Exhibit 10.1 CREDIT AGREEMENT Dated as of May 8, 2023 among PURECYCLE TECHNOLOGIES, INC. as Borrower, THE SUBSIDIARIES OF THE BORROWER PARTY H"
+          },
+          "text_sha256": "3d8e028ae1672ebc65265c149c18b524620055f13ce8075b03def69a0ee2914e"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EX-10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pctq12023ex102sylebrapurec.htm",
+          "text_chars": 12207,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 pctq12023ex102sylebrapurec.htm EX-10.2 Document Exhibit 10.2 Execution Version FIRST AMENDMENT TO CREDIT AGREEMENT This FIRST AMENDMENT TO CREDIT AGREEMENT , dated as of May 8,\u00a02023 (this \u201c "
+          },
+          "text_sha256": "70dd5a888e89cee393ba0b59cc37e4c2f0d04929ab81f7f96c6f90227c47c2b0"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508.xsd",
+          "text_chars": 89,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "0000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "574052ffc5c3c06f7bda5d3ce193e1112ec787e96a932b845f4fc697198265b1"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.DEF",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION DEFINITION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_def.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_lab.xml",
+          "text_chars": 1487,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Entity Central Index Key Entity Central Index Key Entity Address, Address Line Two Entity Address, Address Line Two Units Member Units [Member] Entity Address, Address Line One Entity Address, Address"
+          },
+          "text_sha256": "7735cc32116c667f9321ebab231da755ec1cb87bc832213cd123528523d2269b"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pctq12023ex101pureplasticp.htm",
+          "text_chars": 395775,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 pctq12023ex101pureplasticp.htm EX-10.1 Document Exhibit 10.1 CREDIT AGREEMENT Dated as of May 8, 2023 among PURECYCLE TECHNOLOGIES, INC. as Borrower, THE SUBSIDIARIES OF THE BORROWER PARTY H"
+          },
+          "text_sha256": "3d8e028ae1672ebc65265c149c18b524620055f13ce8075b03def69a0ee2914e"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EX-10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pctq12023ex102sylebrapurec.htm",
+          "text_chars": 12207,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 pctq12023ex102sylebrapurec.htm EX-10.2 Document Exhibit 10.2 Execution Version FIRST AMENDMENT TO CREDIT AGREEMENT This FIRST AMENDMENT TO CREDIT AGREEMENT , dated as of May 8,\u00a02023 (this \u201c "
+          },
+          "text_sha256": "70dd5a888e89cee393ba0b59cc37e4c2f0d04929ab81f7f96c6f90227c47c2b0"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508.xsd",
+          "text_chars": 89,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "0000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "574052ffc5c3c06f7bda5d3ce193e1112ec787e96a932b845f4fc697198265b1"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.DEF",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION DEFINITION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_def.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_lab.xml",
+          "text_chars": 1487,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Entity Central Index Key Entity Central Index Key Entity Address, Address Line Two Entity Address, Address Line Two Units Member Units [Member] Entity Address, Address Line One Entity Address, Address"
+          },
+          "text_sha256": "7735cc32116c667f9321ebab231da755ec1cb87bc832213cd123528523d2269b"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-form8xk3152023ex101xli.htm",
+          "text_chars": 49070,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 pct-form8xk3152023ex101xli.htm EX-10.1 Document Execution Version Exhibit 10.1 LIMITED WAIVER AND FIRST SUPPLEMENTAL INDENTURE This LIMITED WAIVER AND FIRST SUPPLEMENTAL INDENTURE, dated as "
+          },
+          "text_sha256": "34d80b4b1cdc32ae79b2e6c32f4bbb995853e6bab80f8b3e87d1ac63388180e0"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EX-10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-form8xk3152023ex102xsy.htm",
+          "text_chars": 403032,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 pct-form8xk3152023ex102xsy.htm EX-10.2 Document Exhibit 10.2 Execution Version CREDIT AGREEMENT Dated as of March 15, 2023 among PURECYCLE TECHNOLOGIES, INC. as Borrower, THE SUBSIDIARIES OF"
+          },
+          "text_sha256": "797a2a222e21ec22798a672ce88a36cf48af399c45e416c6791ae54ae21470b2"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315.xsd",
+          "text_chars": 89,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "0000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "574052ffc5c3c06f7bda5d3ce193e1112ec787e96a932b845f4fc697198265b1"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.DEF",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION DEFINITION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315_def.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315_lab.xml",
+          "text_chars": 1487,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Entity Central Index Key Entity Central Index Key Entity Address, Address Line Two Entity Address, Address Line Two Units Member Units [Member] Entity Address, Address Line One Entity Address, Address"
+          },
+          "text_sha256": "7735cc32116c667f9321ebab231da755ec1cb87bc832213cd123528523d2269b"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pctq12023ex101pureplasticp.htm",
+          "text_chars": 395775,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 pctq12023ex101pureplasticp.htm EX-10.1 Document Exhibit 10.1 CREDIT AGREEMENT Dated as of May 8, 2023 among PURECYCLE TECHNOLOGIES, INC. as Borrower, THE SUBSIDIARIES OF THE BORROWER PARTY H"
+          },
+          "text_sha256": "3d8e028ae1672ebc65265c149c18b524620055f13ce8075b03def69a0ee2914e"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EX-10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pctq12023ex102sylebrapurec.htm",
+          "text_chars": 12207,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 pctq12023ex102sylebrapurec.htm EX-10.2 Document Exhibit 10.2 Execution Version FIRST AMENDMENT TO CREDIT AGREEMENT This FIRST AMENDMENT TO CREDIT AGREEMENT , dated as of May 8,\u00a02023 (this \u201c "
+          },
+          "text_sha256": "70dd5a888e89cee393ba0b59cc37e4c2f0d04929ab81f7f96c6f90227c47c2b0"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508.xsd",
+          "text_chars": 89,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "0000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "574052ffc5c3c06f7bda5d3ce193e1112ec787e96a932b845f4fc697198265b1"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.DEF",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION DEFINITION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_def.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_lab.xml",
+          "text_chars": 1487,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Entity Central Index Key Entity Central Index Key Entity Address, Address Line Two Entity Address, Address Line Two Units Member Units [Member] Entity Address, Address Line One Entity Address, Address"
+          },
+          "text_sha256": "7735cc32116c667f9321ebab231da755ec1cb87bc832213cd123528523d2269b"
+        },
+        {
+          "accession": "0001830033-23-000034",
+          "file_date": "2023-05-09",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pct-20230508_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-form8xk3152023ex101xli.htm",
+          "text_chars": 49070,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 pct-form8xk3152023ex101xli.htm EX-10.1 Document Execution Version Exhibit 10.1 LIMITED WAIVER AND FIRST SUPPLEMENTAL INDENTURE This LIMITED WAIVER AND FIRST SUPPLEMENTAL INDENTURE, dated as "
+          },
+          "text_sha256": "34d80b4b1cdc32ae79b2e6c32f4bbb995853e6bab80f8b3e87d1ac63388180e0"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EX-10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-form8xk3152023ex102xsy.htm",
+          "text_chars": 403032,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 pct-form8xk3152023ex102xsy.htm EX-10.2 Document Exhibit 10.2 Execution Version CREDIT AGREEMENT Dated as of March 15, 2023 among PURECYCLE TECHNOLOGIES, INC. as Borrower, THE SUBSIDIARIES OF"
+          },
+          "text_sha256": "797a2a222e21ec22798a672ce88a36cf48af399c45e416c6791ae54ae21470b2"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.SCH",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315.xsd",
+          "text_chars": 89,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "0000001 - Document - Cover link:presentationLink link:calculationLink link:definitionLink"
+          },
+          "text_sha256": "574052ffc5c3c06f7bda5d3ce193e1112ec787e96a932b845f4fc697198265b1"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.DEF",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION DEFINITION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315_def.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.LAB",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315_lab.xml",
+          "text_chars": 1487,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": "Entity Central Index Key Entity Central Index Key Entity Address, Address Line Two Entity Address, Address Line Two Units Member Units [Member] Entity Address, Address Line One Entity Address, Address"
+          },
+          "text_sha256": "7735cc32116c667f9321ebab231da755ec1cb87bc832213cd123528523d2269b"
+        },
+        {
+          "accession": "0001830033-23-000021",
+          "file_date": "2023-03-15",
+          "exhibit_type": "EX-101.PRE",
+          "exhibit_description": "XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000021/pct-20230315_pre.xml",
+          "text_chars": 0,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": false,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": false,
+            "signals_found": [],
+            "anti_signals_found": [],
+            "first_200_chars": ""
+          },
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "best_s0_candidate": {
+        "accession": "0001830033-23-000034",
+        "file_date": "2023-05-09",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EX-10.1",
+        "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1830033/000183003323000034/pctq12023ex101pureplasticp.htm",
+        "text_chars": 395775,
+        "has_ca_in_desc": false,
+        "is_credit_agreement": true,
+        "is_amendment": false,
+        "mentions_cross_ref_date": true,
+        "verification": {
+          "is_credit_agreement": true,
+          "signals_found": [
+            "signal_0",
+            "signal_1",
+            "signal_2"
+          ],
+          "anti_signals_found": [],
+          "first_200_chars": "EX-10.1 2 pctq12023ex101pureplasticp.htm EX-10.1 Document Exhibit 10.1 CREDIT AGREEMENT Dated as of May 8, 2023 among PURECYCLE TECHNOLOGIES, INC. as Borrower, THE SUBSIDIARIES OF THE BORROWER PARTY H"
+        },
+        "text_sha256": "3d8e028ae1672ebc65265c149c18b524620055f13ce8075b03def69a0ee2914e"
+      },
+      "verdict": "FOUND"
+    },
+    {
+      "chain_id": "HELD-021",
+      "issuer": "HMS INCOME FUND, INC.  (MSCF)",
+      "cik": "0001535778",
+      "current_s0": {
+        "accession": "0001144204-13-047490",
+        "file_date": "2013-08-22",
+        "exhibit_description": "EXHIBIT 10.1",
+        "text_chars": 16981
+      },
+      "cross_ref_ca_date": "March 11, 2014",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001535778-14-000026",
+          "file_date": "2014-03-14",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000026/hms-creditagreement.htm",
+          "text_chars": 623650,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 hms-creditagreement.htm EXHIBIT 10.1 HMS-CreditAgreement Exhibit No. 10.1 SENIOR SECURED REVOLVING CREDIT AGREEMENT dated as of March 11, 2014 among HMS INCOME FUND, INC., as Borrower, The L"
+          },
+          "text_sha256": "4143c053193a71b9fd9e289b6a3a8e22d5068259dfdc69ecd964cf68121abd0c"
+        },
+        {
+          "accession": "0001535778-14-000084",
+          "file_date": "2014-06-05",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000084/exchibit101amendmenttocapi.htm",
+          "text_chars": 86520,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 exchibit101amendmenttocapi.htm EXHIBIT 10.1 Exchibit 10.1 AmendmenttoCapitalOne Exhibit No. 10.1 EXECUTION VERSION FIRST AMENDMENT TO LOAN DOCUMENTS THIS FIRST AMENDMENT TO LOAN DOCUMENTS (t"
+          },
+          "text_sha256": "bdc5454ce6acc9dceaa26c4410bbfdd9c0470f3daa01a90a666ad01896bcbad4"
+        },
+        {
+          "accession": "0001535778-14-000084",
+          "file_date": "2014-06-05",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000084/exhibit102dbloanagreement.htm",
+          "text_chars": 509879,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 exhibit102dbloanagreement.htm EXHIBIT 10.2 Exhibit 10.2 DB Loan Agreement Exhibit No. 10.2 EXECUTION VERSION LOAN FINANCING AND SERVICING AGREEMENT dated as of June 2, 2014 HMS FUNDING I LLC"
+          },
+          "text_sha256": "d9efff3707718b34a868947df60146955c23672a55f9d3de3208a54e178644d5"
+        },
+        {
+          "accession": "0001535778-14-000026",
+          "file_date": "2014-03-14",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000026/hms-creditagreement.htm",
+          "text_chars": 623650,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 hms-creditagreement.htm EXHIBIT 10.1 HMS-CreditAgreement Exhibit No. 10.1 SENIOR SECURED REVOLVING CREDIT AGREEMENT dated as of March 11, 2014 among HMS INCOME FUND, INC., as Borrower, The L"
+          },
+          "text_sha256": "4143c053193a71b9fd9e289b6a3a8e22d5068259dfdc69ecd964cf68121abd0c"
+        },
+        {
+          "accession": "0001535778-14-000084",
+          "file_date": "2014-06-05",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000084/exchibit101amendmenttocapi.htm",
+          "text_chars": 86520,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 exchibit101amendmenttocapi.htm EXHIBIT 10.1 Exchibit 10.1 AmendmenttoCapitalOne Exhibit No. 10.1 EXECUTION VERSION FIRST AMENDMENT TO LOAN DOCUMENTS THIS FIRST AMENDMENT TO LOAN DOCUMENTS (t"
+          },
+          "text_sha256": "bdc5454ce6acc9dceaa26c4410bbfdd9c0470f3daa01a90a666ad01896bcbad4"
+        },
+        {
+          "accession": "0001535778-14-000084",
+          "file_date": "2014-06-05",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000084/exhibit102dbloanagreement.htm",
+          "text_chars": 509879,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 exhibit102dbloanagreement.htm EXHIBIT 10.2 Exhibit 10.2 DB Loan Agreement Exhibit No. 10.2 EXECUTION VERSION LOAN FINANCING AND SERVICING AGREEMENT dated as of June 2, 2014 HMS FUNDING I LLC"
+          },
+          "text_sha256": "d9efff3707718b34a868947df60146955c23672a55f9d3de3208a54e178644d5"
+        },
+        {
+          "accession": "0001535778-14-000084",
+          "file_date": "2014-06-05",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EXHIBIT 10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000084/exchibit101amendmenttocapi.htm",
+          "text_chars": 86520,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": true,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 exchibit101amendmenttocapi.htm EXHIBIT 10.1 Exchibit 10.1 AmendmenttoCapitalOne Exhibit No. 10.1 EXECUTION VERSION FIRST AMENDMENT TO LOAN DOCUMENTS THIS FIRST AMENDMENT TO LOAN DOCUMENTS (t"
+          },
+          "text_sha256": "bdc5454ce6acc9dceaa26c4410bbfdd9c0470f3daa01a90a666ad01896bcbad4"
+        },
+        {
+          "accession": "0001535778-14-000084",
+          "file_date": "2014-06-05",
+          "exhibit_type": "EX-10.2",
+          "exhibit_description": "EXHIBIT 10.2",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000084/exhibit102dbloanagreement.htm",
+          "text_chars": 509879,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_1",
+              "signal_2",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.2 3 exhibit102dbloanagreement.htm EXHIBIT 10.2 Exhibit 10.2 DB Loan Agreement Exhibit No. 10.2 EXECUTION VERSION LOAN FINANCING AND SERVICING AGREEMENT dated as of June 2, 2014 HMS FUNDING I LLC"
+          },
+          "text_sha256": "d9efff3707718b34a868947df60146955c23672a55f9d3de3208a54e178644d5"
+        }
+      ],
+      "best_s0_candidate": {
+        "accession": "0001535778-14-000026",
+        "file_date": "2014-03-14",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EXHIBIT 10.1",
+        "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1535778/000153577814000026/hms-creditagreement.htm",
+        "text_chars": 623650,
+        "has_ca_in_desc": false,
+        "is_credit_agreement": true,
+        "is_amendment": false,
+        "mentions_cross_ref_date": true,
+        "verification": {
+          "is_credit_agreement": true,
+          "signals_found": [
+            "signal_0",
+            "signal_1",
+            "signal_2",
+            "signal_3"
+          ],
+          "anti_signals_found": [],
+          "first_200_chars": "EX-10.1 2 hms-creditagreement.htm EXHIBIT 10.1 HMS-CreditAgreement Exhibit No. 10.1 SENIOR SECURED REVOLVING CREDIT AGREEMENT dated as of March 11, 2014 among HMS INCOME FUND, INC., as Borrower, The L"
+        },
+        "text_sha256": "4143c053193a71b9fd9e289b6a3a8e22d5068259dfdc69ecd964cf68121abd0c"
+      },
+      "verdict": "FOUND"
+    },
+    {
+      "chain_id": "HELD-024",
+      "issuer": "Sunoco LP  (SUN)",
+      "cik": "0001552275",
+      "current_s0": {
+        "accession": "0001104659-12-065390",
+        "file_date": "2012-09-25",
+        "exhibit_description": "EX-10.1",
+        "text_chars": 68486
+      },
+      "cross_ref_ca_date": "September 25, 2014",
+      "cross_ref_source": "A1",
+      "edgar_candidates": [
+        {
+          "accession": "0001193125-14-332268",
+          "file_date": "2014-09-04",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1552275/000119312514332268/d782890dex101.htm",
+          "text_chars": 13013,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 d782890dex101.htm EX-10.1 EX-10.1 Exhibit 10.1 EXECUTION VERSION AMENDMENT NO. 2 TO CREDIT AGREEMENT This Amendment No.\u00a02 to Credit Agreement (this \u201c Amendment \u201d), dated as of August\u00a028, 201"
+          },
+          "text_sha256": "ef84096cb60c8a0fdf98220b4fd0fd20368ba0ce7bf01acdb6ec3c5ddb99a40a"
+        },
+        {
+          "accession": "0001104659-14-069525",
+          "file_date": "2014-10-01",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1552275/000110465914069525/a14-21684_1ex10d1.htm",
+          "text_chars": 599577,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 4 a14-21684_1ex10d1.htm EX-10.1 Exhibit 10.1 EXECUTION VERSION CUSIP Number: 86923YAD0 CREDIT AGREEMENT Dated as of September\u00a025, 2014 among SUSSER PETROLEUM PARTNERS LP, as the Borrower, BANK"
+          },
+          "text_sha256": "8090012838fa9b6aa6ec186fe67ad59d73ddad6bb190fb5067e325193a0841b8"
+        },
+        {
+          "accession": "0001104659-14-069525",
+          "file_date": "2014-10-01",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1552275/000110465914069525/a14-21684_1ex10d1.htm",
+          "text_chars": 599577,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": false,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_2"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 4 a14-21684_1ex10d1.htm EX-10.1 Exhibit 10.1 EXECUTION VERSION CUSIP Number: 86923YAD0 CREDIT AGREEMENT Dated as of September\u00a025, 2014 among SUSSER PETROLEUM PARTNERS LP, as the Borrower, BANK"
+          },
+          "text_sha256": "8090012838fa9b6aa6ec186fe67ad59d73ddad6bb190fb5067e325193a0841b8"
+        },
+        {
+          "accession": "0001193125-14-332268",
+          "file_date": "2014-09-04",
+          "exhibit_type": "EX-10.1",
+          "exhibit_description": "EX-10.1",
+          "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1552275/000119312514332268/d782890dex101.htm",
+          "text_chars": 13013,
+          "has_ca_in_desc": false,
+          "is_credit_agreement": true,
+          "is_amendment": true,
+          "mentions_cross_ref_date": false,
+          "verification": {
+            "is_credit_agreement": true,
+            "signals_found": [
+              "signal_0",
+              "signal_1",
+              "signal_3"
+            ],
+            "anti_signals_found": [],
+            "first_200_chars": "EX-10.1 2 d782890dex101.htm EX-10.1 EX-10.1 Exhibit 10.1 EXECUTION VERSION AMENDMENT NO. 2 TO CREDIT AGREEMENT This Amendment No.\u00a02 to Credit Agreement (this \u201c Amendment \u201d), dated as of August\u00a028, 201"
+          },
+          "text_sha256": "ef84096cb60c8a0fdf98220b4fd0fd20368ba0ce7bf01acdb6ec3c5ddb99a40a"
+        }
+      ],
+      "best_s0_candidate": {
+        "accession": "0001104659-14-069525",
+        "file_date": "2014-10-01",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EX-10.1",
+        "exhibit_url": "https://www.sec.gov/Archives/edgar/data/1552275/000110465914069525/a14-21684_1ex10d1.htm",
+        "text_chars": 599577,
+        "has_ca_in_desc": false,
+        "is_credit_agreement": true,
+        "is_amendment": false,
+        "mentions_cross_ref_date": false,
+        "verification": {
+          "is_credit_agreement": true,
+          "signals_found": [
+            "signal_0",
+            "signal_1",
+            "signal_2"
+          ],
+          "anti_signals_found": [],
+          "first_200_chars": "EX-10.1 4 a14-21684_1ex10d1.htm EX-10.1 Exhibit 10.1 EXECUTION VERSION CUSIP Number: 86923YAD0 CREDIT AGREEMENT Dated as of September\u00a025, 2014 among SUSSER PETROLEUM PARTNERS LP, as the Borrower, BANK"
+        },
+        "text_sha256": "8090012838fa9b6aa6ec186fe67ad59d73ddad6bb190fb5067e325193a0841b8"
+      },
+      "verdict": "FOUND"
+    }
+  ],
+  "summary": {
+    "total_failed": 11,
+    "found": 5,
+    "not_found": 6
+  }
+}

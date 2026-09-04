@@ -1,0 +1,85 @@
+{
+  "study": "step26b_s0_extraction_results",
+  "run_at": "2025-01-24T00:00:00Z",
+  "description": "S0 extraction results after corrected document selection. Reports extraction output separately from selection success.",
+  "corpus": {
+    "total_chains": 25,
+    "corrected_chains": 9,
+    "unavailable_chains": 2,
+    "unchanged_chains": 14
+  },
+  "extraction_summary": {
+    "chains_with_commitments": 21,
+    "total_commitments_extracted": 35,
+    "corrected_chains_with_commitments": "8 of 9",
+    "chains_with_zero_commitments": ["HELD-008", "HELD-014", "HELD-018", "HELD-019"]
+  },
+  "per_chain_results": {
+    "HELD-001": {"corrected": false, "commitments": 1, "validation_queue": 13, "s0_chars": 552047},
+    "HELD-002": {"corrected": false, "commitments": 1, "validation_queue": 1, "s0_chars": 397208},
+    "HELD-003": {"corrected": false, "commitments": 1, "validation_queue": 2, "s0_chars": 297275},
+    "HELD-004": {"corrected": false, "commitments": 2, "validation_queue": 0, "s0_chars": 275739},
+    "HELD-005": {"corrected": false, "commitments": 1, "validation_queue": 0, "s0_chars": 42409},
+    "HELD-006": {"corrected": false, "commitments": 2, "validation_queue": 2, "s0_chars": 291680},
+    "HELD-007": {"corrected": false, "commitments": 1, "validation_queue": 1, "s0_chars": 383866},
+    "HELD-008": {"corrected": false, "commitments": 0, "validation_queue": 0, "s0_chars": 68883, "note": "Extractor window issue (3000 char lookahead), not selection issue"},
+    "HELD-009": {"corrected": false, "commitments": 1, "validation_queue": 3, "s0_chars": 449606},
+    "HELD-010": {"corrected": false, "commitments": 1, "validation_queue": 1, "s0_chars": 197011},
+    "HELD-011": {"corrected": true, "commitments": 2, "validation_queue": 4, "s0_chars": 420642, "new_s0": "0001602065-14-000004 EX-10.1"},
+    "HELD-012": {"corrected": true, "commitments": 3, "validation_queue": 2, "s0_chars": 460024, "new_s0": "0001437749-20-025626 EX-10.1"},
+    "HELD-013": {"corrected": true, "commitments": 3, "validation_queue": 1, "s0_chars": 759101, "new_s0": "0001157523-16-006018 EX-10.2"},
+    "HELD-014": {"corrected": true, "commitments": 0, "validation_queue": 1, "s0_chars": 754367, "new_s0": "0001866175-22-000007 EX-10.22", "note": "Correct credit agreement selected but extractor found 0 commitments — likely an extraction pattern issue, not a selection issue"},
+    "HELD-015": {"corrected": true, "commitments": 3, "validation_queue": 1, "s0_chars": 478127, "new_s0": "0001193125-12-115120 EX-10.26"},
+    "HELD-016": {"corrected": true, "commitments": 2, "validation_queue": 0, "s0_chars": 225902, "new_s0": "0001437749-19-016414 EX-10.1"},
+    "HELD-017": {"corrected": false, "commitments": 4, "validation_queue": 0, "s0_chars": 321600},
+    "HELD-018": {"corrected": false, "commitments": 0, "validation_queue": 0, "s0_chars": 5059, "note": "S0 unavailable on EDGAR — original incorrect S0 retained"},
+    "HELD-019": {"corrected": false, "commitments": 0, "validation_queue": 0, "s0_chars": 198378, "note": "S0 unavailable on EDGAR — original incorrect S0 retained"},
+    "HELD-020": {"corrected": true, "commitments": 1, "validation_queue": 0, "s0_chars": 395775, "new_s0": "0001830033-23-000034 EX-10.1"},
+    "HELD-021": {"corrected": true, "commitments": 2, "validation_queue": 3, "s0_chars": 623650, "new_s0": "0001535778-14-000026 EX-10.1"},
+    "HELD-022": {"corrected": false, "commitments": 1, "validation_queue": 2, "s0_chars": 347049},
+    "HELD-023": {"corrected": false, "commitments": 1, "validation_queue": 0, "s0_chars": 284088},
+    "HELD-024": {"corrected": true, "commitments": 1, "validation_queue": 2, "s0_chars": 599577, "new_s0": "0001104659-14-069525 EX-10.1"},
+    "HELD-025": {"corrected": false, "commitments": 1, "validation_queue": 0, "s0_chars": 121912}
+  },
+  "before_after_comparison": {
+    "before_step26b": {
+      "chains_with_commitments_after_s0": "12 of 25",
+      "s0_extraction_failures": 12,
+      "s0_selection_failures": 11
+    },
+    "after_step26b": {
+      "chains_with_commitments_after_s0": "21 of 25",
+      "s0_extraction_failures": 4,
+      "s0_selection_failures_remaining": 2,
+      "s0_selection_failures_fixed": 9,
+      "extractor_window_failures": 1,
+      "extraction_pattern_failures": 1
+    }
+  },
+  "remaining_failures": [
+    {
+      "chain_id": "HELD-008",
+      "failure_type": "EXTRACTOR_WINDOW",
+      "description": "Credit agreement correctly selected but extractor's 3000-char lookahead misses covenant section",
+      "out_of_scope": true
+    },
+    {
+      "chain_id": "HELD-014",
+      "failure_type": "EXTRACTION_PATTERN",
+      "description": "Correct credit agreement selected (754K chars, mentions May 6 2021) but extractor found 0 commitments — likely a covenant pattern recognition issue",
+      "requires_investigation": true
+    },
+    {
+      "chain_id": "HELD-018",
+      "failure_type": "S0_UNAVAILABLE",
+      "description": "Credit agreement never filed on EDGAR (entered into by Nuo Therapeutics as private company)",
+      "not_recoverable": true
+    },
+    {
+      "chain_id": "HELD-019",
+      "failure_type": "S0_UNAVAILABLE",
+      "description": "Credit agreement never filed on EDGAR (Oaktree Fund Administration as administrative agent)",
+      "not_recoverable": true
+    }
+  ]
+}

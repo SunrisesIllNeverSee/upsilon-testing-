@@ -57,6 +57,17 @@ results/*
 !results/step25a_post_moses_rerun.json
 !results/step25a_post_moses_rerun.md
 
+# Step 26B corrected S0 selection artifacts (provenance + extraction audit):
+!results/step26b_corrected_s0_selection.json
+!results/step26b_s0_provenance_frozen.json
+!results/step26b_s0_extraction_results.json
+!results/step26a_s0_selection_audit.json
+
+# Step 26B corrected held-out manifest (provenance for corrected S0 selections):
+!data/held_out/
+data/held_out/*
+!data/held_out/manifest_corrected.json
+
 # Post-migration baseline freeze (Step 23G-R rebaseline):
 # The canonical baseline record and comparison script are version-controlled
 # so the post-migration empirical equivalence is auditable.

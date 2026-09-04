@@ -1,0 +1,248 @@
+{
+  "study": "step26b_s0_provenance_freeze",
+  "frozen_at": "2025-01-24T00:00:00Z",
+  "description": "Frozen provenance for corrected S0 document selections. This artifact records the deterministic selection evidence, hashes, and source-resolution path for each corrected S0 document.",
+  "selection_rule": {
+    "name": "deterministic_credit_agreement_identification",
+    "steps": [
+      "1. Extract original credit agreement date from amendment cross-references (provenance resolution only, not value inference)",
+      "2. Search EDGAR submissions API and full-text search for filings within +/- 120/365 days of the cross-referenced date",
+      "3. For each filing, download all EX-10 and EX-4 exhibits",
+      "4. Verify content: >= 3 structural signals (credit_agreement, borrower_or_lender, commitment_or_facility, section_or_article) and no anti-signals in first 300 chars",
+      "5. Reject amendments (title-based detection: FIRST/SECOND AMENDMENT, AMENDMENT NO. N, etc.)",
+      "6. Reject non-credit-agreement documents (anti-signals: lease, subscription, contribution, omnibus, joinder, warrant, etc.)",
+      "7. Score candidates: +100 mentions_cross_ref_date, +50 is_ex10, +1 per 10K chars, -1 per day from CA date",
+      "8. Select highest-scoring candidate"
+    ],
+    "provenance_resolution_only": true,
+    "value_inference_prohibited": true
+  },
+  "chains": [
+    {
+      "chain_id": "HELD-011",
+      "issuer": "Viper Energy Partners LP",
+      "cik": "0001602065",
+      "cross_ref_ca_date": "July 8, 2014",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001193125-14-245558",
+        "exhibit_description": "EX-10.1",
+        "document_type": "Contribution Agreement"
+      },
+      "new_s0": {
+        "accession": "0001602065-14-000004",
+        "file_date": "2014-07-14",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EXHIBIT",
+        "document_url": "https://www.sec.gov/Archives/edgar/data/1602065/000160206514000004/ex10_1vipercreditagreement.htm",
+        "html_sha256": "94f2cb6a5c9d8850",
+        "text_sha256": "2a60549ef51eb6ad",
+        "text_chars": 420642,
+        "mentions_cross_ref_date": true,
+        "selection_reason": "SENIOR SECURED REVOLVING CREDIT AGREEMENT DATED AS OF JULY 8, 2014 among VIPER ENERGY PARTNERS LP, as Borrower, WELLS FARGO BANK, as Administrative Agent"
+      }
+    },
+    {
+      "chain_id": "HELD-012",
+      "issuer": "HighPeak Energy, Inc.",
+      "cik": "0001792849",
+      "cross_ref_ca_date": "December 17, 2020",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001437749-20-018850",
+        "exhibit_description": "EXHIBIT 10.1",
+        "document_type": "Contingent Value Rights Agreement"
+      },
+      "new_s0": {
+        "accession": "0001437749-20-025626",
+        "file_date": "2020-12-18",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EX-10.1",
+        "html_sha256": "c859dcf1f1ebcde9",
+        "text_sha256": "513ee28517933faa",
+        "text_chars": 460024,
+        "mentions_cross_ref_date": true,
+        "selection_reason": "Credit Agreement dated December 17, 2020, classified as CA_ORIG"
+      }
+    },
+    {
+      "chain_id": "HELD-013",
+      "issuer": "WEX Inc.",
+      "cik": "0001309108",
+      "cross_ref_ca_date": "July 1, 2016",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0000950123-10-088119",
+        "exhibit_description": "EX-10.1",
+        "document_type": "Swap Confirmation"
+      },
+      "new_s0": {
+        "accession": "0001157523-16-006018",
+        "file_date": "2016-07-01",
+        "exhibit_type": "EX-10.2",
+        "exhibit_description": "EX-10.2",
+        "html_sha256": "7e22814e03796321",
+        "text_sha256": "a35c4cd04a9f867f",
+        "text_chars": 759101,
+        "mentions_cross_ref_date": true,
+        "selection_reason": "CREDIT AGREEMENT dated July 1, 2016, WEX Inc. and subsidiaries as borrowers, Bank of America as administrative agent. Found via EDGAR full-text search (filing under subsidiary CIK 0001157523, not in submissions API for CIK 0001309108)"
+      }
+    },
+    {
+      "chain_id": "HELD-014",
+      "issuer": "Crescent Energy Co",
+      "cik": "0001866175",
+      "cross_ref_ca_date": "May 6, 2021",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001193125-21-350544",
+        "exhibit_description": "EX-10.1",
+        "document_type": "Registration Rights Agreement"
+      },
+      "new_s0": {
+        "accession": "0001866175-22-000007",
+        "file_date": "2022-03-10",
+        "exhibit_type": "EX-10.22",
+        "exhibit_description": "EX-10.22",
+        "html_sha256": "b4959f1c4a8a8715",
+        "text_sha256": "b176209ec6328029",
+        "text_chars": 754367,
+        "mentions_cross_ref_date": true,
+        "selection_reason": "CREDIT AGREEMENT Dated as of May 6, 2021 among INDEPENDENCE ENERGY FINANCE LLC as Borrower. Filed as exhibit to 10-K (10 months after agreement date)"
+      }
+    },
+    {
+      "chain_id": "HELD-015",
+      "issuer": "Global Power Equipment Group Inc.",
+      "cik": "0001508562",
+      "cross_ref_ca_date": "February 21, 2012",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001193125-13-476098",
+        "exhibit_description": "EX-10.1",
+        "document_type": "Lender Joinder Agreement"
+      },
+      "new_s0": {
+        "accession": "0001193125-12-115120",
+        "file_date": "2012-03-14",
+        "exhibit_type": "EX-10.26",
+        "exhibit_description": "EX-10.26",
+        "html_sha256": "43080ec67d12c8a5",
+        "text_sha256": "ad0af47de7e5a837",
+        "text_chars": 478127,
+        "mentions_cross_ref_date": false,
+        "selection_reason": "CREDIT AGREEMENT dated as of February 21, 2012, Global Power Equipment Group Inc. as borrower, Wells Fargo and lenders. Filed as exhibit to 10-K"
+      }
+    },
+    {
+      "chain_id": "HELD-016",
+      "issuer": "Boston Omaha Corp",
+      "cik": "0001663612",
+      "cross_ref_ca_date": "August 12, 2019",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001437749-18-003328",
+        "exhibit_description": "EXHIBIT 10.1",
+        "document_type": "Class A Common Stock Purchase Agreement"
+      },
+      "new_s0": {
+        "accession": "0001437749-19-016414",
+        "file_date": "2019-08-13",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EX-10.1",
+        "html_sha256": "9f6c0c5cf7592f12",
+        "text_sha256": "8115c770c465035e",
+        "text_chars": 225902,
+        "mentions_cross_ref_date": true,
+        "selection_reason": "Credit Agreement dated August 12, 2019"
+      }
+    },
+    {
+      "chain_id": "HELD-018",
+      "issuer": "Organogenesis Holdings Inc.",
+      "cik": "0001661181",
+      "cross_ref_ca_date": "March 21, 2017",
+      "cross_ref_source": "A2",
+      "status": "UNAVAILABLE",
+      "reason": "Credit agreement was entered into by Nuo Therapeutics, Inc. (a private company at the time). The credit agreement was never filed on EDGAR. The 10-K from 2017-03-28 only has XBRL exhibits. The S-1/A from June 2017 has no EX-10 exhibits. The credit agreement is not available within the current EDGAR acquisition horizon."
+    },
+    {
+      "chain_id": "HELD-019",
+      "issuer": "BioXcel Therapeutics, Inc.",
+      "cik": "0001720893",
+      "cross_ref_ca_date": "April 19, 2022",
+      "cross_ref_source": "A1",
+      "status": "UNAVAILABLE",
+      "reason": "Credit Agreement and Guaranty dated April 19, 2022 (with Oaktree Fund Administration, LLC as administrative agent) was never filed as an exhibit on EDGAR. The 8-K from 2022-04-19 only has EX-4.1 (warrant) and EX-4.2 (registration rights). The 10-Q from 2022-05-09 has EX-10.1 (trademark license) and EX-10.2 (separation agreement). The credit agreement is not available within the current EDGAR acquisition horizon."
+    },
+    {
+      "chain_id": "HELD-020",
+      "issuer": "PureCycle Technologies, Inc.",
+      "cik": "0001830033",
+      "cross_ref_ca_date": "May 8, 2023",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001830033-22-000009",
+        "exhibit_description": "EX-10.1",
+        "document_type": "Subscription Agreement"
+      },
+      "new_s0": {
+        "accession": "0001830033-23-000034",
+        "file_date": "2023-05-09",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EX-10.1",
+        "html_sha256": "a0fd6131d5b152ba",
+        "text_sha256": "3d8e028ae1672ebc",
+        "text_chars": 395775,
+        "mentions_cross_ref_date": true,
+        "selection_reason": "Credit Agreement dated May 8, 2023"
+      }
+    },
+    {
+      "chain_id": "HELD-021",
+      "issuer": "HMS Income Fund, Inc.",
+      "cik": "0001553900",
+      "cross_ref_ca_date": "March 11, 2014",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001144204-13-047490",
+        "exhibit_description": "EXHIBIT 10.1",
+        "document_type": "First Amendment to Credit Agreement (incorrectly selected as S0)"
+      },
+      "new_s0": {
+        "accession": "0001535778-14-000026",
+        "file_date": "2014-03-14",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EX-10.1",
+        "html_sha256": "708e64ae7aa556bb",
+        "text_sha256": "4143c053193a71b9",
+        "text_chars": 623650,
+        "mentions_cross_ref_date": true,
+        "selection_reason": "Senior Secured Revolving Credit Agreement dated March 11, 2014"
+      }
+    },
+    {
+      "chain_id": "HELD-024",
+      "issuer": "Sunoco LP",
+      "cik": "0001613107",
+      "cross_ref_ca_date": "September 25, 2014",
+      "cross_ref_source": "A1",
+      "old_s0": {
+        "accession": "0001104659-12-065390",
+        "exhibit_description": "EX-10.1",
+        "document_type": "Omnibus Agreement"
+      },
+      "new_s0": {
+        "accession": "0001104659-14-069525",
+        "file_date": "2014-10-01",
+        "exhibit_type": "EX-10.1",
+        "exhibit_description": "EX-10.1",
+        "html_sha256": "5c89217153304bcd",
+        "text_sha256": "8090012838fa9b6a",
+        "text_chars": 599577,
+        "mentions_cross_ref_date": false,
+        "selection_reason": "Credit Agreement dated September 25, 2014, Sunoco Partners LLC as borrower"
+      }
+    }
+  ]
+}
