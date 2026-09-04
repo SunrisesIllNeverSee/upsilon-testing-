@@ -19,6 +19,17 @@ import pytest
 
 from upsilon.evidence.gold_schema import GoldRecord, load_gold_file, validate_gold_record
 
+try:
+    import data.create_held_out_gold as _held_out_gold  # noqa: F401
+    _HELD_OUT_GOLD_AVAILABLE = True
+except ImportError:
+    _HELD_OUT_GOLD_AVAILABLE = False
+
+_skip_no_held_out_gold = pytest.mark.skipif(
+    not _HELD_OUT_GOLD_AVAILABLE,
+    reason="data.create_held_out_gold not available (data/ is gitignored)",
+)
+
 
 # ---------------------------------------------------------------------------
 # Data availability guards
@@ -55,6 +66,7 @@ def _require_prereg():
 # ---------------------------------------------------------------------------
 
 
+@_skip_no_held_out_gold
 class TestIndependentAnnotators:
     """Verify that the two annotators use genuinely different strategies."""
 
@@ -119,6 +131,7 @@ class TestIndependentAnnotators:
         assert "ShortName" in names
 
 
+@_skip_no_held_out_gold
 class TestDoubleAnnotation:
     """Test the double_annotate adjudication logic."""
 

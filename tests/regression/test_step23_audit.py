@@ -35,6 +35,12 @@ from upsilon.models.legacy_models import (
     InstructionType,
 )
 
+_HELD_OUT_MANIFEST = Path("data/held_out/manifest.json")
+_skip_no_held_out = pytest.mark.skipif(
+    not _HELD_OUT_MANIFEST.exists(),
+    reason="Held-out manifest not available (data/ is gitignored)",
+)
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -97,6 +103,7 @@ class TestInstructionCollectionCount:
     CONFORMED_COPY amendments.
     """
 
+    @_skip_no_held_out
     def test_total_matches_v2_study(self):
         records = collect_all_instructions()
         v2_study = json.loads(
@@ -159,6 +166,7 @@ class TestEligibilityClassification:
         eligibility, _, _, _ = classify_instruction_eligibility(ins)
         assert eligibility in ("OUT_OF_SCOPE", "AMBIGUOUS_SCOPE")
 
+    @_skip_no_held_out
     def test_canonical_class_must_be_in_13_class_set(self):
         """All IN_SCOPE canonical classes must be in the frozen 13-class
         ontology."""

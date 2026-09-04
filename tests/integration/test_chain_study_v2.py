@@ -27,12 +27,19 @@ from research.run_chain_study_v2 import (
 )
 from upsilon.pipeline.semantic_pipeline import SemanticPipelineResult, run_semantic_pipeline
 
+_V2_MANIFEST = Path("data/chain_study/manifest.json")
+_skip_no_manifest = pytest.mark.skipif(
+    not _V2_MANIFEST.exists(),
+    reason="Chain study manifest not available (data/ is gitignored)",
+)
+
 # ---------------------------------------------------------------------------
 # v2 chain building
 # ---------------------------------------------------------------------------
 
 
 class TestV2ChainBuilding:
+    @_skip_no_manifest
     def test_all_v2_chains_returns_25(self):
         chains = all_v2_chains()
         assert len(chains) == 25
@@ -56,6 +63,7 @@ class TestV2ChainBuilding:
         assert ameresco.chain_id == "EDGAR-AMERESCO"
         assert "financial_covenant.leverage_ratio" in ameresco.original_state
 
+    @_skip_no_manifest
     def test_new_chains_have_non_empty_s0_when_extractable(self):
         """At least some new chains should have non-empty S0 state."""
         chains = all_v2_chains()
@@ -63,6 +71,7 @@ class TestV2ChainBuilding:
         non_empty = sum(1 for c, _, _ in new_chains if len(c.original_state) > 0)
         assert non_empty > 0, "At least some new chains should have extracted S0 state"
 
+    @_skip_no_manifest
     def test_new_chains_with_cmp_have_gt(self):
         """Chains with CMP files should have extracted ground truth."""
         chains = all_v2_chains()

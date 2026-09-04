@@ -34,6 +34,12 @@ from audits.step23r.build_step23r_audit import (
     populate_expected_truth,
 )
 
+_HELD_OUT_MANIFEST = Path("data/held_out/manifest.json")
+_skip_no_held_out = pytest.mark.skipif(
+    not _HELD_OUT_MANIFEST.exists(),
+    reason="Held-out manifest not available (data/ is gitignored)",
+)
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -68,6 +74,7 @@ def _make_row(
 # ---------------------------------------------------------------------------
 
 
+@_skip_no_held_out
 class TestFrozenPopulation:
 
     def test_total_is_393(self):
@@ -161,6 +168,7 @@ class TestIndependentEligibility:
         )
         assert e1 == e2 == "IN_SCOPE"
 
+    @_skip_no_held_out
     def test_all_in_scope_classes_in_13_class_ontology(self):
         rows = collect_all_instructions()
         for row in rows:

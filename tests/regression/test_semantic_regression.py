@@ -21,6 +21,17 @@ from pathlib import Path
 import pytest
 from upsilon.parsing.amendment_parser import parse_v04, AMENDED_AS_FOLLOWS_V04
 
+try:
+    import data.classify_development_corpus as _classify_dev  # noqa: F401
+    _CLASSIFY_DEV_AVAILABLE = True
+except ImportError:
+    _CLASSIFY_DEV_AVAILABLE = False
+
+_skip_no_classify_dev = pytest.mark.skipif(
+    not _CLASSIFY_DEV_AVAILABLE,
+    reason="data.classify_development_corpus not available (data/ is gitignored)",
+)
+
 DEV_DIR = Path("data/development")
 GOLD_PATH = DEV_DIR / "gold_annotations.json"
 
@@ -267,6 +278,7 @@ class TestGoldAnnotationStructure:
 # Span-based matching tests (item 3)
 # ---------------------------------------------------------------------------
 
+@_skip_no_classify_dev
 class TestSpanBasedMatching:
     """Verify span-based matching works correctly."""
 
@@ -340,6 +352,7 @@ class TestSpanBasedMatching:
         assert fn == 0
 
 
+@_skip_no_classify_dev
 class TestHistoricalTypeAdapter:
     """Verify the historical evaluation adapter maps legacy types to the
     current gold ontology so v0.3.1 and v0.4.1 are evaluated fairly."""
