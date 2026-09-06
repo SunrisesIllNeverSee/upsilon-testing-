@@ -120,3 +120,7 @@ data/edgar_chains/*/*
 # Explicitly ignore derived parser/processing output (defense in depth)
 data/edgar_chains/*/*.html
 data/edgar_chains/*/*.v04.json
+
+# Skylos scan output
+skylos-sec.json
+.skylos/
