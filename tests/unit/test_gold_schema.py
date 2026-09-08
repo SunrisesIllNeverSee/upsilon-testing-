@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from upsilon.evidence.gold_schema import (
     VERIFICATION_STATUSES,
     GoldRecord,
@@ -408,3 +410,82 @@ class TestSchemaDocumentation:
         write_schema_documentation(path)
         content = path.read_text(encoding="utf-8")
         assert "preregistered" in content.lower() or "double-annotated" in content.lower()
+
+
+# ---------------------------------------------------------------------------
+# Memory poisoning prevention (HRN-005)
+# ---------------------------------------------------------------------------
+
+
+class TestMemoryPoisoningPrevention:
+    """Memory poisoning prevention — validate on write + validate on read.
+
+    HRN-005: retrieved/stored content is untrusted. A hallucinated or
+    adversarial record with missing required fields, an invalid
+    verification status, or a malformed source_span must be rejected
+    before it can contaminate the gold store.
+    """
+
+    def _valid_record(self) -> GoldRecord:
+        return GoldRecord(
+            issuer="Test", document="S0", section="S1",
+            commitment_id="fc.lr", field="threshold", value=4.5,
+            unit="ratio", source_span=(100, 200), annotator="a",
+        )
+
+    def test_save_rejects_invalid_record(self, tmp_path):
+        """save_gold_file raises ValueError for an invalid record (hard gate)."""
+        bad = self._valid_record()
+        object.__setattr__(bad, "issuer", "")  # missing issuer
+        path = tmp_path / "bad_gold.json"
+        with pytest.raises(ValueError, match="failed validation"):
+            save_gold_file(path, [bad])
+        assert not path.exists(), "Invalid record must not be written to disk"
+
+    def test_save_rejects_mixed_batch(self, tmp_path):
+        """save_gold_file rejects the entire batch if any record is invalid."""
+        good = self._valid_record()
+        bad = self._valid_record()
+        object.__setattr__(bad, "verification_status", "bogus_status")
+        path = tmp_path / "mixed_gold.json"
+        with pytest.raises(ValueError, match="failed validation"):
+            save_gold_file(path, [good, bad])
+        assert not path.exists(), "Batch with invalid record must not be written"
+
+    def test_save_accepts_valid_records(self, tmp_path):
+        """save_gold_file accepts valid records (no false positives)."""
+        records = [self._valid_record(), self._valid_record()]
+        path = tmp_path / "good_gold.json"
+        save_gold_file(path, records)
+        assert path.exists()
+
+    def test_load_skips_invalid_records(self, tmp_path):
+        """load_gold_file skips invalid records and warns (soft gate)."""
+        # Manually write a file with one valid and one invalid record
+        good = gold_record_to_dict(self._valid_record())
+        bad = gold_record_to_dict(self._valid_record())
+        bad["issuer"] = ""  # invalid
+        data = {
+            "schema_version": "1.0",
+            "record_count": 2,
+            "records": [good, bad],
+        }
+        path = tmp_path / "tampered_gold.json"
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        loaded = load_gold_file(path)
+        assert len(loaded) == 1, "Invalid record should be skipped on load"
+        assert loaded[0].issuer == "Test"
+
+    def test_load_handles_externally_tampered_file(self, tmp_path):
+        """load_gold_file handles a file with all invalid records gracefully."""
+        bad = gold_record_to_dict(self._valid_record())
+        bad["verification_status"] = "tampered"
+        data = {
+            "schema_version": "1.0",
+            "record_count": 1,
+            "records": [bad],
+        }
+        path = tmp_path / "all_bad_gold.json"
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        loaded = load_gold_file(path)
+        assert len(loaded) == 0, "All-invalid file should return empty list"

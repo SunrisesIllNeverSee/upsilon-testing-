@@ -192,7 +192,25 @@ def dict_to_gold_record(d: dict) -> GoldRecord:
 
 
 def save_gold_file(path: str | Path, records: list[GoldRecord]) -> None:
-    """Save gold records to a JSON file."""
+    """Save gold records to a JSON file.
+
+    Memory poisoning prevention (HRN-005): every record is validated
+    before it is written. A hallucinated or adversarial record with
+    missing required fields, an invalid verification status, or a
+    malformed source_span is rejected before it can contaminate the
+    gold store. Invalid records raise ValueError with the list of
+    validation errors — the caller must fix or discard them.
+    """
+    # Validate every record before writing (HRN-005 memory poisoning prevention)
+    for i, record in enumerate(records):
+        errors = validate_gold_record(record)
+        if errors:
+            raise ValueError(
+                f"Gold record {i} (commitment_id={record.commitment_id}, "
+                f"field={record.field}) failed validation: {errors}. "
+                f"Fix or discard the record before writing — do not write "
+                f"invalid records to the gold store."
+            )
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     data = {
@@ -204,10 +222,38 @@ def save_gold_file(path: str | Path, records: list[GoldRecord]) -> None:
 
 
 def load_gold_file(path: str | Path) -> list[GoldRecord]:
-    """Load gold records from a JSON file."""
+    """Load gold records from a JSON file.
+
+    Memory poisoning prevention (HRN-005): records are validated on load
+    as well as on save. A gold file written by older code that skipped
+    validation, or tampered externally, is caught here. Invalid records
+    are logged to stderr but do not raise — the caller gets the valid
+    records and can decide how to handle the invalid ones. This is
+    defense-in-depth: validate on write (hard gate) + validate on read
+    (soft gate with warning).
+    """
+    import sys
     p = Path(path)
     data = json.loads(p.read_text(encoding="utf-8"))
-    return [dict_to_gold_record(d) for d in data["records"]]
+    records: list[GoldRecord] = []
+    invalid_count = 0
+    for i, d in enumerate(data["records"]):
+        record = dict_to_gold_record(d)
+        errors = validate_gold_record(record)
+        if errors:
+            invalid_count += 1
+            print(
+                f"WARNING: gold record {i} in {path} failed validation: {errors}",
+                file=sys.stderr,
+            )
+        else:
+            records.append(record)
+    if invalid_count:
+        print(
+            f"WARNING: {invalid_count} invalid gold record(s) skipped in {path}",
+            file=sys.stderr,
+        )
+    return records
 
 
 # ---------------------------------------------------------------------------
